@@ -1,0 +1,82 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1>Reportes y Estadísticas</h1><p>Indicadores clave de gestión del consultorio</p></div>
+    <div class="period-selector">
+      <label>Período:</label>
+      <select [(ngModel)]="periodo" (change)="cargarDatos()">
+        <option value="7">Últimos 7 días</option>
+        <option value="15">Últimos 15 días</option>
+        <option value="30">Últimos 30 días</option>
+        <option value="90">Últimos 90 días</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon bg-primary"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+      <div class="kpi-info"><h3>{{ totalPacientes }}</h3><p>Pacientes Registrados</p></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+      <div class="kpi-info"><h3>{{ totalTurnos }}</h3><p>Turnos en el período</p></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon bg-success"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="kpi-info"><h3>{{ confirmados }}</h3><p>Confirmados</p></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon bg-danger"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      <div class="kpi-info"><h3>{{ tasaAusentismo }}%</h3><p>Tasa de Ausentismo</p></div>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+    <section class="report-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2>Turnos por Día</h2>
+        <button class="btn-icon" title="Exportar a CSV" (click)="exportarResumenDiario()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+      <div class="bar-chart">
+        <div *ngFor="let d of turnosPorDia" class="bar-item">
+          <div class="bar-label">{{ d.fecha }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" [style.width.%]="(d.cantidad / 10) * 100" [style.background]="'#4f46e5'">
+              <span class="bar-value">{{ d.cantidad }}</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="turnosPorDia.length === 0" class="empty-state">Sin datos en el período</div>
+      </div>
+    </section>
+
+    <section class="report-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2>Turnos por Profesional</h2>
+        <button class="btn-icon" title="Exportar a CSV" (click)="exportarResumenProfesionales()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+      <div class="bar-chart">
+        <div *ngFor="let p of turnosPorProfesional" class="bar-item">
+          <div class="bar-label">{{ p.nombre }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" [style.width.%]="(p.cantidad / 10) * 100" [style.background]="'#059669'">
+              <span class="bar-value">{{ p.cantidad }}</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="turnosPorProfesional.length === 0" class="empty-state">Sin datos</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="export-section">
+    <button class="btn-secondary" (click)="exportarReporteTurnos()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar todos los turnos del período
+    </button>
+  </div>
+</div>

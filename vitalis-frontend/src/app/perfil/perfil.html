@@ -1,0 +1,57 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1>Mi Perfil</h1><p>Información de la cuenta y seguridad</p></div>
+  </div>
+
+  <div class="profile-grid">
+    <section class="profile-card">
+      <h2>Información Personal</h2>
+      <div class="avatar-section">
+        <div class="avatar-large">{{ perfil?.nombre?.charAt(0) }}{{ perfil?.apellido?.charAt(0) }}</div>
+        <div class="avatar-info">
+          <h3>{{ perfil?.nombre }} {{ perfil?.apellido }}</h3>
+          <span class="role-badge">{{ perfil?.rol }}</span>
+        </div>
+      </div>
+      <div class="info-rows">
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ perfil?.email }}</span></div>
+        <div class="info-row"><span class="info-label">Rol</span><span class="info-value">{{ perfil?.rol }}</span></div>
+      </div>
+    </section>
+
+    <section class="profile-card">
+      <h2>Seguridad</h2>
+      <p class="card-desc">Administrá tu contraseña de acceso al sistema.</p>
+
+      <button class="btn-outline" (click)="togglePasswordForm()" *ngIf="!showPasswordForm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Cambiar Contraseña
+      </button>
+
+      <div class="password-form" *ngIf="showPasswordForm">
+        <div class="form-group">
+          <label>Contraseña Actual</label>
+          <input type="password" [(ngModel)]="passwordActual" placeholder="Ingrese su contraseña actual" />
+        </div>
+        <div class="form-group">
+          <label>Nueva Contraseña</label>
+          <input type="password" [(ngModel)]="passwordNuevo" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div class="form-group">
+          <label>Confirmar Nueva Contraseña</label>
+          <input type="password" [(ngModel)]="passwordConfirmar" placeholder="Repita la nueva contraseña" />
+        </div>
+
+        <div class="alert-success" *ngIf="mensaje">{{ mensaje }}</div>
+        <div class="alert-error" *ngIf="error">{{ error }}</div>
+
+        <div class="form-actions">
+          <button class="btn-secondary" (click)="togglePasswordForm()">Cancelar</button>
+          <button class="btn-primary" (click)="cambiarPassword()" [disabled]="cargando || !passwordActual || !passwordNuevo || !passwordConfirmar">
+            {{ cargando ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

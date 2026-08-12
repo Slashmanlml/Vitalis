@@ -1,0 +1,107 @@
+<div class="inbox-container">
+  <!-- Header -->
+  <div class="view-header">
+    <div class="header-title">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Simulador de Correos
+      </h1>
+      <p>Registro de notificaciones enviadas automáticamente por el sistema a los pacientes</p>
+    </div>
+    <button class="btn-refresh" (click)="cargarEmails()" [disabled]="cargando">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spinning]="cargando"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      {{ cargando ? 'Actualizando...' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <!-- Badge total -->
+  <div class="badge-bar" *ngIf="!cargando">
+    <span class="badge-total">
+      <strong>{{ emails.length }}</strong> {{ emails.length === 1 ? 'notificación registrada' : 'notificaciones registradas' }}
+    </span>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" *ngIf="cargando">
+    <div class="spinner"></div>
+    <p>Cargando correos...</p>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!cargando && emails.length === 0">
+    <div class="empty-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
+    <h3>Sin correos enviados</h3>
+    <p>Aún no se han generado notificaciones. Crea o cancela un turno para ver los emails simulados aquí.</p>
+  </div>
+
+  <!-- Main layout: sidebar + viewer -->
+  <div class="inbox-layout glass-panel" *ngIf="!cargando && emails.length > 0">
+
+    <!-- Left sidebar: email list -->
+    <div class="inbox-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Bandeja de Salida</span>
+        <span class="count-badge">{{ emails.length }}</span>
+      </div>
+      <div class="email-list">
+        <div
+          class="email-item"
+          *ngFor="let mail of emails"
+          [class.active]="selectedEmail?.id === mail.id"
+          (click)="seleccionarEmail(mail)">
+          <div class="email-avatar">
+            {{ mail.destinatario.charAt(0).toUpperCase() }}
+          </div>
+          <div class="email-content">
+            <div class="email-meta">
+              <span class="email-to">{{ mail.destinatario }}</span>
+              <span class="email-time">{{ mail.fechaEnvio | date:'dd/MM HH:mm' }}</span>
+            </div>
+            <div class="email-subject">{{ mail.asunto }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel: email viewer -->
+    <div class="inbox-viewer">
+      <div class="empty-viewer" *ngIf="!selectedEmail">
+        <div class="empty-viewer-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <p>Seleccione un correo de la lista para visualizar su contenido</p>
+      </div>
+
+      <div class="email-details animate-fade-in" *ngIf="selectedEmail">
+        <!-- Email header bar -->
+        <div class="email-header">
+          <div class="header-main">
+            <h2 class="viewer-subject">{{ selectedEmail.asunto }}</h2>
+            <div class="header-meta-row">
+              <div class="header-field">
+                <span class="field-label">Para:</span>
+                <span class="field-value to-email">{{ selectedEmail.destinatario }}</span>
+              </div>
+              <div class="header-field">
+                <span class="field-label">Enviado:</span>
+                <span class="field-value">{{ selectedEmail.fechaEnvio | date:'dd MMMM yyyy, HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-pill">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Enviado
+          </div>
+        </div>
+
+        <!-- Email body -->
+        <div class="email-body-container">
+          <div class="email-body-html" [innerHTML]="selectedEmail.cuerpo"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

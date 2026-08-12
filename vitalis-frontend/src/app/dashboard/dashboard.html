@@ -1,0 +1,208 @@
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="heart-pulse-icon">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+          <path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h4.78"/>
+        </svg>
+      </div>
+      <span class="brand-name">Vitalis</span>
+    </div>
+
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar..." [(ngModel)]="searchQuery" (input)="onSearchInput()" (focus)="searchResults && searchResults.pacientes.length + searchResults.profesionales.length + searchResults.turnos.length > 0 ? showSearch = true : null" />
+      </div>
+      <div class="search-dropdown" *ngIf="showSearch && searchResults">
+        <div class="search-section" *ngIf="searchResults.pacientes.length > 0">
+          <div class="search-section-title">Pacientes</div>
+          <div class="search-item" *ngFor="let p of searchResults.pacientes" (click)="irA(p)">
+            <span class="search-item-title">{{ p.titulo }}</span>
+            <span class="search-item-sub">{{ p.subtitulo }}</span>
+          </div>
+        </div>
+        <div class="search-section" *ngIf="searchResults.profesionales.length > 0">
+          <div class="search-section-title">Profesionales</div>
+          <div class="search-item" *ngFor="let p of searchResults.profesionales" (click)="irA(p)">
+            <span class="search-item-title">{{ p.titulo }}</span>
+            <span class="search-item-sub">{{ p.subtitulo }}</span>
+          </div>
+        </div>
+        <div class="search-section" *ngIf="searchResults.turnos.length > 0">
+          <div class="search-section-title">Turnos</div>
+          <div class="search-item" *ngFor="let t of searchResults.turnos" (click)="irA(t)">
+            <span class="search-item-title">{{ t.titulo }}</span>
+            <span class="search-item-sub">{{ t.subtitulo }}</span>
+          </div>
+        </div>
+        <div class="search-empty" *ngIf="searchResults.pacientes.length === 0 && searchResults.profesionales.length === 0 && searchResults.turnos.length === 0">
+          Sin resultados
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-menu">
+      <a class="menu-item" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Panel Principal</span>
+      </a>
+      
+      <!-- Pacientes: Admin y Recepcionista -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador' || rolUsuario === 'Recepcionista'" routerLink="/dashboard/pacientes" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Pacientes</span>
+      </a>
+
+      <!-- Médicos: Admin -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/profesionales" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <span>Médicos</span>
+      </a>
+
+      <!-- Turnos: Todos -->
+      <a class="menu-item" routerLink="/dashboard/turnos" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Turnos</span>
+      </a>
+
+      <!-- Sala de Espera: Todos -->
+      <a class="menu-item" routerLink="/dashboard/sala-espera" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Sala de Espera</span>
+      </a>
+
+      <!-- Bloqueo de Agenda: Admin y Medico -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador' || rolUsuario === 'Medico'" routerLink="/dashboard/bloqueos" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Bloquear Agenda</span>
+      </a>
+
+      <!-- Reportes: Admin y Recepcionista -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador' || rolUsuario === 'Recepcionista'" routerLink="/dashboard/reportes" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><line x1="18" y1="12" x2="18" y2="17"/><line x1="12" y1="12" x2="12" y2="17"/><line x1="6" y1="12" x2="6" y2="17"/></svg>
+        <span>Reportes</span>
+      </a>
+
+      <!-- Obras Sociales: Admin -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/obras-sociales" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Obras Sociales</span>
+      </a>
+
+      <!-- Especialidades: Admin -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/especialidades" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Especialidades</span>
+      </a>
+
+      <!-- Simulación Mails: Admin y Recepcionista -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador' || rolUsuario === 'Recepcionista'" routerLink="/dashboard/mails-simulados" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Simulación Mails</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="menu-item" routerLink="/dashboard/perfil" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Mi Perfil</span>
+      </a>
+      <button class="logout-btn" (click)="logout()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="content-area">
+    <!-- Topbar solo en ruta raíz del dashboard -->
+    <ng-container *ngIf="esRutaRaiz">
+      <header class="topbar glass-panel">
+        <div class="topbar-welcome">
+          <h1>Panel de Administración</h1>
+          <p>Bienvenido de vuelta, {{ nombreUsuario }}</p>
+        </div>
+        <div class="topbar-profile">
+          <div class="user-info">
+            <span class="user-name">{{ nombreUsuario }}</span>
+            <span class="user-role">{{ rolUsuario }}</span>
+          </div>
+          <div class="user-avatar">
+            <span>{{ nombreUsuario.charAt(0) }}</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="loading-overlay" *ngIf="cargando"><div class="spinner"></div></div>
+      <section class="stats-grid" *ngIf="!cargando">
+        <div *ngFor="let stat of estadisticas" class="stat-card glass-panel" [ngClass]="stat.color">
+          <div class="stat-header">
+            <span class="stat-title">{{ stat.titulo }}</span>
+            <div class="stat-icon-wrapper">
+              <svg *ngIf="stat.icono === 'users'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <svg *ngIf="stat.icono === 'doctor'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <svg *ngIf="stat.icono === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <svg *ngIf="stat.icono === 'shield'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+          </div>
+          <div class="stat-body">
+            <h2 class="stat-value">{{ stat.valor }}</h2>
+            <span class="stat-subtext">{{ stat.cambio }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Dashboard Charts Section -->
+      <section class="dashboard-analytics-grid" *ngIf="!cargando">
+        <div class="analytics-card glass-panel">
+          <div class="analytics-card-header">
+            <h2>Distribución de Pacientes por Obra Social</h2>
+            <p>Porcentaje de cobertura de salud sobre el total de pacientes</p>
+          </div>
+          <div class="analytics-card-body">
+            <div class="bar-chart-vertical">
+              <div *ngFor="let os of obrasSocialesStats" class="bar-chart-row">
+                <span class="row-label">{{ os.nombre }}</span>
+                <div class="row-bar-container">
+                  <div class="row-bar bg-primary-gradient" [style.width.%]="os.porcentaje"></div>
+                  <span class="row-value">{{ os.cantidad }} ({{ os.porcentaje }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-card glass-panel">
+          <div class="analytics-card-header">
+            <h2>Volumen de Turnos por Médico</h2>
+            <p>Médicos con mayor volumen de consultas registradas</p>
+          </div>
+          <div class="analytics-card-body">
+            <div class="bar-chart-vertical">
+              <div *ngFor="let doc of consultasStats" class="bar-chart-row">
+                <span class="row-label">{{ doc.nombre }}</span>
+                <div class="row-bar-container">
+                  <div class="row-bar bg-accent-gradient" [style.width.%]="doc.porcentaje"></div>
+                  <span class="row-value">{{ doc.cantidad }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container">
+  <div *ngFor="let t of toastService.toasts" class="toast" [ngClass]="'toast-' + t.tipo" (click)="toastService.remover(t.id)">
+    <svg *ngIf="t.tipo === 'success'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <svg *ngIf="t.tipo === 'error'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <svg *ngIf="t.tipo === 'info'" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>{{ t.mensaje }}</span>
+  </div>
+</div>

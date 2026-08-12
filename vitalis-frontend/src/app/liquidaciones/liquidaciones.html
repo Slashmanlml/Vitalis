@@ -1,0 +1,64 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1>Liquidaciones</h1><p>Gestión de cierres de caja por profesional</p></div>
+    <button class="btn-primary" (click)="abrirModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Liquidación
+    </button>
+  </div>
+
+  <div class="filters-bar">
+    <select class="filter-select" [(ngModel)]="filtroEstado">
+      <option value="todas">Todas</option>
+      <option value="Pendiente">Pendientes</option>
+      <option value="Liquidada">Liquidadas</option>
+    </select>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr><th>Profesional</th><th>Período</th><th>Total</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let l of filtered">
+          <td><span class="cell-primary">{{ l.profesionalNombre }}</span></td>
+          <td>{{ l.periodoDesde | date:'dd/MM/yyyy' }} - {{ l.periodoHasta | date:'dd/MM/yyyy' }}</td>
+          <td><span class="cell-price">$ {{ l.total | number:'1.2-2' }}</span></td>
+          <td><span class="status-badge" [ngClass]="getEstadoClass(l.estado)">{{ l.estado }}</span></td>
+          <td>{{ l.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon btn-icon-success" title="Liquidar" (click)="liquidar(l)" *ngIf="l.estado === 'Pendiente'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filtered.length === 0"><td colspan="6" class="empty-state">No hay liquidaciones</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Nueva Liquidacion -->
+<div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2>Nueva Liquidación</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Profesional *</label>
+        <select [(ngModel)]="form.profesionalId">
+          <option [ngValue]="0" disabled>Seleccione profesional</option>
+          <option *ngFor="let p of profesionales" [ngValue]="p.id">{{ p.nombre }} {{ p.apellido }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Período Desde</label><input type="date" [(ngModel)]="form.periodoDesde" /></div>
+        <div class="form-group"><label>Período Hasta</label><input type="date" [(ngModel)]="form.periodoHasta" /></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardar()" [disabled]="!form.profesionalId || !form.periodoDesde || !form.periodoHasta">Crear Liquidación</button>
+    </div>
+  </div>
+</div>

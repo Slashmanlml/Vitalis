@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Secrets
+appsettings.Development.json
+**/appsettings.*.local.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+backend/src/Vitalis.Api/Logs/

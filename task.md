@@ -1,0 +1,11 @@
+- [ ] Add Serilog packages (AspNetCore, Console, File)
+- [ ] Configure Serilog in Program.cs
+- [ ] Add .editorconfig and optional stylecop.json
+- [ ] Add data‑annotation validation to DTOs
+- [ ] (Optional) Mark navigation properties as virtual for lazy loading
+- [ ] Enable EF Core automatic migrations on startup
+- [ ] Create test project Vitalis.Tests with xUnit
+- [ ] Add InMemory EF provider to test project
+- [ ] Write sample unit test for PacienteService
+- [ ] Write sample integration test for PacientesController
+- [ ] Run all builds and tests, verify Swagger UI

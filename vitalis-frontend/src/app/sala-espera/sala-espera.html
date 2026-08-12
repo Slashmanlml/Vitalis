@@ -1,0 +1,200 @@
+<div class="sala-espera-container">
+  <!-- Header Section -->
+  <div class="sala-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">Sala de Espera Virtual</h1>
+        <p class="page-subtitle">Monitoreo en tiempo real del flujo de atención de hoy</p>
+        <div class="header-stats">
+          <div class="stat-card">
+            <span class="stat-value">{{ turnosHoy.length }}</span>
+            <span class="stat-label">Turnos del día</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ filteredTurnos.length }}</span>
+            <span class="stat-label">En filtro actual</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-container">
+    <div class="filter-header">
+      <h3>Filtrar por estado</h3>
+    </div>
+    <div class="filter-tabs-wrapper">
+      <button 
+        *ngFor="let estado of ['todos', 'Solicitado', 'Confirmado', 'En Espera', 'En Atencion', 'Atendido', 'Cancelado']"
+        class="filter-tab" 
+        [ngClass]="{'active': filtroEstado === estado}"
+        (click)="filtroEstado = estado">
+        <span>
+          <svg *ngIf="estado === 'todos'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <svg *ngIf="estado === 'Solicitado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="12" r="9"/></svg>
+          <svg *ngIf="estado === 'Confirmado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg *ngIf="estado === 'En Espera'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg *ngIf="estado === 'En Atencion'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/><path d="M15 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/></svg>
+          <svg *ngIf="estado === 'Atendido'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <svg *ngIf="estado === 'Cancelado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        </span>
+        <span class="tab-label">
+          {{ estado === 'todos' ? 'Todos' : estado }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Waiting Board Section -->
+  <div class="waiting-board-section">
+    <div *ngIf="filteredTurnos.length > 0; else emptyState" class="waiting-board">
+      <div 
+        *ngFor="let turno of filteredTurnos" 
+        class="waiting-card" 
+        [ngClass]="'status-' + turno.estado.toLowerCase().replace(' ', '-')">
+        
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="card-time">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>{{ turno.fechaHora | date:'HH:mm' }} hs</span>
+          </div>
+          <span class="card-badge" [ngClass]="'badge-' + turno.estado.toLowerCase().replace(' ', '-')">
+            {{ turno.estado }}
+          </span>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="patient-info">
+            <h3 class="patient-name">{{ turno.pacienteNombre }}</h3>
+            <p class="patient-detail">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ turno.profesionalNombre }}
+            </p>
+            <p class="patient-detail" *ngIf="turno.obraSocialNombre">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21H4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><line x1="6" y1="7" x2="6" y2="18"/><line x1="18" y1="7" x2="18" y2="18"/>
+              </svg>
+              {{ turno.obraSocialNombre }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="card-actions">
+          <ng-container [ngSwitch]="turno.estado">
+            <button 
+              *ngSwitchCase="'Solicitado'" 
+              class="btn-action btn-action-confirm" 
+              (click)="cambiarEstado(turno, 'Confirmado')"
+              title="Confirmar turno">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Confirmar
+            </button>
+            <button 
+              *ngSwitchCase="'Confirmado'" 
+              class="btn-action btn-action-arrive" 
+              (click)="cambiarEstado(turno, 'En Espera')"
+              title="Paciente llegó">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+              </svg>
+              Llegó
+            </button>
+            <button 
+              *ngSwitchCase="'En Espera'" 
+              class="btn-action btn-action-attend" 
+              (click)="cambiarEstado(turno, 'En Atencion')"
+              title="Iniciar atención">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/>
+              </svg>
+              Atender
+            </button>
+            <button 
+              *ngSwitchCase="'En Atencion'" 
+              class="btn-action btn-action-finish" 
+              (click)="cambiarEstado(turno, 'Atendido')"
+              title="Finalizar atención">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              Finalizar
+            </button>
+          </ng-container>
+          <button 
+            *ngIf="turno.estado === 'En Atencion' || turno.estado === 'En Espera'"
+            class="btn-action btn-action-speak"
+            (click)="llamarPaciente(turno)"
+            title="Llamar por Altavoz (Chime)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </button>
+          <button 
+            *ngIf="turno.estado !== 'Atendido' && turno.estado !== 'Cancelado'" 
+            class="btn-action btn-action-cancel" 
+            (click)="cambiarEstado(turno, 'Cancelado')"
+            title="Cancelar turno">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <h3>No hay turnos para el filtro seleccionado</h3>
+        <p>Intenta cambiar los filtros o vuelve más tarde</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<!-- Full screen Patient Call Alert Overlay -->
+<div class="call-overlay" *ngIf="showCallAlert && pacienteLlamado">
+  <div class="call-content">
+    <div class="call-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bell-icon">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+    <div class="call-banner">LLAMADO A PACIENTE</div>
+    <h1 class="call-patient-name">{{ pacienteLlamado.pacienteNombre }}</h1>
+    <div class="call-divider"></div>
+    <div class="call-details">
+      <div class="call-detail-item">
+        <span class="call-label">Médico:</span>
+        <span class="call-value">{{ pacienteLlamado.profesionalNombre }}</span>
+      </div>
+      <div class="call-detail-item" *ngIf="pacienteLlamado.obraSocialNombre">
+        <span class="call-label">Obra Social:</span>
+        <span class="call-value">{{ pacienteLlamado.obraSocialNombre }}</span>
+      </div>
+      <div class="call-detail-item">
+        <span class="call-label">Estado:</span>
+        <span class="call-value highlight">POR FAVOR, INGRESE AL CONSULTORIO</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,91 @@
+<div class="bloqueos-container">
+  <div class="view-header">
+    <div class="header-title">
+      <h1>Bloqueo de Agenda</h1>
+      <p>Configure los periodos de tiempo no disponibles para los profesionales médicos</p>
+    </div>
+  </div>
+
+  <div class="bloqueos-grid">
+    <!-- Form Panel -->
+    <div class="form-card glass-panel animate-fade-in">
+      <h2>Nuevo Bloqueo</h2>
+      <p class="form-subtitle">Los turnos vigentes dentro de este horario se cancelarán y se notificará a los pacientes automáticamente.</p>
+      
+      <form (submit)="$event.preventDefault(); guardar()">
+        <div class="form-group" *ngIf="userRol !== 'Medico'">
+          <label for="profesional">Médico / Profesional</label>
+          <select id="profesional" [(ngModel)]="form.profesionalId" name="profesionalId" class="form-control">
+            <option value="0">Seleccionar profesional...</option>
+            <option *ngFor="let p of profesionales" [value]="p.id">Dr/Dra. {{ p.nombre }} {{ p.apellido }} ({{ p.especialidadNombre }})</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="userRol === 'Medico'">
+          <label>Médico / Profesional</label>
+          <input type="text" readonly class="form-control read-only" value="Su Agenda Personal" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col">
+            <label for="inicio">Fecha y Hora de Inicio</label>
+            <input type="datetime-local" id="inicio" [(ngModel)]="form.fechaHoraInicio" name="fechaHoraInicio" class="form-control" />
+          </div>
+          <div class="form-group col">
+            <label for="fin">Fecha y Hora de Fin</label>
+            <input type="datetime-local" id="fin" [(ngModel)]="form.fechaHoraFin" name="fechaHoraFin" class="form-control" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="motivo">Motivo del Bloqueo</label>
+          <input type="text" id="motivo" placeholder="Ej. Congreso de Cardiología, Licencia médica, Vacaciones" [(ngModel)]="form.motivo" name="motivo" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Bloquear Horario
+        </button>
+      </form>
+    </div>
+
+    <!-- List Panel -->
+    <div class="list-card glass-panel animate-fade-in">
+      <h2>Bloqueos Activos</h2>
+      
+      <div class="loading-overlay" *ngIf="cargando">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="empty-state" *ngIf="!cargando && bloqueos.length === 0">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>
+        </div>
+        <h3>Sin Bloqueos</h3>
+        <p>No se registran periodos de agenda bloqueados para este profesional.</p>
+      </div>
+
+      <div class="bloqueos-list" *ngIf="!cargando && bloqueos.length > 0">
+        <div class="bloqueo-item" *ngFor="let b of bloqueos">
+          <div class="bloqueo-info">
+            <h4 class="bloqueo-doc" *ngIf="userRol !== 'Medico'">Dr/Dra. {{ b.profesionalNombre }}</h4>
+            <div class="bloqueo-reason"><strong>Motivo:</strong> {{ b.motivo }}</div>
+            <div class="bloqueo-times">
+              <div class="time-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Desde: {{ b.fechaHoraInicio | date:'dd/MM/yyyy HH:mm':'UTC' }}
+              </div>
+              <div class="time-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Hasta: {{ b.fechaHoraFin | date:'dd/MM/yyyy HH:mm':'UTC' }}
+              </div>
+            </div>
+          </div>
+          <button class="btn-delete" (click)="eliminar(b.id)" title="Desbloquear horario">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

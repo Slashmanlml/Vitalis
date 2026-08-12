@@ -1,0 +1,124 @@
+<div class="page-container">
+  <div class="page-header">
+    <div><h1>Facturación</h1><p>Gestión de facturas, cobros y pagos</p></div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-secondary" title="Exportar a CSV" (click)="exportarFacturasCSV()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+      <button class="btn-primary" (click)="abrirNuevaFactura()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nueva Factura
+      </button>
+    </div>
+  </div>
+
+  <div class="filters-bar">
+    <select class="filter-select" [(ngModel)]="filtroEstado">
+      <option value="todas">Todas las facturas</option>
+      <option value="Pendiente">Pendientes</option>
+      <option value="Pagada">Pagadas</option>
+      <option value="Pago Parcial">Pago Parcial</option>
+    </select>
+  </div>
+
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr><th>Paciente</th><th>Fecha</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Estado</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filteredFacturas">
+          <td><span class="cell-primary">{{ f.pacienteNombre }}</span></td>
+          <td>{{ f.fecha | date:'dd/MM/yyyy' }}</td>
+          <td><span class="cell-price">$ {{ f.total | number:'1.2-2' }}</span></td>
+          <td>$ {{ f.pagos.reduce((s,p) => s + p.importe, 0) | number:'1.2-2' }}</td>
+          <td><span class="cell-price" [ngClass]="getSaldo(f) > 0 ? 'text-danger' : 'text-success'">$ {{ getSaldo(f) | number:'1.2-2' }}</span></td>
+          <td><span class="status-badge" [ngClass]="getEstadoClass(f.estado)">{{ f.estado }}</span></td>
+          <td class="actions-cell">
+            <button class="btn-icon btn-icon-success" title="Registrar Pago" (click)="abrirPago(f)" *ngIf="f.estado !== 'Pagada'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="btn-icon" title="Imprimir Factura" (click)="imprimirFactura(f)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            </button>
+          </td>
+        </tr>
+        <tr><td colspan="7" style="display:none">
+          <div *ngFor="let f of facturas" [id]="'factura-print-' + f.id">
+            <p><strong>Factura #{{ f.id }}</strong></p>
+            <p><strong>Paciente:</strong> {{ f.pacienteNombre }} | <strong>Fecha:</strong> {{ f.fecha | date:'dd/MM/yyyy' }}</p>
+            <table><tr><th>Prestación</th><th>Cant</th><th>P.Unit</th><th>Subtotal</th></tr>
+              <tr *ngFor="let d of f.detalles"><td>{{ d.prestacionNombre }}</td><td>{{ d.cantidad }}</td><td>${{ d.precioUnitario | number:'1.2-2' }}</td><td>${{ d.subtotal | number:'1.2-2' }}</td></tr>
+            </table>
+            <p><strong>Total:</strong> ${{ f.total | number:'1.2-2' }}</p>
+            <p *ngIf="f.pagos.length > 0"><strong>Pagos:</strong></p>
+            <p *ngFor="let p of f.pagos">${{ p.importe | number:'1.2-2' }} - {{ p.medioPago }} ({{ p.fecha | date:'dd/MM/yyyy' }})</p>
+            <p><strong>Estado:</strong> {{ f.estado }}</p>
+          </div>
+        </td></tr>
+        <tr *ngIf="filteredFacturas.length === 0"><td colspan="7" class="empty-state">No hay facturas</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Nueva Factura -->
+<div class="modal-overlay" *ngIf="showFacturaModal" (click)="cerrarModal()">
+  <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2>Nueva Factura</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Paciente *</label>
+        <select [(ngModel)]="facturaForm.pacienteId">
+          <option [ngValue]="0" disabled>Seleccione paciente</option>
+          <option *ngFor="let p of pacientes" [ngValue]="p.id">{{ p.nombre }} {{ p.apellido }}</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Observaciones</label><input type="text" [(ngModel)]="facturaForm.observaciones" /></div>
+
+      <h3 class="section-subtitle">Detalles de facturación</h3>
+      <div class="detalle-row">
+        <select class="detalle-select" [(ngModel)]="nuevoDetalle.prestacionId">
+          <option [ngValue]="0">Seleccione prestación</option>
+          <option *ngFor="let pr of prestaciones" [ngValue]="pr.id">{{ pr.nombre }} (${{ pr.importeBase }})</option>
+        </select>
+        <input type="number" class="detalle-cant" [(ngModel)]="nuevoDetalle.cantidad" min="1" placeholder="Cant" />
+        <input type="number" class="detalle-precio" [(ngModel)]="nuevoDetalle.precioUnitario" step="0.01" placeholder="$" />
+        <button class="btn-add-row" (click)="agregarDetalle()">+</button>
+      </div>
+
+      <table class="detalle-table" *ngIf="facturaForm.detalles.length > 0">
+        <thead><tr><th>Prestación</th><th>Cant</th><th>P.Unit</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody>
+          <tr *ngFor="let d of facturaForm.detalles; let i = index">
+            <td>{{ d.prestacionNombre }}</td><td>{{ d.cantidad }}</td><td>${{ d.precioUnitario | number:'1.2-2' }}</td><td>${{ (d.cantidad * d.precioUnitario) | number:'1.2-2' }}</td>
+            <td><button class="btn-icon btn-icon-danger" (click)="quitarDetalle(i)">&times;</button></td>
+          </tr>
+        </tbody>
+        <tfoot><tr><td colspan="3" class="text-right"><strong>Total:</strong></td><td><strong>$ {{ totalFactura | number:'1.2-2' }}</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" (click)="cerrarModal()">Cancelar</button><button class="btn-primary" (click)="guardarFactura()" [disabled]="facturaForm.detalles.length === 0">Emitir Factura</button></div>
+  </div>
+</div>
+
+<!-- Modal Pago -->
+<div class="modal-overlay" *ngIf="showPagoModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2>Registrar Pago</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
+    <div class="modal-body">
+      <p><strong>Paciente:</strong> {{ selectedFactura?.pacienteNombre }}</p>
+      <p><strong>Total:</strong> ${{ selectedFactura?.total | number:'1.2-2' }}</p>
+      <div class="form-group"><label>Medio de Pago</label>
+        <select [(ngModel)]="pagoForm.medioPago">
+          <option value="Efectivo">Efectivo</option><option value="Tarjeta Débito">Tarjeta Débito</option>
+          <option value="Tarjeta Crédito">Tarjeta Crédito</option><option value="Transferencia">Transferencia</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Importe $</label><input type="number" step="0.01" [(ngModel)]="pagoForm.importe" /></div>
+      <div class="form-group"><label>Observaciones</label><input type="text" [(ngModel)]="pagoForm.observaciones" /></div>
+    </div>
+    <div class="modal-footer"><button class="btn-secondary" (click)="cerrarModal()">Cancelar</button><button class="btn-primary" (click)="guardarPago()">Registrar Pago</button></div>
+  </div>
+</div>

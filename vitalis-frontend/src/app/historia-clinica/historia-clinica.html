@@ -1,0 +1,240 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Historia Clínica Electrónica</h1>
+      <p>Registro cronológico de la atención médica del paciente</p>
+    </div>
+  </div>
+
+  <div class="patient-selector">
+    <label>Seleccionar Paciente:</label>
+    <select [(ngModel)]="selectedPacienteId" (change)="seleccionarPaciente(selectedPacienteId)">
+      <option [ngValue]="0">-- Seleccione un paciente --</option>
+      <option *ngFor="let p of pacientes" [ngValue]="p.id">{{ p.nombre }} {{ p.apellido }} ({{ p.dni }})</option>
+    </select>
+  </div>
+
+  <ng-container *ngIf="selectedPacienteId > 0">
+    <div class="print-actions no-print" *ngIf="consultas.length > 0 || antecedentes.length > 0 || alergias.length > 0">
+      <button class="btn-outline" (click)="imprimirHistoria()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir Historia
+      </button>
+    </div>
+    <div id="hc-print-content">
+    <div class="hc-grid">
+      <section class="hc-card hc-main">
+        <div class="section-header">
+          <h2>Consultas Médicas</h2>
+          <button class="btn-primary btn-sm" (click)="abrirNuevaConsulta()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva Consulta
+          </button>
+        </div>
+
+        <div class="timeline">
+          <div *ngFor="let c of consultas" class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content card">
+              <div class="tl-header">
+                <span class="tl-date">{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="tl-doctor">{{ c.profesionalNombre }}</span>
+              </div>
+              <div class="tl-body">
+                <div class="tl-field">
+                  <label>Motivo</label>
+                  <p>{{ c.motivoConsulta }}</p>
+                </div>
+                <div class="tl-field" *ngIf="c.diagnostico">
+                  <label>Diagnóstico</label>
+                  <p>{{ c.diagnostico }}</p>
+                </div>
+                <div class="tl-field" *ngIf="c.evolucion">
+                  <label>Evolución</label>
+                  <p>{{ c.evolucion }}</p>
+                </div>
+                <div class="tl-field" *ngIf="c.indicaciones">
+                  <label>Indicaciones</label>
+                  <p>{{ c.indicaciones }}</p>
+                </div>
+                <div class="tl-field" *ngIf="c.estudioAdjuntoUrl">
+                  <label>Estudio Clínico Adjunto</label>
+                  <div class="clinical-attachment-view">
+                    <a [href]="'http://localhost:5004' + c.estudioAdjuntoUrl" target="_blank" class="attachment-link">
+                      <img [src]="'http://localhost:5004' + c.estudioAdjuntoUrl" class="attachment-thumbnail" />
+                      <span class="attachment-link-label">Ver Estudio Ampliado</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="consultas.length === 0" class="empty-state">No hay consultas registradas</div>
+        </div>
+      </section>
+
+      <aside class="hc-sidebar">
+        <section class="hc-card">
+          <div class="section-header">
+            <h2>Antecedentes</h2>
+            <button class="btn-icon" title="Agregar" (click)="abrirNuevoAntecedente()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div *ngFor="let a of antecedentes" class="list-item">
+            <span class="badge-tipo">{{ a.tipo }}</span>
+            <p>{{ a.descripcion }}</p>
+            <small>{{ a.fechaRegistro | date:'dd/MM/yyyy' }}</small>
+          </div>
+          <div *ngIf="antecedentes.length === 0" class="empty-state-sm">Sin antecedentes</div>
+        </section>
+
+        <section class="hc-card">
+          <div class="section-header">
+            <h2>Alergias</h2>
+            <button class="btn-icon" title="Agregar" (click)="abrirNuevaAlergia()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div *ngFor="let al of alergias" class="list-item">
+            <div class="alergia-header">
+              <span class="badge-alergia">{{ al.sustancia }}</span>
+              <span class="severidad-badge" [ngClass]="'sev-' + (al.severidad?.toLowerCase() || 'media')">{{ al.severidad || 'Media' }}</span>
+            </div>
+            <p *ngIf="al.reaccion">{{ al.reaccion }}</p>
+          </div>
+          <div *ngIf="alergias.length === 0" class="empty-state-sm">Sin alergias registradas</div>
+        </section>
+      </aside>
+    </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Modal Consulta -->
+<div class="modal-overlay" *ngIf="showConsultaModal" (click)="cerrarModal()">
+  <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nueva Consulta Médica</h2>
+      <button class="btn-close" (click)="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Turno *</label>
+          <select [(ngModel)]="consultaForm.turnoId" (change)="onTurnoChange()" required style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+            <option [ngValue]="0" disabled>Seleccione turno</option>
+            <option *ngFor="let t of turnosDisponibles" [ngValue]="t.id">{{ t.fechaHora | date:'dd/MM HH:mm' }} - {{ t.profesionalNombre }}</option>
+          </select>
+          <small class="form-text text-muted" *ngIf="turnosDisponibles.length === 0" style="color: #ea580c; display: block; margin-top: 0.25rem;">
+            No hay turnos hoy/pasados para este paciente pendientes de atención.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Profesional *</label>
+          <input type="text" [value]="getProfesionalNombrePorTurno(consultaForm.turnoId)" readonly class="form-control" placeholder="Seleccione un turno primero" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; background-color: #f3f4f6; color: #4b5563; font-weight: 500;" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Motivo de Consulta *</label>
+        <input type="text" [(ngModel)]="consultaForm.motivoConsulta" required />
+      </div>
+      <div class="form-group">
+        <label>Diagnóstico</label>
+        <textarea [(ngModel)]="consultaForm.diagnostico" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Evolución</label>
+        <textarea [(ngModel)]="consultaForm.evolucion" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Indicaciones</label>
+        <textarea [(ngModel)]="consultaForm.indicaciones" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Observaciones</label>
+        <textarea [(ngModel)]="consultaForm.observaciones" rows="2"></textarea>
+      </div>
+      <div class="form-group attachment-upload-group">
+        <label>Adjuntar Estudio Clínico (Radiografía, análisis, etc.)</label>
+        <div class="attachment-upload-box">
+          <input type="file" (change)="onFileSelected($event)" accept="image/*" id="attachment-file-input" style="display: none;" />
+          <label for="attachment-file-input" class="btn-attachment-upload">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Seleccionar Archivo de Estudio
+          </label>
+          <span class="attachment-name" *ngIf="consultaForm.estudioAdjuntoUrl">
+            ✓ Archivo cargado correctamente: 
+            <a [href]="'http://localhost:5004' + consultaForm.estudioAdjuntoUrl" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Ver Archivo</a>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardarConsulta()">Registrar Consulta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Antecedente -->
+<div class="modal-overlay" *ngIf="showAntecedenteModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nuevo Antecedente</h2>
+      <button class="btn-close" (click)="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select [(ngModel)]="antecedenteForm.tipo">
+          <option value="Quirúrgico">Quirúrgico</option>
+          <option value="Crónico">Crónico</option>
+          <option value="Familiar">Familiar</option>
+          <option value="Hábito">Hábito (tabaco, alcohol)</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descripción *</label>
+        <textarea [(ngModel)]="antecedenteForm.descripcion" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardarAntecedente()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Alergia -->
+<div class="modal-overlay" *ngIf="showAlergiaModal" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Nueva Alergia</h2>
+      <button class="btn-close" (click)="cerrarModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Sustancia *</label>
+        <input type="text" [(ngModel)]="alergiaForm.sustancia" />
+      </div>
+      <div class="form-group">
+        <label>Reacción</label>
+        <input type="text" [(ngModel)]="alergiaForm.reaccion" />
+      </div>
+      <div class="form-group">
+        <label>Severidad</label>
+        <select [(ngModel)]="alergiaForm.severidad">
+          <option value="Leve">Leve</option>
+          <option value="Moderada">Moderada</option>
+          <option value="Severa">Severa</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" (click)="guardarAlergia()">Guardar</button>
+    </div>
+  </div>
+</div>

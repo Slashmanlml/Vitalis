@@ -1,0 +1,42 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace Vitalis.Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddAuditoriasTable : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "auditorias",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UsuarioEmail = table.Column<string>(type: "text", nullable: true),
+                    Accion = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Tabla = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ClavePrimaria = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Fecha = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ValoresAnteriores = table.Column<string>(type: "text", nullable: true),
+                    ValoresNuevos = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_auditorias", x => x.Id);
+                });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "auditorias");
+        }
+    }
+}
