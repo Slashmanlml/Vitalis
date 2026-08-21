@@ -195,7 +195,7 @@ export class PacientesComponent implements OnInit {
         nombre: this.form.nombre, apellido: this.form.apellido,
         dni: this.form.dni.replace(/\./g, ''),
         fechaNacimiento: this.form.fechaNacimiento,
-        email: this.form.email, telefono: this.form.telefono,
+        email: this.form.email || undefined, telefono: this.form.telefono,
         direccion: this.form.direccion, obraSocialId: this.form.obraSocialId,
         numeroAfiliado: this.form.numeroAfiliado,
         fotoUrl: this.form.fotoUrl

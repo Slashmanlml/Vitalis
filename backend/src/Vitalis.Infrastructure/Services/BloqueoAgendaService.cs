@@ -74,12 +74,17 @@ public class BloqueoAgendaService : IBloqueoAgendaService
 
     public async Task<BloqueoAgendaDto> CrearAsync(CrearBloqueoDto dto)
     {
-        if (dto.FechaHoraInicio >= dto.FechaHoraFin)
+        // Se normaliza a Utc antes de usarla en cualquier consulta o guardado: Npgsql
+        // rechaza DateTimeKind.Unspecified tanto en parámetros de consulta como al guardar.
+        var fechaHoraInicioUtc = DateTime.SpecifyKind(dto.FechaHoraInicio, DateTimeKind.Utc);
+        var fechaHoraFinUtc = DateTime.SpecifyKind(dto.FechaHoraFin, DateTimeKind.Utc);
+
+        if (fechaHoraInicioUtc >= fechaHoraFinUtc)
         {
             throw new ValidationException("La fecha de inicio debe ser anterior a la de fin.");
         }
 
-        if (dto.FechaHoraInicio < DateTime.UtcNow)
+        if (fechaHoraInicioUtc < DateTime.UtcNow)
         {
             throw new ValidationException("No se pueden crear bloqueos en el pasado.");
         }
@@ -94,8 +99,8 @@ public class BloqueoAgendaService : IBloqueoAgendaService
         var bloqueo = new BloqueoAgenda
         {
             ProfesionalId = dto.ProfesionalId,
-            FechaHoraInicio = dto.FechaHoraInicio,
-            FechaHoraFin = dto.FechaHoraFin,
+            FechaHoraInicio = fechaHoraInicioUtc,
+            FechaHoraFin = fechaHoraFinUtc,
             Motivo = dto.Motivo
         };
 
@@ -107,8 +112,8 @@ public class BloqueoAgendaService : IBloqueoAgendaService
             .Include(t => t.Paciente)
             .Include(t => t.Profesional)
             .Where(t => t.ProfesionalId == dto.ProfesionalId
-                        && t.FechaHora >= dto.FechaHoraInicio
-                        && t.FechaHora <= dto.FechaHoraFin
+                        && t.FechaHora >= fechaHoraInicioUtc
+                        && t.FechaHora <= fechaHoraFinUtc
                         && t.Estado != "Cancelado")
             .ToListAsync();
 

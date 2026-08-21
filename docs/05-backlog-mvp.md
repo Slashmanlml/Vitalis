@@ -1,5 +1,11 @@
 # Backlog inicial del MVP
 
+> **Nota:** este documento es el plan de trabajo original y se conserva como registro
+> histórico del proceso (útil para mostrar la evolución planeado → construido en la
+> tesina). El sistema hoy supera este alcance: ver
+> [07-estado-actual-del-sistema.md](07-estado-actual-del-sistema.md) para el estado real
+> implementado.
+
 El MVP es la primera version funcional defendible. La idea es construir lo suficiente para demostrar el flujo completo del consultorio.
 
 ## Version 1: base del sistema

@@ -36,7 +36,7 @@ Al iniciar, la API aplica migraciones y crea roles + usuario admin.
 ## 4. Frontend
 
 ```powershell
-cd frontend/vitalis-web
+cd vitalis-frontend
 npm start
 ```
 
@@ -58,8 +58,9 @@ backend/
     Vitalis.Application/
     Vitalis.Infrastructure/
     Vitalis.Api/
-frontend/
-  vitalis-web/
+  tests/
+    Vitalis.Tests/
+vitalis-frontend/
 database/
   scripts/
   seed/

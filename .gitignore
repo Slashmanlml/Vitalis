@@ -21,3 +21,8 @@ Thumbs.db
 # Logs
 *.log
 backend/src/Vitalis.Api/Logs/
+
+# Local tooling / no publicar
+.claude/
+Vitalis_Tesina.docx
+docs/09-guion-demo-y-defensa.md

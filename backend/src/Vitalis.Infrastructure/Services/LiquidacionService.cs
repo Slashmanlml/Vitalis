@@ -55,8 +55,10 @@ public class LiquidacionService : ILiquidacionService
         var profesional = await _context.Profesionales.FindAsync(dto.ProfesionalId)
             ?? throw new Exception("Profesional no encontrado");
 
-        var fechaDesdeInicioDia = dto.PeriodoDesde.Date;
-        var fechaHastaFinDia = dto.PeriodoHasta.Date.AddDays(1).AddTicks(-1);
+        // Se normaliza a Utc antes de usarla en la consulta: Npgsql rechaza
+        // DateTimeKind.Unspecified como parámetro de consulta.
+        var fechaDesdeInicioDia = DateTime.SpecifyKind(dto.PeriodoDesde.Date, DateTimeKind.Utc);
+        var fechaHastaFinDia = DateTime.SpecifyKind(dto.PeriodoHasta.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
 
         var turnos = await _context.Turnos
             .Include(t => t.ObraSocial)
@@ -99,8 +101,9 @@ public class LiquidacionService : ILiquidacionService
         var liquidacion = new Liquidacion
         {
             ProfesionalId = dto.ProfesionalId,
-            PeriodoDesde = dto.PeriodoDesde,
-            PeriodoHasta = dto.PeriodoHasta,
+            // PostgreSQL exige DateTimeKind.Utc para timestamptz.
+            PeriodoDesde = DateTime.SpecifyKind(dto.PeriodoDesde, DateTimeKind.Utc),
+            PeriodoHasta = DateTime.SpecifyKind(dto.PeriodoHasta, DateTimeKind.Utc),
             Total = total,
             Estado = "Pendiente",
             FechaCreacion = DateTime.UtcNow

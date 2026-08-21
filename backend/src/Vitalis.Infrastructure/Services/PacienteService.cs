@@ -88,7 +88,9 @@ public class PacienteService : IPacienteService
             Nombre = dto.Nombre,
             Apellido = dto.Apellido,
             Dni = dto.Dni,
-            FechaNacimiento = dto.FechaNacimiento,
+            // PostgreSQL exige DateTimeKind.Utc para timestamptz; el JSON del cliente
+            // suele llegar como fecha "pelada" (Kind=Unspecified) y Npgsql la rechaza.
+            FechaNacimiento = DateTime.SpecifyKind(dto.FechaNacimiento, DateTimeKind.Utc),
             Telefono = dto.Telefono,
             Email = dto.Email,
             Direccion = dto.Direccion,

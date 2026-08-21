@@ -129,14 +129,19 @@ public class TurnoService : ITurnoService
 
     public async Task<TurnoDto> CrearAsync(CrearTurnoDto dto)
     {
-        await ValidarLógicaComplejaTurnoAsync(dto.PacienteId, dto.ProfesionalId, dto.FechaHora);
+        // Se normaliza a Utc antes de usarla en cualquier lado: tanto la validación
+        // (que consulta la base) como la entidad necesitan Kind=Utc, porque Npgsql
+        // rechaza DateTimeKind.Unspecified tanto en parámetros de consulta como al guardar.
+        var fechaHoraUtc = DateTime.SpecifyKind(dto.FechaHora, DateTimeKind.Utc);
+
+        await ValidarLógicaComplejaTurnoAsync(dto.PacienteId, dto.ProfesionalId, fechaHoraUtc);
 
         var turno = new Turno
         {
             PacienteId = dto.PacienteId,
             ProfesionalId = dto.ProfesionalId,
             ObraSocialId = dto.ObraSocialId,
-            FechaHora = dto.FechaHora,
+            FechaHora = fechaHoraUtc,
             Confirmado = false,
             Estado = "Solicitado"
         };
@@ -175,10 +180,12 @@ public class TurnoService : ITurnoService
         var turno = await _context.Turnos.FindAsync(id);
         if (turno == null) return null;
 
+        var fechaHoraUtc = DateTime.SpecifyKind(dto.FechaHora, DateTimeKind.Utc);
+
         // Validar lógica si cambió fecha, médico o paciente
-        if (turno.FechaHora != dto.FechaHora || turno.ProfesionalId != dto.ProfesionalId || turno.PacienteId != dto.PacienteId)
+        if (turno.FechaHora != fechaHoraUtc || turno.ProfesionalId != dto.ProfesionalId || turno.PacienteId != dto.PacienteId)
         {
-            await ValidarLógicaComplejaTurnoAsync(dto.PacienteId, dto.ProfesionalId, dto.FechaHora, id);
+            await ValidarLógicaComplejaTurnoAsync(dto.PacienteId, dto.ProfesionalId, fechaHoraUtc, id);
         }
 
         var fechaAnterior = turno.FechaHora;
@@ -187,7 +194,7 @@ public class TurnoService : ITurnoService
         turno.PacienteId = dto.PacienteId;
         turno.ProfesionalId = dto.ProfesionalId;
         turno.ObraSocialId = dto.ObraSocialId;
-        turno.FechaHora = dto.FechaHora;
+        turno.FechaHora = fechaHoraUtc;
         turno.Confirmado = dto.Confirmado;
         if (!string.IsNullOrWhiteSpace(dto.Estado))
             turno.Estado = dto.Estado;

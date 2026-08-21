@@ -1,0 +1,101 @@
+<svg viewBox="0 0 1000 900" xmlns="http://www.w3.org/2000/svg" font-family="Calibri, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#1F4E79"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8A8A8A"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="900" fill="#FFFFFF"/>
+  <text x="500" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">Vitalis — Arquitectura en capas y flujo de una petición</text>
+
+  <!-- Cliente -->
+  <rect x="340" y="56" width="300" height="66" rx="8" fill="#E7EEF5" stroke="#1F4E79" stroke-width="1.5"/>
+  <text x="490" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="#1F4E79">Cliente — Angular SPA</text>
+  <text x="490" y="98" text-anchor="middle" font-size="11" fill="#333333">vitalis-frontend (puerto 4200)</text>
+  <text x="490" y="112" text-anchor="middle" font-size="10" fill="#555555">Componentes · Services HTTP · Guards · Interceptors (JWT)</text>
+
+  <!-- Flecha 1: Cliente -> Api -->
+  <line x1="490" y1="122" x2="490" y2="188" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="502" y="150" font-size="11" fill="#1F4E79">① HTTP/JSON + Bearer &lt;token&gt;</text>
+
+  <!-- Vitalis.Api -->
+  <rect x="290" y="188" width="400" height="104" rx="8" fill="#1F4E79"/>
+  <rect x="290" y="188" width="400" height="26" rx="8" fill="#1F4E79"/>
+  <text x="490" y="206" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Vitalis.Api</text>
+  <rect x="292" y="216" width="396" height="74" fill="#F0F4F8"/>
+  <text x="500" y="234" text-anchor="middle" font-size="11" fill="#222222">Controllers REST (20) · Middleware de excepciones</text>
+  <text x="500" y="250" text-anchor="middle" font-size="11" fill="#222222">Autenticación JWT + Autorización por rol</text>
+  <text x="500" y="266" text-anchor="middle" font-size="11" fill="#222222">Swagger / OpenAPI · CORS</text>
+
+  <!-- Flecha 2: Api -> Application -->
+  <line x1="490" y1="292" x2="490" y2="358" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="502" y="316" font-size="11" fill="#1F4E79">② Invoca el caso de uso</text>
+  <text x="502" y="330" font-size="11" fill="#1F4E79">vía interfaz (IPacienteService, ...)</text>
+
+  <!-- Vitalis.Application -->
+  <rect x="290" y="358" width="400" height="80" rx="8" fill="#2E5F8A"/>
+  <rect x="290" y="358" width="400" height="26" rx="8" fill="#2E5F8A"/>
+  <text x="490" y="376" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Vitalis.Application</text>
+  <rect x="292" y="386" width="396" height="50" fill="#EAF0F6"/>
+  <text x="500" y="406" text-anchor="middle" font-size="11" fill="#222222">DTOs de entrada/salida</text>
+  <text x="500" y="422" text-anchor="middle" font-size="11" fill="#222222">Interfaces de servicios (contratos de casos de uso)</text>
+
+  <!-- Flecha 3: Application -> Infrastructure -->
+  <line x1="490" y1="438" x2="490" y2="504" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="502" y="462" font-size="11" fill="#1F4E79">③ Inyección de dependencias resuelve</text>
+  <text x="502" y="476" font-size="11" fill="#1F4E79">la implementación concreta</text>
+
+  <!-- Vitalis.Infrastructure -->
+  <rect x="290" y="504" width="400" height="104" rx="8" fill="#3B7A57"/>
+  <rect x="290" y="504" width="400" height="26" rx="8" fill="#3B7A57"/>
+  <text x="490" y="522" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Vitalis.Infrastructure</text>
+  <rect x="292" y="532" width="396" height="74" fill="#EAF3EE"/>
+  <text x="500" y="550" text-anchor="middle" font-size="11" fill="#222222">Services (19) — reglas de negocio</text>
+  <text x="500" y="566" text-anchor="middle" font-size="11" fill="#222222">VitalisDbContext (EF Core) · Auditoría automática</text>
+  <text x="500" y="582" text-anchor="middle" font-size="11" fill="#222222">JwtTokenService · DbSeeder · EmailService</text>
+
+  <!-- Flecha 4: Infrastructure -> DB -->
+  <line x1="490" y1="608" x2="490" y2="666" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="502" y="640" font-size="11" fill="#1F4E79">④ Entity Framework Core → SQL</text>
+
+  <!-- PostgreSQL cylinder -->
+  <g>
+    <path d="M 400 666 L 400 720 A 90 12 0 0 0 580 720 L 580 666" fill="#FDF3D8" stroke="#B8860B" stroke-width="1.5"/>
+    <ellipse cx="490" cy="666" rx="90" ry="12" fill="#FBE9C2" stroke="#B8860B" stroke-width="1.5"/>
+    <text x="490" y="700" text-anchor="middle" font-size="12" font-weight="bold" fill="#7A5A00">PostgreSQL</text>
+    <text x="490" y="714" text-anchor="middle" font-size="10" fill="#7A5A00">base "vitalis"</text>
+  </g>
+
+  <!-- Vitalis.Domain (lateral) -->
+  <rect x="760" y="358" width="200" height="250" rx="8" fill="#6B2D7A"/>
+  <rect x="760" y="358" width="200" height="26" rx="8" fill="#6B2D7A"/>
+  <text x="860" y="376" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Vitalis.Domain</text>
+  <rect x="762" y="386" width="196" height="220" fill="#F5E9F7"/>
+  <text x="860" y="410" text-anchor="middle" font-size="11" fill="#222222">Entidades</text>
+  <text x="860" y="430" text-anchor="middle" font-size="11" fill="#222222">(Paciente, Turno, Factura...)</text>
+  <text x="860" y="456" text-anchor="middle" font-size="11" fill="#222222">Excepciones de dominio</text>
+  <text x="860" y="472" text-anchor="middle" font-size="11" fill="#222222">(NotFound, Conflict, Validation)</text>
+  <text x="860" y="498" text-anchor="middle" font-size="11" fill="#222222">Constants.Roles</text>
+  <text x="860" y="530" text-anchor="middle" font-size="10" font-style="italic" fill="#555555">No depende de ninguna</text>
+  <text x="860" y="544" text-anchor="middle" font-size="10" font-style="italic" fill="#555555">otra capa del sistema</text>
+
+  <!-- Dependencias punteadas hacia Domain -->
+  <line x1="690" y1="398" x2="758" y2="398" stroke="#8A8A8A" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowGray)"/>
+  <line x1="690" y1="556" x2="758" y2="470" stroke="#8A8A8A" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowGray)"/>
+  <text x="700" y="392" font-size="9.5" fill="#666666">depende de</text>
+  <text x="700" y="522" font-size="9.5" fill="#666666">depende de</text>
+
+  <!-- Flecha de respuesta (vuelta) -->
+  <path d="M 290 220 C 180 220, 180 90, 338 88" fill="none" stroke="#8A8A8A" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrowGray)"/>
+  <text x="140" y="170" font-size="11" fill="#666666">⑤ Respuesta JSON</text>
+
+  <!-- Leyenda -->
+  <text x="40" y="800" font-size="11" fill="#555555" font-style="italic">Flechas continuas: flujo de una petición HTTP. Flechas punteadas: dependencia de compilación</text>
+  <text x="40" y="816" font-size="11" fill="#555555" font-style="italic">(todas las capas dependen de Domain; Domain no depende de ninguna — Clean Architecture / Dependency Inversion).</text>
+
+  <text x="40" y="850" font-size="11" fill="#555555" font-style="italic">Autenticación: JWT firmado con HMAC-SHA256, roles embebidos como claim. BCrypt para hashing de contraseñas.</text>
+  <text x="40" y="866" font-size="11" fill="#555555" font-style="italic">Autorización: [Authorize(Roles = ...)] por controlador/acción según el módulo (ver docs/07-estado-actual-del-sistema.md).</text>
+</svg>

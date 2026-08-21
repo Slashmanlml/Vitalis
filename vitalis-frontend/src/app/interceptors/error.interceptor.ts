@@ -24,6 +24,10 @@ export class ErrorInterceptor implements HttpInterceptor {
         } else {
           if (typeof error.error === 'object' && error.error?.mensaje) {
             mensaje = error.error.mensaje;
+          } else if (typeof error.error === 'object' && error.error?.errors) {
+            // ValidationProblemDetails de ASP.NET Core: { errors: { Campo: ["mensaje", ...] } }
+            const primerCampo = Object.values(error.error.errors as Record<string, string[]>)[0];
+            mensaje = primerCampo?.[0] ?? error.error.title ?? mensaje;
           } else if (error.status === 0) {
             mensaje = 'No se puede conectar al servidor';
           } else if (error.status === 401) {
