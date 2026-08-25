@@ -9,6 +9,7 @@ import { ProfesionalService } from '../services/profesional.service';
 import { ObraSocialService } from '../services/obra-social.service';
 import { SearchService, SearchResults, SearchItem } from '../services/search.service';
 import { ToastService } from '../services/toast.service';
+import { decodeToken, obtenerNombreUsuario, obtenerRolUsuario, obtenerEmailUsuario } from '../utils/jwt.util';
 
 @Component({
   selector: 'app-dashboard',
@@ -70,14 +71,11 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     const token = localStorage.getItem('token');
     if (token) {
-      try {
-        const payloadBase64 = token.split('.')[1];
-        const payloadJson = JSON.parse(atob(payloadBase64));
-        this.nombreUsuario = payloadJson["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] || payloadJson.NombreCompleto || 'Usuario';
-        this.rolUsuario = payloadJson["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payloadJson.Rol || 'Administrador';
-        this.emailUsuario = payloadJson.email || '';
-      } catch (e) {
-        console.error('Error al decodificar el token:', e);
+      const claims = decodeToken(token);
+      if (claims) {
+        this.nombreUsuario = obtenerNombreUsuario(claims);
+        this.rolUsuario = obtenerRolUsuario(claims);
+        this.emailUsuario = obtenerEmailUsuario(claims);
       }
     }
     this.router.events.subscribe(() => {

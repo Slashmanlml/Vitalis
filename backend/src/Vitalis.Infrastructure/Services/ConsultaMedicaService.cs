@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Consultas;
 using Vitalis.Application.Interfaces;
 using Vitalis.Domain.Entities;
+using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
 
 namespace Vitalis.Infrastructure.Services;
@@ -65,6 +66,25 @@ public class ConsultaMedicaService : IConsultaMedicaService
 
     public async Task<ConsultaMedicaDto> CrearAsync(CrearConsultaDto dto)
     {
+        // TurnoId/PacienteId/ProfesionalId son FKs requeridas en la entidad ConsultaMedica
+        // (navegaciones no-nulas): antes de este chequeo el servicio no validaba que
+        // existieran, lo que permitía crear consultas "huérfanas" apuntando a ids
+        // inexistentes. Ver hallazgo en task.md (semana 3).
+        var turno = await _context.Turnos.FindAsync(dto.TurnoId)
+            ?? throw new NotFoundException("Turno no encontrado.");
+
+        var pacienteExiste = await _context.Pacientes.AnyAsync(p => p.Id == dto.PacienteId);
+        if (!pacienteExiste)
+        {
+            throw new NotFoundException("Paciente no encontrado.");
+        }
+
+        var profesionalExiste = await _context.Profesionales.AnyAsync(p => p.Id == dto.ProfesionalId);
+        if (!profesionalExiste)
+        {
+            throw new NotFoundException("Profesional no encontrado.");
+        }
+
         var consulta = new ConsultaMedica
         {
             PacienteId = dto.PacienteId,
@@ -79,8 +99,7 @@ public class ConsultaMedicaService : IConsultaMedicaService
             EstudioAdjuntoUrl = dto.EstudioAdjuntoUrl
         };
 
-        var turno = await _context.Turnos.FindAsync(dto.TurnoId);
-        if (turno != null) turno.Estado = "Atendido";
+        turno.Estado = "Atendido";
 
         _context.ConsultasMedicas.Add(consulta);
         await _context.SaveChangesAsync();

@@ -99,7 +99,7 @@ label {
 
 .form-control:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb),0.1);
 }
 
 .form-control.read-only {
@@ -205,7 +205,7 @@ label {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: rgba(79,70,229,0.08);
+  background: rgba(var(--color-primary-rgb),0.08);
   color: var(--color-primary);
   border-radius: 4px;
   font-size: 11px;

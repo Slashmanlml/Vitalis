@@ -10,11 +10,12 @@ import { Paciente } from '../models/paciente.model';
 import { Profesional } from '../models/profesional.model';
 import { ObraSocial } from '../models/obra-social.model';
 import { ToastService } from '../services/toast.service';
+import { AgendaSemanalComponent, SlotLibre } from '../agenda/agenda-semanal';
 
 @Component({
   selector: 'app-turnos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AgendaSemanalComponent],
   templateUrl: './turnos.html',
   styleUrls: ['./turnos.css']
 })
@@ -25,6 +26,9 @@ export class TurnosComponent implements OnInit {
   profesionales: Profesional[] = [];
   obrasSociales: ObraSocial[] = [];
   touched: { [key: string]: boolean } = {};
+
+  /** La pantalla ofrece dos lecturas del mismo dato: listado y agenda. */
+  vista: 'tabla' | 'calendario' = 'tabla';
 
   searchTerm: string = '';
   filtroEstado: string = 'todos';
@@ -261,19 +265,62 @@ export class TurnosComponent implements OnInit {
       pacienteId: t.pacienteId, profesionalId: t.profesionalId,
       obraSocialId: t.obraSocialId, fechaHora: t.fechaHora, confirmado: true
     };
-    this.turnoService.editar(t.id, dto).subscribe(() => {
-      this.toastService.success('Turno confirmado exitosamente');
-      this.cargarTurnos();
+    this.turnoService.editar(t.id, dto).subscribe({
+      next: () => {
+        this.toastService.success('Turno confirmado exitosamente');
+        this.cargarTurnos();
+      },
+      error: (err) => {
+        this.toastService.error(err.error?.mensaje || 'Error al confirmar el turno');
+      }
     });
   }
 
   cancelarTurno(t: Turno) {
+    // Antes esto llamaba a eliminar() (DELETE físico): borraba el turno de la base en
+    // vez de marcarlo "Cancelado", perdiendo el historial y rompiendo con un error
+    // genérico si el turno ya tenía una ConsultaMedica asociada (la FK Turno->ConsultaMedica
+    // es Restrict). Ahora se actualiza el Estado, igual que hace BloqueoAgendaService al
+    // cancelar en cascada -- conserva el registro y dispara el mail de cancelación que
+    // TurnoService.EditarAsync ya envía cuando el Estado pasa a "Cancelado".
     if (confirm(`¿Cancelar turno de ${t.pacienteNombre}?`)) {
-      this.turnoService.eliminar(t.id).subscribe(() => {
-        this.toastService.success('Turno cancelado exitosamente');
-        this.cargarTurnos();
+      const dto: EditarTurno = {
+        pacienteId: t.pacienteId, profesionalId: t.profesionalId,
+        obraSocialId: t.obraSocialId, fechaHora: t.fechaHora, confirmado: t.confirmado,
+        estado: 'Cancelado'
+      };
+      this.turnoService.editar(t.id, dto).subscribe({
+        next: () => {
+          this.toastService.success('Turno cancelado exitosamente');
+          this.cargarTurnos();
+        },
+        error: (err) => {
+          this.toastService.error(err.error?.mensaje || 'Error al cancelar el turno');
+        }
       });
     }
+  }
+
+  cambiarVista(v: 'tabla' | 'calendario') {
+    this.vista = v;
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Alta de turno desde un espacio libre de la agenda: se abre el modal ya
+   * posicionado en ese día/hora (y en ese profesional, si la columna lo define),
+   * en vez de obligar a recargar la fecha a mano.
+   */
+  agendarEnSlot(slot: SlotLibre) {
+    this.abrirNuevo();
+    const d = slot.fechaHora;
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+    this.form.fechaHora = local;
+    if (slot.profesionalId) {
+      this.form.profesionalId = slot.profesionalId;
+    }
+    this.cdr.detectChanges();
   }
 
   cerrarModal() { this.showModal = false; }

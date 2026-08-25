@@ -1,0 +1,104 @@
+<div class="agenda">
+
+  <div class="agenda-toolbar">
+    <div class="modo-switch" role="group" aria-label="Modo de vista">
+      <button type="button" [class.activo]="modo === 'semana'" (click)="cambiarModo('semana')">
+        Semana
+      </button>
+      <button type="button" [class.activo]="modo === 'dia'" (click)="cambiarModo('dia')">
+        Día
+      </button>
+    </div>
+
+    <div class="nav-fechas">
+      <button type="button" class="nav-btn" (click)="mover(-1)" aria-label="Anterior">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="rango">{{ etiquetaRango }}</span>
+      <button type="button" class="nav-btn" (click)="mover(1)" aria-label="Siguiente">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <button type="button" class="btn-hoy" (click)="irHoy()">Hoy</button>
+    </div>
+
+    <select class="filtro-prof"
+            *ngIf="modo === 'semana' && !profesionalFijo"
+            [(ngModel)]="filtroProfesional"
+            (change)="construirGrilla()">
+      <option [ngValue]="null">Todos los profesionales</option>
+      <option *ngFor="let p of profesionales" [ngValue]="p.id">
+        {{ p.apellido }}, {{ p.nombre }}
+      </option>
+    </select>
+  </div>
+
+  <div class="leyenda">
+    <span class="ref"><i class="pt turno-pendiente"></i> Pendiente</span>
+    <span class="ref"><i class="pt turno-confirmado"></i> Confirmado</span>
+    <span class="ref"><i class="pt turno-atendido"></i> Atendido</span>
+    <span class="ref"><i class="pt turno-cancelado"></i> Cancelado</span>
+    <span class="ref"><i class="pt ref-bloqueo"></i> Agenda bloqueada</span>
+    <span class="ref-ayuda">Hacé click en un espacio libre para agendar</span>
+  </div>
+
+  <div class="aviso" *ngIf="modo === 'semana' && !filtroProfesional && !profesionalFijo">
+    Estás viendo la agenda de <strong>todos los profesionales</strong> superpuesta.
+    Elegí uno en el filtro para ver sus horarios bloqueados y poder agendar desde la grilla.
+  </div>
+
+  <div class="aviso" *ngIf="modo === 'dia' && columnas.length === 0">
+    No hay profesionales activos para mostrar.
+  </div>
+
+  <div class="grilla-scroll" *ngIf="columnas.length">
+    <div class="grilla"
+         [style.grid-template-columns]="'68px repeat(' + columnas.length + ', minmax(150px, 1fr))'">
+
+      <div class="esquina"></div>
+      <div class="col-encabezado" *ngFor="let c of columnas" [class.es-hoy]="esHoy(c)">
+        <span class="col-titulo">{{ c.titulo }}</span>
+        <span class="col-sub">{{ c.subtitulo }}</span>
+        <span class="col-carga" [class.vacia]="cargaDe(c) === 0">
+          {{ cargaDe(c) }} {{ cargaDe(c) === 1 ? 'turno' : 'turnos' }}
+        </span>
+      </div>
+
+      <ng-container *ngFor="let fila of filas; let i = index; trackBy: trackFila">
+        <div class="celda-hora" [class.en-punto]="franjas[i].enPunto">
+          <span *ngIf="franjas[i].enPunto">{{ franjas[i].etiqueta }}</span>
+        </div>
+
+        <div class="celda"
+             *ngFor="let cel of fila; trackBy: trackCelda"
+             [class.en-punto]="cel.franja.enPunto"
+             [class.bloqueada]="cel.bloqueo"
+             [class.pasada]="cel.pasado"
+             [class.ocupada]="cel.turnos.length"
+             [class.es-hoy]="esHoy(cel.columna)"
+             [title]="cel.bloqueo ? 'Bloqueado: ' + cel.bloqueo.motivo : ''"
+             (click)="clickCelda(cel)">
+
+          <span class="marca-bloqueo" *ngIf="cel.bloqueo && cel.franja.enPunto">
+            {{ cel.bloqueo.motivo }}
+          </span>
+
+          <button type="button"
+                  class="turno-chip"
+                  *ngFor="let t of cel.turnos"
+                  [ngClass]="claseTurno(t)"
+                  (click)="clickTurno(t, $event)"
+                  [title]="t.pacienteNombre + ' · ' + t.profesionalNombre + ' · ' + t.estado">
+            <span class="chip-hora">{{ horaDe(t) }}</span>
+            <span class="chip-paciente">{{ t.pacienteNombre }}</span>
+            <span class="chip-prof" *ngIf="modo === 'semana' && !filtroProfesional && !profesionalFijo">
+              {{ t.profesionalNombre }}
+            </span>
+          </button>
+
+          <span class="mas-turno" *ngIf="!cel.turnos.length && !cel.bloqueo && !cel.pasado">+</span>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</div>

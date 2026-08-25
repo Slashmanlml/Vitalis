@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Prescripciones;
 using Vitalis.Application.Interfaces;
 using Vitalis.Domain.Entities;
+using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
 
 namespace Vitalis.Infrastructure.Services;
@@ -77,6 +78,35 @@ public class PrescripcionService : IPrescripcionService
 
     public async Task<PrescripcionDto> CrearAsync(CrearPrescripcionDto dto)
     {
+        // Mismo hallazgo que en ConsultaMedicaService: las FKs de Prescripcion son
+        // requeridas (navegaciones no-nulas) pero antes no se validaba su existencia.
+        var consultaExiste = await _context.ConsultasMedicas.AnyAsync(c => c.Id == dto.ConsultaMedicaId);
+        if (!consultaExiste)
+        {
+            throw new NotFoundException("Consulta médica no encontrada.");
+        }
+
+        var pacienteExiste = await _context.Pacientes.AnyAsync(p => p.Id == dto.PacienteId);
+        if (!pacienteExiste)
+        {
+            throw new NotFoundException("Paciente no encontrado.");
+        }
+
+        var profesionalExiste = await _context.Profesionales.AnyAsync(p => p.Id == dto.ProfesionalId);
+        if (!profesionalExiste)
+        {
+            throw new NotFoundException("Profesional no encontrado.");
+        }
+
+        foreach (var detalle in dto.Detalles)
+        {
+            var medicamentoExiste = await _context.Medicamentos.AnyAsync(m => m.Id == detalle.MedicamentoId);
+            if (!medicamentoExiste)
+            {
+                throw new NotFoundException($"Medicamento con id {detalle.MedicamentoId} no encontrado.");
+            }
+        }
+
         var presc = new Prescripcion
         {
             ConsultaMedicaId = dto.ConsultaMedicaId,

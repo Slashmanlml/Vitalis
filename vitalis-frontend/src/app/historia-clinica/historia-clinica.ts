@@ -90,8 +90,11 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: err => {
+          // El ErrorInterceptor global ya muestra un toast con el mensaje del backend
+          // para todo error HTTP -- este toastService.error() duplicado quedaba
+          // mostrando dos notificaciones para el mismo error. Se deja el console.error
+          // para debugging.
           console.error('Error fetching consultations', err);
-          this.toastService.error('Error al cargar consultas médicas');
         }
       });
       this.consultaService.obtenerAntecedentes(numericId).subscribe({
@@ -101,7 +104,6 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Error fetching antecedents', err);
-          this.toastService.error('Error al cargar antecedentes');
         }
       });
       this.consultaService.obtenerAlergias(numericId).subscribe({
@@ -111,7 +113,6 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
         },
         error: err => {
           console.error('Error fetching allergies', err);
-          this.toastService.error('Error al cargar alergias');
         }
       });
       const now = new Date();
@@ -188,7 +189,6 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al guardar consulta', err);
-        this.toastService.error('Error al registrar la consulta médica');
       }
     });
   }
@@ -202,7 +202,7 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
           this.toastService.success('Estudio clínico adjuntado correctamente');
         },
         error: (err) => {
-          this.toastService.error('Error al subir el estudio clínico');
+          console.error('Error al subir estudio clínico', err);
         }
       });
     }
@@ -226,7 +226,7 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
         this.showAntecedenteModal = false;
         this.cdr.detectChanges();
       },
-      error: () => this.toastService.error('Error al registrar el antecedente')
+      error: (err) => console.error('Error al guardar antecedente', err)
     });
   }
 
@@ -248,7 +248,7 @@ export class HistoriaClinicaComponent implements OnInit, OnDestroy {
         this.showAlergiaModal = false;
         this.cdr.detectChanges();
       },
-      error: () => this.toastService.error('Error al registrar la alergia')
+      error: (err) => console.error('Error al guardar alergia', err)
     });
   }
 

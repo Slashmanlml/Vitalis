@@ -228,11 +228,11 @@
 }
 
 .email-item:hover {
-  background: rgba(79, 70, 229, 0.04);
+  background: rgba(var(--color-primary-rgb), 0.04);
 }
 
 .email-item.active {
-  background: rgba(79, 70, 229, 0.08);
+  background: rgba(var(--color-primary-rgb), 0.08);
   border-left: 3px solid var(--color-primary);
   padding-left: 13px;
 }
@@ -384,7 +384,7 @@
   align-items: center;
   gap: 5px;
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: var(--color-success);
   border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 5px 12px;
   border-radius: 20px;
@@ -403,14 +403,14 @@
 }
 
 .email-body-html {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: var(--radius-md);
   padding: 28px 32px;
   color: #333333;
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   max-width: 600px;
   margin: 0 auto;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   line-height: 1.7;
   font-size: 14px;
 }

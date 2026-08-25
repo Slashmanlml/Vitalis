@@ -1,82 +1,223 @@
 <div class="page-container">
+
   <div class="page-header">
-    <div><h1>Reportes y Estadísticas</h1><p>Indicadores clave de gestión del consultorio</p></div>
-    <div class="period-selector">
-      <label>Período:</label>
-      <select [(ngModel)]="periodo" (change)="cargarDatos()">
-        <option value="7">Últimos 7 días</option>
-        <option value="15">Últimos 15 días</option>
-        <option value="30">Últimos 30 días</option>
-        <option value="90">Últimos 90 días</option>
-      </select>
+    <div>
+      <h1>Reportes</h1>
+      <p>Indicadores de actividad de la agenda</p>
     </div>
-  </div>
-
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-icon bg-primary"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-      <div class="kpi-info"><h3>{{ totalPacientes }}</h3><p>Pacientes Registrados</p></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
-      <div class="kpi-info"><h3>{{ totalTurnos }}</h3><p>Turnos en el período</p></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon bg-success"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <div class="kpi-info"><h3>{{ confirmados }}</h3><p>Confirmados</p></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon bg-danger"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-      <div class="kpi-info"><h3>{{ tasaAusentismo }}%</h3><p>Tasa de Ausentismo</p></div>
-    </div>
-  </div>
-
-  <div class="reports-grid">
-    <section class="report-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2>Turnos por Día</h2>
-        <button class="btn-icon" title="Exportar a CSV" (click)="exportarResumenDiario()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-      </div>
-      <div class="bar-chart">
-        <div *ngFor="let d of turnosPorDia" class="bar-item">
-          <div class="bar-label">{{ d.fecha }}</div>
-          <div class="bar-track">
-            <div class="bar-fill" [style.width.%]="(d.cantidad / 10) * 100" [style.background]="'#4f46e5'">
-              <span class="bar-value">{{ d.cantidad }}</span>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="turnosPorDia.length === 0" class="empty-state">Sin datos en el período</div>
-      </div>
-    </section>
-
-    <section class="report-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2>Turnos por Profesional</h2>
-        <button class="btn-icon" title="Exportar a CSV" (click)="exportarResumenProfesionales()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-      </div>
-      <div class="bar-chart">
-        <div *ngFor="let p of turnosPorProfesional" class="bar-item">
-          <div class="bar-label">{{ p.nombre }}</div>
-          <div class="bar-track">
-            <div class="bar-fill" [style.width.%]="(p.cantidad / 10) * 100" [style.background]="'#059669'">
-              <span class="bar-value">{{ p.cantidad }}</span>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="turnosPorProfesional.length === 0" class="empty-state">Sin datos</div>
-      </div>
-    </section>
-  </div>
-
-  <div class="export-section">
-    <button class="btn-secondary" (click)="exportarReporteTurnos()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar todos los turnos del período
+    <button class="btn-secondary" (click)="exportarResumen()" [disabled]="!estadisticas">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar resumen
     </button>
   </div>
+
+  <p class="cargando" *ngIf="cargando">Cargando indicadores…</p>
+
+  <ng-container *ngIf="!cargando && estadisticas as e">
+
+    <!-- Indicadores principales: son cinco cifras sueltas, no una serie;
+         por eso van como fichas y no como gráfico de barras. -->
+    <div class="kpis">
+      <div class="kpi">
+        <span class="kpi-label">Total de turnos</span>
+        <span class="kpi-valor">{{ e.totalTurnos }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label"><i class="punto p-confirmado"></i> Confirmados</span>
+        <span class="kpi-valor">{{ e.confirmados }}</span>
+        <span class="kpi-sub">{{ e.totalTurnos ? (e.confirmados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label"><i class="punto p-pendiente"></i> Pendientes</span>
+        <span class="kpi-valor">{{ e.pendientes }}</span>
+        <span class="kpi-sub">{{ e.totalTurnos ? (e.pendientes / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label"><i class="punto p-atendido"></i> Atendidos</span>
+        <span class="kpi-valor">{{ e.atendidos }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label"><i class="punto p-cancelado"></i> Cancelados</span>
+        <span class="kpi-valor">{{ e.cancelados }}</span>
+        <span class="kpi-sub">{{ e.totalTurnos ? (e.cancelados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+      </div>
+    </div>
+
+    <!-- Evolución mensual: una sola serie, así que no lleva leyenda; el título la nombra. -->
+    <section class="panel">
+      <header class="panel-header">
+        <h2>Turnos por mes</h2>
+        <span class="panel-sub" *ngIf="serieMensual.length">{{ serieMensual.length }} meses con actividad</span>
+      </header>
+
+      <div class="grafico-linea" *ngIf="serieMensual.length; else sinSerie">
+        <svg #svgSerie
+             [attr.viewBox]="'0 0 ' + ANCHO + ' ' + ALTO"
+             role="img"
+             aria-label="Cantidad de turnos por mes"
+             (mousemove)="moverSobreSerie($event, svgSerie)"
+             (mouseleave)="salirDeSerie()">
+
+          <g class="grid">
+            <line *ngFor="let g of gridY"
+                  [attr.x1]="MARGEN.izquierda" [attr.x2]="ANCHO - MARGEN.derecha"
+                  [attr.y1]="g.y" [attr.y2]="g.y" />
+            <text *ngFor="let g of gridY"
+                  [attr.x]="MARGEN.izquierda - 8" [attr.y]="g.y + 4"
+                  text-anchor="end">{{ g.valor }}</text>
+          </g>
+
+          <path class="area" [attr.d]="pathArea" />
+          <path class="linea" [attr.d]="pathLinea" />
+
+          <line class="cruz" *ngIf="puntoActivo"
+                [attr.x1]="puntoActivo.x" [attr.x2]="puntoActivo.x"
+                [attr.y1]="MARGEN.arriba" [attr.y2]="ALTO - MARGEN.abajo" />
+
+          <g class="puntos">
+            <circle *ngFor="let p of serieMensual"
+                    [attr.cx]="p.x" [attr.cy]="p.y"
+                    [attr.r]="puntoActivo === p ? 6 : 4.5" />
+          </g>
+
+          <g class="eje-x">
+            <text *ngFor="let p of serieMensual"
+                  [attr.x]="p.x" [attr.y]="ALTO - 8"
+                  text-anchor="middle">{{ p.etiquetaCorta }}</text>
+          </g>
+        </svg>
+
+        <div class="tooltip" *ngIf="puntoActivo"
+             [style.left.%]="(puntoActivo.x / ANCHO) * 100">
+          <strong>{{ puntoActivo.cantidad }}</strong>
+          {{ puntoActivo.cantidad === 1 ? 'turno' : 'turnos' }}
+          <span>{{ puntoActivo.etiquetaCorta }}</span>
+        </div>
+      </div>
+      <ng-template #sinSerie><p class="vacio">Todavía no hay turnos registrados.</p></ng-template>
+    </section>
+
+    <div class="grilla-paneles">
+
+      <section class="panel">
+        <header class="panel-header"><h2>Turnos por especialidad</h2></header>
+        <div class="barras" *ngIf="barras(e.porEspecialidad).length; else sinEsp">
+          <div class="barra-fila" *ngFor="let b of barras(e.porEspecialidad)">
+            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+            <span class="barra-valor">{{ b.cantidad }}</span>
+          </div>
+          <p class="nota" *ngIf="restantes(e.porEspecialidad) as r">
+            y {{ r }} especialidad{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+          </p>
+        </div>
+        <ng-template #sinEsp><p class="vacio">Sin datos.</p></ng-template>
+      </section>
+
+      <section class="panel">
+        <header class="panel-header"><h2>Turnos por obra social</h2></header>
+        <div class="barras" *ngIf="barras(e.porObraSocial).length; else sinOs">
+          <div class="barra-fila" *ngFor="let b of barras(e.porObraSocial)">
+            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+            <span class="barra-valor">{{ b.cantidad }}</span>
+          </div>
+          <p class="nota" *ngIf="restantes(e.porObraSocial) as r">
+            y {{ r }} obra{{ r === 1 ? '' : 's' }} social{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+          </p>
+        </div>
+        <ng-template #sinOs><p class="vacio">Sin datos.</p></ng-template>
+      </section>
+
+      <section class="panel panel-ancho">
+        <header class="panel-header"><h2>Turnos por profesional</h2></header>
+        <div class="barras" *ngIf="barras(e.porProfesional).length; else sinProf">
+          <div class="barra-fila" *ngFor="let b of barras(e.porProfesional)">
+            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+            <span class="barra-valor">{{ b.cantidad }}</span>
+          </div>
+          <p class="nota" *ngIf="restantes(e.porProfesional) as r">
+            y {{ r }} profesional{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+          </p>
+        </div>
+        <ng-template #sinProf><p class="vacio">Sin datos.</p></ng-template>
+      </section>
+
+    </div>
+  </ng-container>
+
+  <!-- Consulta de detalle contra los endpoints del backend -->
+  <section class="panel">
+    <header class="panel-header">
+      <h2>Consulta de detalle</h2>
+      <span class="panel-sub">Listado de turnos por profesional, paciente u obra social</span>
+    </header>
+
+    <div class="filtros">
+      <label>
+        <span>Agrupar por</span>
+        <select [(ngModel)]="dimension" (change)="cambiarDimension()">
+          <option value="profesional">Profesional</option>
+          <option value="paciente">Paciente</option>
+          <option value="obraSocial">Obra social</option>
+        </select>
+      </label>
+
+      <label class="crece">
+        <span>{{ dimension === 'profesional' ? 'Profesional' : dimension === 'paciente' ? 'Paciente' : 'Obra social' }}</span>
+        <select [(ngModel)]="entidadId">
+          <option [ngValue]="0" disabled>Seleccione una opción</option>
+          <option *ngFor="let e of entidades" [ngValue]="e.id">{{ e.nombre }}</option>
+        </select>
+      </label>
+
+      <label *ngIf="dimension === 'profesional'">
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="desde" />
+      </label>
+      <label *ngIf="dimension === 'profesional'">
+        <span>Hasta</span>
+        <input type="date" [(ngModel)]="hasta" />
+      </label>
+
+      <div class="acciones">
+        <button class="btn-primary" (click)="consultar()" [disabled]="!entidadId || consultando">
+          {{ consultando ? 'Consultando…' : 'Consultar' }}
+        </button>
+        <button class="btn-secondary" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+
+    <div class="resultado" *ngIf="consultaHecha && !consultando">
+      <div class="resultado-cabecera" *ngIf="detalle.length">
+        <span><strong>{{ detalle.length }}</strong> turno{{ detalle.length === 1 ? '' : 's' }} · {{ nombreEntidad }}</span>
+        <button class="btn-secondary" (click)="exportarDetalle()">Exportar CSV</button>
+      </div>
+
+      <div class="table-container" *ngIf="detalle.length; else sinResultados">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Hora</th><th>Paciente</th>
+              <th>Profesional</th><th>Obra social</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of detalle">
+              <td>{{ t.fechaHora | date:'dd/MM/yyyy' }}</td>
+              <td>{{ t.fechaHora | date:'HH:mm' }}</td>
+              <td>{{ t.pacienteNombre }}</td>
+              <td>{{ t.profesionalNombre }}</td>
+              <td>{{ t.obraSocialNombre }}</td>
+              <td><span class="estado" [ngClass]="claseEstado(t)">{{ t.estado }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #sinResultados>
+        <p class="vacio">No se encontraron turnos con ese criterio.</p>
+      </ng-template>
+    </div>
+  </section>
 </div>

@@ -48,8 +48,7 @@ const routes: Routes = [
       { path: 'perfil', component: PerfilComponent },
       { path: 'auditorias', component: AuditoriasComponent },
       { path: 'bloqueos', component: BloqueosComponent },
-      { path: 'mails-simulados', component: EmailLogsComponent },
-      { path: 'configuracion', component: EspecialidadesComponent }
+      { path: 'mails-simulados', component: EmailLogsComponent }
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
