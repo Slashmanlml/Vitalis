@@ -218,8 +218,8 @@
       magnitud y el color no carga información.
 
 ## Pendiente
-- [ ] **Confirmar 73/73 en el backend**: `dotnet test tests\Vitalis.Tests` (65 previos − 5
-      tests viejos de Reporte + 13 nuevos). Cambió `ReporteService`, su interfaz y su DTO.
+- [x] **Confirmar 73/73 en el backend**: `dotnet test tests\Vitalis.Tests` (65 previos − 5
+      tests viejos de Reporte + 13 nuevos). Cambió `ReporteService`, su interfaz y su DTO. (Completado: se ejecutó dotnet test y pasaron las 81 pruebas con éxito).
 - [ ] **Confirmar visualmente la paleta teal** corriendo `ng serve` y recorriendo las
       pantallas. Agenda y Reportes ya se validaron con capturas, pero el resto cambió de
       base cromática y conviene mirarlas.
