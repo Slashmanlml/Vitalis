@@ -223,11 +223,10 @@
 - [ ] **Confirmar visualmente la paleta teal** corriendo `ng serve` y recorriendo las
       pantallas. Agenda y Reportes ya se validaron con capturas, pero el resto cambió de
       base cromática y conviene mirarlas.
-- [ ] **[Módulo] Pantalla de Prescripciones** (decidido con Tito: construirla). El backend
-      tiene `PrescripcionesController` completo con 9 tests, y el frontend tiene
-      `prescripcion.service.ts` y su modelo con **0 usos** — falta la pantalla: emitir
-      receta desde una consulta, elegir medicamentos del catálogo, historial por paciente
-      e impresión.
+- [x] **[Módulo] Pantalla de Prescripciones** (Construida y verificada). Se creó el componente
+      `app/prescripciones` con selector de paciente, modal para emitir recetas dinámicas
+      con fármacos del catálogo, vista de detalle e impresión formal con PrintService. Se
+      conectó la ruta en `app.config.ts` y se agregó el acceso al menú lateral por rol.
 - [ ] **[Reportes] Ampliar a facturación y liquidaciones.** Los reportes actuales cubren
       la agenda (turnos). El backend no expone todavía indicadores de facturación,
       cobranzas ni liquidaciones a profesionales, que es el otro sector con peso propio.
