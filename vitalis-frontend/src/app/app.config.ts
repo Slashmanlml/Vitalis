@@ -13,6 +13,7 @@ import { ObrasSocialesComponent } from './obras-sociales/obras-sociales';
 import { EspecialidadesComponent } from './especialidades/especialidades';
 import { TurnosComponent } from './turnos/turnos';
 import { HistoriaClinicaComponent } from './historia-clinica/historia-clinica';
+import { PrescripcionesComponent } from './prescripciones/prescripciones';
 import { SalaEsperaComponent } from './sala-espera/sala-espera';
 import { MedicamentosComponent } from './medicamentos/medicamentos';
 import { PrestacionesComponent } from './prestaciones/prestaciones';
@@ -39,6 +40,7 @@ const routes: Routes = [
       { path: 'obras-sociales', component: ObrasSocialesComponent },
       { path: 'especialidades', component: EspecialidadesComponent },
       { path: 'historia-clinica', component: HistoriaClinicaComponent },
+      { path: 'prescripciones', component: PrescripcionesComponent },
       { path: 'sala-espera', component: SalaEsperaComponent },
       { path: 'medicamentos', component: MedicamentosComponent },
       { path: 'prestaciones', component: PrestacionesComponent },
