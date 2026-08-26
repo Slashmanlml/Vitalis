@@ -234,10 +234,34 @@ namespace Vitalis.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Evento")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<DateTime>("FechaEnvio")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("MensajeError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Origen")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int?>("TurnoId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TurnoId", "Evento");
 
                     b.ToTable("email_logs", (string)null);
                 });
@@ -849,6 +873,16 @@ namespace Vitalis.Infrastructure.Migrations
                     b.Navigation("Paciente");
 
                     b.Navigation("Profesional");
+
+                    b.Navigation("Turno");
+                });
+
+            modelBuilder.Entity("Vitalis.Domain.Entities.EmailLog", b =>
+                {
+                    b.HasOne("Vitalis.Domain.Entities.Turno", "Turno")
+                        .WithMany()
+                        .HasForeignKey("TurnoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Turno");
                 });

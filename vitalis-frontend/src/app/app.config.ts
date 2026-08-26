@@ -24,6 +24,7 @@ import { PerfilComponent } from './perfil/perfil';
 import { AuditoriasComponent } from './auditorias/auditorias';
 import { BloqueosComponent } from './bloqueos/bloqueos';
 import { EmailLogsComponent } from './email-logs/email-logs';
+import { UsuariosComponent } from './usuarios/usuarios';
 import { authGuard } from './guards/auth.guard';
 
 
@@ -50,7 +51,9 @@ const routes: Routes = [
       { path: 'perfil', component: PerfilComponent },
       { path: 'auditorias', component: AuditoriasComponent },
       { path: 'bloqueos', component: BloqueosComponent },
-      { path: 'mails-simulados', component: EmailLogsComponent }
+      { path: 'usuarios', component: UsuariosComponent },
+      { path: 'notificaciones', component: EmailLogsComponent },
+      { path: 'mails-simulados', redirectTo: 'notificaciones', pathMatch: 'full' }
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },

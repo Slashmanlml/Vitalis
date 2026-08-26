@@ -27,3 +27,7 @@ backend/src/Vitalis.Api/Logs/
 Vitalis_Tesina.docx
 docs/09-guion-demo-y-defensa.md
 ~$*
+
+# Archivos subidos por los usuarios: se conserva la carpeta, no su contenido.
+backend/src/Vitalis.Api/wwwroot/uploads/*
+!backend/src/Vitalis.Api/wwwroot/uploads/.gitkeep

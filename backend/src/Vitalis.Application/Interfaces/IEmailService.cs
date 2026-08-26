@@ -1,12 +1,20 @@
+using Vitalis.Application.DTOs.Emails;
 using Vitalis.Domain.Entities;
 
 namespace Vitalis.Application.Interfaces;
 
 public interface IEmailService
 {
-    Task SendEmailAsync(string to, string subject, string body);
-    Task<IEnumerable<EmailLog>> GetEmailLogsAsync();
-    Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion, string? asuntoPersonalizado = null, string? cuerpoPersonalizado = null);
+    /// <summary>Envía y registra. Nunca lanza: ante una falla registra
+    /// Estado="Fallido" y devuelve false.</summary>
+    Task<bool> NotificarAsync(NotificacionRequest request);
+
+    Task<IEnumerable<EmailLog>> GetEmailLogsAsync(string? origen = null, string? evento = null, string? estado = null);
+
+    /// <summary>Alta manual desde la pantalla. Fuerza Origen="Simulado".</summary>
+    Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion,
+                                     string? asuntoPersonalizado = null,
+                                     string? cuerpoPersonalizado = null);
+
     Task<bool> EliminarLogAsync(int id);
-    Task<bool> LimpiarLogsAsync();
 }

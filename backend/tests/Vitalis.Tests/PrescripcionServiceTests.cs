@@ -25,7 +25,7 @@ public class PrescripcionServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new PrescripcionService(_context);
+        _service = new PrescripcionService(_context, new NoOpEmailService());
 
         SeedRelatedEntities();
     }

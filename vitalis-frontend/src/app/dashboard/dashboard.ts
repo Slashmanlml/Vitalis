@@ -3,10 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { PacienteService } from '../services/paciente.service';
 import { TurnoService } from '../services/turno.service';
 import { ProfesionalService } from '../services/profesional.service';
-import { ObraSocialService } from '../services/obra-social.service';
 import { SearchService, SearchResults, SearchItem } from '../services/search.service';
 import { ToastService } from '../services/toast.service';
 import { decodeToken, obtenerNombreUsuario, obtenerRolUsuario, obtenerEmailUsuario } from '../utils/jwt.util';
@@ -24,9 +22,19 @@ export class DashboardComponent implements OnInit {
   rolUsuario: string = 'Administrador';
   emailUsuario: string = '';
 
-  estadisticas: any[] = [];
-  obrasSocialesStats: any[] = [];
-  consultasStats: any[] = [];
+  /**
+   * El panel dejó de mostrar totales históricos (cuántos pacientes hay en la
+   * base) para mostrar la operación del día. Un recepcionista que abre el
+   * sistema a la mañana no necesita saber cuántos pacientes existen: necesita
+   * saber cuántos turnos hay hoy y cuáles faltan confirmar.
+   */
+  indicadores: Indicador[] = [];
+  cargaHoy: CargaProfesional[] = [];
+  proximos: TurnoProximo[] = [];
+  turnosHoyTotal = 0;
+  pendientesHoy = 0;
+  hoyTexto = '';
+  private profesionalIdUsuario: number | null = null;
 
   cargando = true;
   searchQuery = '';
@@ -36,10 +44,8 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private pacienteService: PacienteService,
     private turnoService: TurnoService,
     private profesionalService: ProfesionalService,
-    private obraSocialService: ObraSocialService,
     private searchService: SearchService,
     public toastService: ToastService
   ) {}
@@ -88,59 +94,136 @@ export class DashboardComponent implements OnInit {
   cargarEstadisticas() {
     this.cargando = true;
     forkJoin({
-      pacientes: this.pacienteService.obtenerTodos(),
       profesionales: this.profesionalService.obtenerTodos(),
-      turnos: this.turnoService.obtenerTodos(),
-      obras: this.obraSocialService.obtenerTodas()
+      turnos: this.turnoService.obtenerTodos()
     }).subscribe({
-      next: ({ pacientes, profesionales, turnos, obras }) => {
-        const hoy = new Date().toISOString().split('T')[0];
-        const turnosHoy = turnos.filter((t: any) => t.fechaHora.startsWith(hoy));
-        const pendientesHoy = turnosHoy.filter((t: any) => !t.confirmado).length;
+      next: ({ profesionales, turnos }) => {
+        this.resolverProfesionalDelUsuario(profesionales);
 
-        // Calculate Obra Social Stats
-        const obraSocialMap: { [key: string]: number } = {};
-        pacientes.forEach((p: any) => {
-          const nombre = p.obraSocialNombre || 'Particular';
-          obraSocialMap[nombre] = (obraSocialMap[nombre] || 0) + 1;
-        });
-        const totalPacientesCount = pacientes.length || 1;
-        this.obrasSocialesStats = Object.keys(obraSocialMap).map(key => ({
-          nombre: key,
-          cantidad: obraSocialMap[key],
-          porcentaje: Math.round((obraSocialMap[key] / totalPacientesCount) * 100)
-        })).sort((a, b) => b.cantidad - a.cantidad);
+        const ahora = new Date();
+        this.hoyTexto = this.formatearFechaLarga(ahora);
 
-        // Calculate consultations stats per doctor
-        const doctorMap: { [key: string]: number } = {};
-        turnos.forEach((t: any) => {
-          doctorMap[t.profesionalNombre] = (doctorMap[t.profesionalNombre] || 0) + 1;
-        });
-        const maxConsultas = Math.max(...Object.values(doctorMap), 1);
-        this.consultasStats = Object.keys(doctorMap).map(key => ({
-          nombre: key,
-          cantidad: doctorMap[key],
-          porcentaje: Math.round((doctorMap[key] / maxConsultas) * 100)
-        })).sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
+        let turnosHoy = turnos.filter(t => this.esMismoDia(new Date(t.fechaHora), ahora));
 
-        this.cargando = false;
-        this.estadisticas = [
-          { titulo: 'Pacientes Registrados', valor: pacientes.length.toString(), cambio: '+ Registros activos', icono: 'users', color: 'accent' },
-          { titulo: 'Médicos Activos', valor: profesionales.filter((p: any) => p.activo).length.toString(), cambio: `${profesionales.length} en total`, icono: 'doctor', color: 'primary' },
-          { titulo: 'Turnos para Hoy', valor: turnosHoy.length.toString(), cambio: `${pendientesHoy} pendientes de confirmar`, icono: 'calendar', color: 'warning' },
-          { titulo: 'Obras Sociales', valor: obras.length.toString(), cambio: 'Convenios activos', icono: 'shield', color: 'info' }
+        // Un médico ve su propia jornada, no la de toda la clínica.
+        if (this.rolUsuario === 'Medico' && this.profesionalIdUsuario) {
+          turnosHoy = turnosHoy.filter(t => t.profesionalId === this.profesionalIdUsuario);
+        }
+
+        const vigentes = turnosHoy.filter(t => t.estado !== 'Cancelado');
+        const confirmados = vigentes.filter(t => t.confirmado).length;
+        const atendidos = turnosHoy.filter(t => t.estado === 'Atendido').length;
+        const cancelados = turnosHoy.filter(t => t.estado === 'Cancelado').length;
+        const pendientes = vigentes.filter(t => !t.confirmado).length;
+
+        this.turnosHoyTotal = vigentes.length;
+        this.pendientesHoy = pendientes;
+
+        this.indicadores = [
+          { etiqueta: 'Turnos de hoy', valor: vigentes.length, tono: 'neutro',
+            detalle: cancelados > 0 ? cancelados + ' cancelado' + (cancelados === 1 ? '' : 's') : '' },
+          { etiqueta: 'Confirmados', valor: confirmados, tono: 'primary',
+            detalle: this.porcentaje(confirmados, vigentes.length) },
+          { etiqueta: 'Sin confirmar', valor: pendientes, tono: 'warning',
+            detalle: this.porcentaje(pendientes, vigentes.length) },
+          { etiqueta: 'Ya atendidos', valor: atendidos, tono: 'success',
+            detalle: this.porcentaje(atendidos, vigentes.length) }
         ];
-      },
-      error: (err) => {
-        console.error('Error cargando estadísticas', err);
+
+        this.proximos = vigentes
+          .filter(t => new Date(t.fechaHora).getTime() >= ahora.getTime())
+          .sort((a, b) => new Date(a.fechaHora).getTime() - new Date(b.fechaHora).getTime())
+          .slice(0, 6)
+          .map(t => ({
+            hora: this.formatearHora(new Date(t.fechaHora)),
+            paciente: t.pacienteNombre,
+            profesional: t.profesionalNombre,
+            estado: t.estado === 'Atendido' ? 'Atendido' : (t.confirmado ? 'Confirmado' : 'Sin confirmar'),
+            clase: t.estado === 'Atendido' ? 'estado-atendido'
+                 : (t.confirmado ? 'estado-confirmado' : 'estado-pendiente')
+          }));
+
+        this.cargaHoy = this.calcularCarga(vigentes);
         this.cargando = false;
-        this.toastService.error('Error al cargar los datos del tablero');
+      },
+      // El ErrorInterceptor global ya notifica: un toast propio acá duplicaba el aviso.
+      error: (err) => {
+        console.error('Error cargando el panel', err);
+        this.cargando = false;
       }
     });
+  }
+
+  private resolverProfesionalDelUsuario(profesionales: { id: number; email: string }[]) {
+    if (this.rolUsuario !== 'Medico' || !this.emailUsuario) return;
+    const doc = profesionales.find(
+      p => (p.email || '').toLowerCase() === this.emailUsuario.toLowerCase());
+    this.profesionalIdUsuario = doc ? doc.id : null;
+  }
+
+  /** Carga de la jornada por profesional, de mayor a menor. */
+  private calcularCarga(turnos: { profesionalNombre: string }[]): CargaProfesional[] {
+    const conteo: { [nombre: string]: number } = {};
+    turnos.forEach(t => conteo[t.profesionalNombre] = (conteo[t.profesionalNombre] || 0) + 1);
+    const max = Math.max(...Object.values(conteo), 1);
+    return Object.keys(conteo)
+      .map(nombre => ({
+        nombre,
+        cantidad: conteo[nombre],
+        porcentaje: Math.round((conteo[nombre] / max) * 100)
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad)
+      .slice(0, 6);
+  }
+
+  private porcentaje(parte: number, total: number): string {
+    return total > 0 ? Math.round((parte / total) * 100) + '% del día' : '';
+  }
+
+  private esMismoDia(a: Date, b: Date): boolean {
+    return a.getDate() === b.getDate()
+        && a.getMonth() === b.getMonth()
+        && a.getFullYear() === b.getFullYear();
+  }
+
+  private formatearHora(d: Date): string {
+    const dd = (n: number) => n < 10 ? '0' + n : '' + n;
+    return dd(d.getHours()) + ':' + dd(d.getMinutes());
+  }
+
+  private formatearFechaLarga(d: Date): string {
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const texto = dias[d.getDay()] + ' ' + d.getDate() + ' de ' + meses[d.getMonth()];
+    // Sólo la inicial en mayúscula. Dejárselo a text-transform: capitalize
+    // producía "Miércoles 26 De Agosto", con la preposición en mayúscula.
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
   logout() {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
+}
+
+export interface Indicador {
+  etiqueta: string;
+  valor: number;
+  detalle?: string;
+  tono: 'neutro' | 'primary' | 'warning' | 'success' | 'danger';
+}
+
+export interface CargaProfesional {
+  nombre: string;
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface TurnoProximo {
+  hora: string;
+  paciente: string;
+  profesional: string;
+  estado: string;
+  clase: string;
 }

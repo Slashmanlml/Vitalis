@@ -8,19 +8,62 @@
 .page-header {
   display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
 }
-.page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
-.page-header p { color: var(--text-secondary); font-size: .92rem; }
+.page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px 0; }
+.page-header p { color: var(--text-secondary); font-size: .92rem; margin: 0; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .cargando, .vacio {
   color: var(--text-muted); font-size: .9rem; padding: 12px 0;
 }
 .nota { color: var(--text-muted); font-size: .78rem; margin-top: 10px; font-style: italic; }
 
+/* ------------------------------------------------------------- Pestañas Nav */
+
+.tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 2px;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-family: var(--font-primary);
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab-btn.activa {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
 /* ----------------------------------------------------------------- fichas */
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
   gap: 14px;
 }
 
@@ -41,7 +84,7 @@
 
 /* El número usa color de texto, nunca el color del estado: el punto de al lado
    ya lleva la identidad y así el valor mantiene contraste de lectura. */
-.kpi-valor { font-size: 2rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
+.kpi-valor { font-size: 1.7rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; }
 .kpi-sub { font-size: .78rem; color: var(--text-muted); }
 
 .punto { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
@@ -64,7 +107,7 @@
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
 }
-.panel-header h2 { font-size: 1.02rem; font-weight: 700; color: var(--text-primary); }
+.panel-header h2 { font-size: 1.02rem; font-weight: 700; color: var(--text-primary); margin: 0; }
 .panel-sub { font-size: .8rem; color: var(--text-muted); }
 
 .grilla-paneles {
@@ -88,7 +131,7 @@
 }
 .puntos circle {
   fill: var(--color-primary);
-  stroke: var(--bg-card);   /* anillo de superficie: separa el punto de la línea */
+  stroke: var(--bg-card);
   stroke-width: 2;
   transition: r .12s ease;
 }
@@ -127,7 +170,7 @@
 .barra-relleno {
   display: block; height: 100%;
   background: var(--color-primary);
-  border-radius: 0 4px 4px 0;   /* extremo redondeado, anclado a la base */
+  border-radius: 0 4px 4px 0;
   transition: width .35s cubic-bezier(.4, 0, .2, 1);
 }
 
@@ -138,27 +181,73 @@
 
 /* ----------------------------------------------------------------- filtros */
 
-.filtros {
+.filtros, .filtros-fechas {
   display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end;
   padding-bottom: 4px;
 }
-.filtros label { display: flex; flex-direction: column; gap: 5px; }
+.filtros label, .filtros-fechas label { display: flex; flex-direction: column; gap: 5px; }
 .filtros label.crece { flex: 1 1 220px; }
-.filtros label > span {
+.filtros label > span, .filtros-fechas label > span {
   font-size: .75rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: .04em; color: var(--text-secondary);
 }
-.filtros select, .filtros input {
+.filtros select, .filtros input, .filtros-fechas input {
   padding: .55rem .8rem;
   border: 1px solid var(--border-color); border-radius: var(--radius-sm);
   background: var(--bg-primary); color: var(--text-primary);
   font-family: var(--font-primary); font-size: .9rem;
 }
-.filtros select:focus, .filtros input:focus {
+.filtros select:focus, .filtros input:focus, .filtros-fechas input:focus {
   outline: none; border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), .15);
 }
-.acciones { display: flex; gap: 8px; }
+.acciones, .acciones-fechas { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: .55rem 1rem;
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: .55rem 1rem;
+  font-size: .88rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 /* --------------------------------------------------------------- resultado */
 
@@ -174,7 +263,9 @@
   overflow: auto; max-height: 460px;
 }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table thead { position: sticky; top: 0; z-index: 1; }
+.data-table thead { position: sticky; top: 0; z-index: 1; background: var(--bg-secondary); }
+.data-table th { padding: 10px 14px; font-size: .8rem; text-transform: uppercase; color: var(--text-secondary); text-align: left; }
+.data-table td { padding: 12px 14px; font-size: .88rem; border-top: 1px solid var(--border-light); color: var(--text-primary); }
 
 .estado {
   display: inline-block; padding: 3px 9px; border-radius: 20px;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface BloqueoAgenda {
@@ -10,6 +10,22 @@ export interface BloqueoAgenda {
   fechaHoraInicio: string;
   fechaHoraFin: string;
   motivo: string;
+}
+
+/** Turnos que un bloqueo dejaría cancelados. Espeja ImpactoBloqueoDto del backend. */
+export interface ImpactoBloqueo {
+  cantidadTurnos: number;
+  pacientesAfectados: number;
+  pacientesConEmail: number;
+  turnos: TurnoAfectado[];
+}
+
+export interface TurnoAfectado {
+  turnoId: number;
+  fechaHora: string;
+  pacienteNombre: string;
+  estado: string;
+  tieneEmail: boolean;
 }
 
 export interface CrearBloqueo {
@@ -31,6 +47,19 @@ export class BloqueoService {
 
   obtenerPorProfesional(profesionalId: number): Observable<BloqueoAgenda[]> {
     return this.http.get<BloqueoAgenda[]>(`${this.apiUrl}/profesional/${profesionalId}`);
+  }
+
+  /**
+   * Consulta qué turnos se cancelarían, sin aplicar nada. Se llama antes de
+   * confirmar: crear el bloqueo cancela turnos y notifica pacientes, y eso no
+   * se puede deshacer.
+   */
+  obtenerImpacto(profesionalId: number, desde: string, hasta: string): Observable<ImpactoBloqueo> {
+    const params = new HttpParams()
+      .set('profesionalId', profesionalId)
+      .set('desde', desde)
+      .set('hasta', hasta);
+    return this.http.get<ImpactoBloqueo>(`${this.apiUrl}/impacto`, { params });
   }
 
   crear(dto: CrearBloqueo): Observable<BloqueoAgenda> {

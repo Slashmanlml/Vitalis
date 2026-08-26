@@ -25,19 +25,34 @@ public class BloqueosAgendaController : ControllerBase
         return Ok(bloqueos);
     }
 
-    [HttpGet("profesional/{profesionalId}")]
+    [HttpGet("profesional/{profesionalId:int}")]
     public async Task<IActionResult> GetByProfesional(int profesionalId)
     {
         var bloqueos = await _bloqueoService.ObtenerPorProfesionalAsync(profesionalId);
         return Ok(bloqueos);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var bloqueo = await _bloqueoService.ObtenerPorIdAsync(id);
         if (bloqueo == null) return NotFound();
         return Ok(bloqueo);
+    }
+
+    /// <summary>
+    /// Previsualiza el efecto de un bloqueo sin aplicarlo. Se consulta desde el
+    /// formulario antes de confirmar, porque crear el bloqueo cancela turnos y
+    /// notifica pacientes de forma irreversible.
+    /// </summary>
+    [HttpGet("impacto")]
+    public async Task<IActionResult> GetImpacto(
+        [FromQuery] int profesionalId,
+        [FromQuery] DateTime desde,
+        [FromQuery] DateTime hasta)
+    {
+        var impacto = await _bloqueoService.ObtenerImpactoAsync(profesionalId, desde, hasta);
+        return Ok(impacto);
     }
 
     [HttpPost]
@@ -47,7 +62,7 @@ public class BloqueosAgendaController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = bloqueo.Id }, bloqueo);
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var eliminado = await _bloqueoService.EliminarAsync(id);

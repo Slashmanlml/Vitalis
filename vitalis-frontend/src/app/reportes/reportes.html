@@ -3,221 +3,397 @@
   <div class="page-header">
     <div>
       <h1>Reportes</h1>
-      <p>Indicadores de actividad de la agenda</p>
+      <p>Métricas consolidadas de agenda, rendimiento clínico y gestión financiera</p>
     </div>
-    <button class="btn-secondary" (click)="exportarResumen()" [disabled]="!estadisticas">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar resumen
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="exportarResumen()" *ngIf="pestanaActiva === 'agenda'" [disabled]="!estadisticas">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar resumen
+      </button>
+      <button class="btn-secondary" (click)="exportarResumenFinanciero()" *ngIf="pestanaActiva === 'financiero'" [disabled]="!resumenFinanciero">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV Financiero
+      </button>
+    </div>
+  </div>
+
+  <!-- Pestañas Principales -->
+  <div class="tabs-nav">
+    <button 
+      class="tab-btn" 
+      [class.activa]="pestanaActiva === 'agenda'" 
+      (click)="cambiarPestana('agenda')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      Actividad de Agenda
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.activa]="pestanaActiva === 'financiero'" 
+      (click)="cambiarPestana('financiero')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Facturación y Liquidaciones
     </button>
   </div>
 
-  <p class="cargando" *ngIf="cargando">Cargando indicadores…</p>
+  <!-- =========================================================================
+       PESTAÑA 1: AGENDA Y TURNOS (EXISTENTE)
+       ========================================================================= -->
+  <ng-container *ngIf="pestanaActiva === 'agenda'">
+    <p class="cargando" *ngIf="cargando">Cargando indicadores…</p>
 
-  <ng-container *ngIf="!cargando && estadisticas as e">
+    <ng-container *ngIf="!cargando && estadisticas as e">
+      <!-- Indicadores principales -->
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi-label">Total de turnos</span>
+          <span class="kpi-valor">{{ e.totalTurnos }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-confirmado"></i> Confirmados</span>
+          <span class="kpi-valor">{{ e.confirmados }}</span>
+          <span class="kpi-sub">{{ e.totalTurnos ? (e.confirmados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-pendiente"></i> Pendientes</span>
+          <span class="kpi-valor">{{ e.pendientes }}</span>
+          <span class="kpi-sub">{{ e.totalTurnos ? (e.pendientes / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-atendido"></i> Atendidos</span>
+          <span class="kpi-valor">{{ e.atendidos }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-cancelado"></i> Cancelados</span>
+          <span class="kpi-valor">{{ e.cancelados }}</span>
+          <span class="kpi-sub">{{ e.totalTurnos ? (e.cancelados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
+        </div>
+      </div>
 
-    <!-- Indicadores principales: son cinco cifras sueltas, no una serie;
-         por eso van como fichas y no como gráfico de barras. -->
-    <div class="kpis">
-      <div class="kpi">
-        <span class="kpi-label">Total de turnos</span>
-        <span class="kpi-valor">{{ e.totalTurnos }}</span>
-      </div>
-      <div class="kpi">
-        <span class="kpi-label"><i class="punto p-confirmado"></i> Confirmados</span>
-        <span class="kpi-valor">{{ e.confirmados }}</span>
-        <span class="kpi-sub">{{ e.totalTurnos ? (e.confirmados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
-      </div>
-      <div class="kpi">
-        <span class="kpi-label"><i class="punto p-pendiente"></i> Pendientes</span>
-        <span class="kpi-valor">{{ e.pendientes }}</span>
-        <span class="kpi-sub">{{ e.totalTurnos ? (e.pendientes / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
-      </div>
-      <div class="kpi">
-        <span class="kpi-label"><i class="punto p-atendido"></i> Atendidos</span>
-        <span class="kpi-valor">{{ e.atendidos }}</span>
-      </div>
-      <div class="kpi">
-        <span class="kpi-label"><i class="punto p-cancelado"></i> Cancelados</span>
-        <span class="kpi-valor">{{ e.cancelados }}</span>
-        <span class="kpi-sub">{{ e.totalTurnos ? (e.cancelados / e.totalTurnos | percent:'1.0-0') : '—' }} del total</span>
-      </div>
-    </div>
+      <!-- Evolución mensual -->
+      <section class="panel">
+        <header class="panel-header">
+          <h2>Turnos por mes</h2>
+          <span class="panel-sub" *ngIf="serieMensual.length">{{ serieMensual.length }} meses con actividad</span>
+        </header>
 
-    <!-- Evolución mensual: una sola serie, así que no lleva leyenda; el título la nombra. -->
+        <div class="grafico-linea" *ngIf="serieMensual.length; else sinSerie">
+          <svg #svgSerie
+               [attr.viewBox]="'0 0 ' + ANCHO + ' ' + ALTO"
+               role="img"
+               aria-label="Cantidad de turnos por mes"
+               (mousemove)="moverSobreSerie($event, svgSerie)"
+               (mouseleave)="salirDeSerie()">
+
+            <g class="grid">
+              <line *ngFor="let g of gridY"
+                    [attr.x1]="MARGEN.izquierda" [attr.x2]="ANCHO - MARGEN.derecha"
+                    [attr.y1]="g.y" [attr.y2]="g.y" />
+              <text *ngFor="let g of gridY"
+                    [attr.x]="MARGEN.izquierda - 8" [attr.y]="g.y + 4"
+                    text-anchor="end">{{ g.valor }}</text>
+            </g>
+
+            <path class="area" [attr.d]="pathArea" />
+            <path class="linea" [attr.d]="pathLinea" />
+
+            <line class="cruz" *ngIf="puntoActivo"
+                  [attr.x1]="puntoActivo.x" [attr.x2]="puntoActivo.x"
+                  [attr.y1]="MARGEN.arriba" [attr.y2]="ALTO - MARGEN.abajo" />
+
+            <g class="puntos">
+              <circle *ngFor="let p of serieMensual"
+                      [attr.cx]="p.x" [attr.cy]="p.y"
+                      [attr.r]="puntoActivo === p ? 6 : 4.5" />
+            </g>
+
+            <g class="eje-x">
+              <text *ngFor="let p of serieMensual"
+                    [attr.x]="p.x" [attr.y]="ALTO - 8"
+                    text-anchor="middle">{{ p.etiquetaCorta }}</text>
+            </g>
+          </svg>
+
+          <div class="tooltip" *ngIf="puntoActivo"
+               [style.left.%]="(puntoActivo.x / ANCHO) * 100">
+            <strong>{{ puntoActivo.cantidad }}</strong>
+            {{ puntoActivo.cantidad === 1 ? 'turno' : 'turnos' }}
+            <span>{{ puntoActivo.etiquetaCorta }}</span>
+          </div>
+        </div>
+        <ng-template #sinSerie><p class="vacio">Todavía no hay turnos registrados.</p></ng-template>
+      </section>
+
+      <div class="grilla-paneles">
+
+        <section class="panel">
+          <header class="panel-header"><h2>Turnos por especialidad</h2></header>
+          <div class="barras" *ngIf="barras(e.porEspecialidad).length; else sinEsp">
+            <div class="barra-fila" *ngFor="let b of barras(e.porEspecialidad)">
+              <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+              <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+              <span class="barra-valor">{{ b.cantidad }}</span>
+            </div>
+            <p class="nota" *ngIf="restantes(e.porEspecialidad) as r">
+              y {{ r }} especialidad{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+            </p>
+          </div>
+          <ng-template #sinEsp><p class="vacio">Sin datos.</p></ng-template>
+        </section>
+
+        <section class="panel">
+          <header class="panel-header"><h2>Turnos por obra social</h2></header>
+          <div class="barras" *ngIf="barras(e.porObraSocial).length; else sinOs">
+            <div class="barra-fila" *ngFor="let b of barras(e.porObraSocial)">
+              <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+              <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+              <span class="barra-valor">{{ b.cantidad }}</span>
+            </div>
+            <p class="nota" *ngIf="restantes(e.porObraSocial) as r">
+              y {{ r }} obra{{ r === 1 ? '' : 's' }} social{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+            </p>
+          </div>
+          <ng-template #sinOs><p class="vacio">Sin datos.</p></ng-template>
+        </section>
+
+        <section class="panel panel-ancho">
+          <header class="panel-header"><h2>Turnos por profesional</h2></header>
+          <div class="barras" *ngIf="barras(e.porProfesional).length; else sinProf">
+            <div class="barra-fila" *ngFor="let b of barras(e.porProfesional)">
+              <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+              <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+              <span class="barra-valor">{{ b.cantidad }}</span>
+            </div>
+            <p class="nota" *ngIf="restantes(e.porProfesional) as r">
+              y {{ r }} profesional{{ r === 1 ? '' : 'es' }} más, fuera del top 8
+            </p>
+          </div>
+          <ng-template #sinProf><p class="vacio">Sin datos.</p></ng-template>
+        </section>
+
+      </div>
+    </ng-container>
+
+    <!-- Consulta de detalle contra los endpoints de agenda -->
     <section class="panel">
       <header class="panel-header">
-        <h2>Turnos por mes</h2>
-        <span class="panel-sub" *ngIf="serieMensual.length">{{ serieMensual.length }} meses con actividad</span>
+        <h2>Consulta de detalle</h2>
+        <span class="panel-sub">Listado de turnos por profesional, paciente u obra social</span>
       </header>
 
-      <div class="grafico-linea" *ngIf="serieMensual.length; else sinSerie">
-        <svg #svgSerie
-             [attr.viewBox]="'0 0 ' + ANCHO + ' ' + ALTO"
-             role="img"
-             aria-label="Cantidad de turnos por mes"
-             (mousemove)="moverSobreSerie($event, svgSerie)"
-             (mouseleave)="salirDeSerie()">
+      <div class="filtros">
+        <label>
+          <span>Agrupar por</span>
+          <select [(ngModel)]="dimension" (change)="cambiarDimension()">
+            <option value="profesional">Profesional</option>
+            <option value="paciente">Paciente</option>
+            <option value="obraSocial">Obra social</option>
+          </select>
+        </label>
 
-          <g class="grid">
-            <line *ngFor="let g of gridY"
-                  [attr.x1]="MARGEN.izquierda" [attr.x2]="ANCHO - MARGEN.derecha"
-                  [attr.y1]="g.y" [attr.y2]="g.y" />
-            <text *ngFor="let g of gridY"
-                  [attr.x]="MARGEN.izquierda - 8" [attr.y]="g.y + 4"
-                  text-anchor="end">{{ g.valor }}</text>
-          </g>
+        <label class="crece">
+          <span>{{ dimension === 'profesional' ? 'Profesional' : dimension === 'paciente' ? 'Paciente' : 'Obra social' }}</span>
+          <select [(ngModel)]="entidadId">
+            <option [ngValue]="0" disabled>Seleccione una opción</option>
+            <option *ngFor="let e of entidades" [ngValue]="e.id">{{ e.nombre }}</option>
+          </select>
+        </label>
 
-          <path class="area" [attr.d]="pathArea" />
-          <path class="linea" [attr.d]="pathLinea" />
+        <label *ngIf="dimension === 'profesional'">
+          <span>Desde</span>
+          <input type="date" [(ngModel)]="desde" />
+        </label>
+        <label *ngIf="dimension === 'profesional'">
+          <span>Hasta</span>
+          <input type="date" [(ngModel)]="hasta" />
+        </label>
 
-          <line class="cruz" *ngIf="puntoActivo"
-                [attr.x1]="puntoActivo.x" [attr.x2]="puntoActivo.x"
-                [attr.y1]="MARGEN.arriba" [attr.y2]="ALTO - MARGEN.abajo" />
-
-          <g class="puntos">
-            <circle *ngFor="let p of serieMensual"
-                    [attr.cx]="p.x" [attr.cy]="p.y"
-                    [attr.r]="puntoActivo === p ? 6 : 4.5" />
-          </g>
-
-          <g class="eje-x">
-            <text *ngFor="let p of serieMensual"
-                  [attr.x]="p.x" [attr.y]="ALTO - 8"
-                  text-anchor="middle">{{ p.etiquetaCorta }}</text>
-          </g>
-        </svg>
-
-        <div class="tooltip" *ngIf="puntoActivo"
-             [style.left.%]="(puntoActivo.x / ANCHO) * 100">
-          <strong>{{ puntoActivo.cantidad }}</strong>
-          {{ puntoActivo.cantidad === 1 ? 'turno' : 'turnos' }}
-          <span>{{ puntoActivo.etiquetaCorta }}</span>
+        <div class="acciones">
+          <button class="btn-primary" (click)="consultar()" [disabled]="!entidadId || consultando">
+            {{ consultando ? 'Consultando…' : 'Consultar' }}
+          </button>
+          <button class="btn-secondary" (click)="limpiar()">Limpiar</button>
         </div>
       </div>
-      <ng-template #sinSerie><p class="vacio">Todavía no hay turnos registrados.</p></ng-template>
+
+      <div class="resultado" *ngIf="consultaHecha && !consultando">
+        <div class="resultado-cabecera" *ngIf="detalle.length">
+          <span><strong>{{ detalle.length }}</strong> turno{{ detalle.length === 1 ? '' : 's' }} · {{ nombreEntidad }}</span>
+          <button class="btn-secondary" (click)="exportarDetalle()">Exportar CSV</button>
+        </div>
+
+        <div class="table-container" *ngIf="detalle.length; else sinResultados">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th><th>Hora</th><th>Paciente</th>
+                <th>Profesional</th><th>Obra social</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of detalle">
+                <td>{{ t.fechaHora | date:'dd/MM/yyyy' }}</td>
+                <td>{{ t.fechaHora | date:'HH:mm' }}</td>
+                <td>{{ t.pacienteNombre }}</td>
+                <td>{{ t.profesionalNombre }}</td>
+                <td>{{ t.obraSocialNombre }}</td>
+                <td><span class="estado" [ngClass]="claseEstado(t)">{{ t.estado }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #sinResultados>
+          <p class="vacio">No se encontraron turnos con ese criterio.</p>
+        </ng-template>
+      </div>
     </section>
-
-    <div class="grilla-paneles">
-
-      <section class="panel">
-        <header class="panel-header"><h2>Turnos por especialidad</h2></header>
-        <div class="barras" *ngIf="barras(e.porEspecialidad).length; else sinEsp">
-          <div class="barra-fila" *ngFor="let b of barras(e.porEspecialidad)">
-            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
-            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
-            <span class="barra-valor">{{ b.cantidad }}</span>
-          </div>
-          <p class="nota" *ngIf="restantes(e.porEspecialidad) as r">
-            y {{ r }} especialidad{{ r === 1 ? '' : 'es' }} más, fuera del top 8
-          </p>
-        </div>
-        <ng-template #sinEsp><p class="vacio">Sin datos.</p></ng-template>
-      </section>
-
-      <section class="panel">
-        <header class="panel-header"><h2>Turnos por obra social</h2></header>
-        <div class="barras" *ngIf="barras(e.porObraSocial).length; else sinOs">
-          <div class="barra-fila" *ngFor="let b of barras(e.porObraSocial)">
-            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
-            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
-            <span class="barra-valor">{{ b.cantidad }}</span>
-          </div>
-          <p class="nota" *ngIf="restantes(e.porObraSocial) as r">
-            y {{ r }} obra{{ r === 1 ? '' : 's' }} social{{ r === 1 ? '' : 'es' }} más, fuera del top 8
-          </p>
-        </div>
-        <ng-template #sinOs><p class="vacio">Sin datos.</p></ng-template>
-      </section>
-
-      <section class="panel panel-ancho">
-        <header class="panel-header"><h2>Turnos por profesional</h2></header>
-        <div class="barras" *ngIf="barras(e.porProfesional).length; else sinProf">
-          <div class="barra-fila" *ngFor="let b of barras(e.porProfesional)">
-            <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
-            <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
-            <span class="barra-valor">{{ b.cantidad }}</span>
-          </div>
-          <p class="nota" *ngIf="restantes(e.porProfesional) as r">
-            y {{ r }} profesional{{ r === 1 ? '' : 'es' }} más, fuera del top 8
-          </p>
-        </div>
-        <ng-template #sinProf><p class="vacio">Sin datos.</p></ng-template>
-      </section>
-
-    </div>
   </ng-container>
 
-  <!-- Consulta de detalle contra los endpoints del backend -->
-  <section class="panel">
-    <header class="panel-header">
-      <h2>Consulta de detalle</h2>
-      <span class="panel-sub">Listado de turnos por profesional, paciente u obra social</span>
-    </header>
+  <!-- =========================================================================
+       PESTAÑA 2: FACTURACIÓN Y LIQUIDACIONES (NUEVA)
+       ========================================================================= -->
+  <ng-container *ngIf="pestanaActiva === 'financiero'">
 
-    <div class="filtros">
-      <label>
-        <span>Agrupar por</span>
-        <select [(ngModel)]="dimension" (change)="cambiarDimension()">
-          <option value="profesional">Profesional</option>
-          <option value="paciente">Paciente</option>
-          <option value="obraSocial">Obra social</option>
-        </select>
-      </label>
-
-      <label class="crece">
-        <span>{{ dimension === 'profesional' ? 'Profesional' : dimension === 'paciente' ? 'Paciente' : 'Obra social' }}</span>
-        <select [(ngModel)]="entidadId">
-          <option [ngValue]="0" disabled>Seleccione una opción</option>
-          <option *ngFor="let e of entidades" [ngValue]="e.id">{{ e.nombre }}</option>
-        </select>
-      </label>
-
-      <label *ngIf="dimension === 'profesional'">
-        <span>Desde</span>
-        <input type="date" [(ngModel)]="desde" />
-      </label>
-      <label *ngIf="dimension === 'profesional'">
-        <span>Hasta</span>
-        <input type="date" [(ngModel)]="hasta" />
-      </label>
-
-      <div class="acciones">
-        <button class="btn-primary" (click)="consultar()" [disabled]="!entidadId || consultando">
-          {{ consultando ? 'Consultando…' : 'Consultar' }}
-        </button>
-        <button class="btn-secondary" (click)="limpiar()">Limpiar</button>
+    <!-- Barra de Filtros de Período Financiero -->
+    <div class="filtros-financiero-bar panel">
+      <div class="filtros-fechas">
+        <label>
+          <span>Desde</span>
+          <input type="date" [(ngModel)]="desdeFinanciero" />
+        </label>
+        <label>
+          <span>Hasta</span>
+          <input type="date" [(ngModel)]="hastaFinanciero" />
+        </label>
+        <div class="acciones-fechas">
+          <button class="btn-primary" (click)="cargarReporteFinanciero()" [disabled]="cargandoFinanciero">
+            {{ cargandoFinanciero ? 'Actualizando...' : 'Filtrar Período' }}
+          </button>
+          <button class="btn-secondary" (click)="establecerMesActual()">Mes Actual</button>
+          <button class="btn-secondary" (click)="establecerUltimos30Dias()">Últimos 30 días</button>
+        </div>
       </div>
     </div>
 
-    <div class="resultado" *ngIf="consultaHecha && !consultando">
-      <div class="resultado-cabecera" *ngIf="detalle.length">
-        <span><strong>{{ detalle.length }}</strong> turno{{ detalle.length === 1 ? '' : 's' }} · {{ nombreEntidad }}</span>
-        <button class="btn-secondary" (click)="exportarDetalle()">Exportar CSV</button>
+    <p class="cargando" *ngIf="cargandoFinanciero">Calculando indicadores financieros y cobranzas…</p>
+
+    <ng-container *ngIf="!cargandoFinanciero && resumenFinanciero as rf">
+
+      <!-- Fichas KPI Financieras -->
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-confirmado"></i> Total Facturado</span>
+          <span class="kpi-valor">{{ rf.totalFacturado | currency:'ARS':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Monto total emitido</span>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-atendido"></i> Total Cobrado</span>
+          <span class="kpi-valor">{{ rf.totalCobrado | currency:'ARS':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">{{ rf.tasaCobranzaPorcentaje | number:'1.1-1' }}% efectividad de cobro</span>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-pendiente"></i> Saldo Pendiente</span>
+          <span class="kpi-valor">{{ rf.saldoPendiente | currency:'ARS':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Por cobrar en el período</span>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-cancelado"></i> Total Liquidado</span>
+          <span class="kpi-valor">{{ rf.totalLiquidado | currency:'ARS':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Honorarios a profesionales</span>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-confirmado"></i> Margen Bruto</span>
+          <span class="kpi-valor">{{ rf.margenBruto | currency:'ARS':'symbol':'1.0-0' }}</span>
+          <span class="kpi-sub">Facturado - Liquidado</span>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi-label"><i class="punto p-atendido"></i> Tasa de Cobro</span>
+          <span class="kpi-valor">{{ rf.tasaCobranzaPorcentaje | number:'1.1-1' }}%</span>
+          <span class="kpi-sub">Cobrado / Facturado</span>
+        </div>
       </div>
 
-      <div class="table-container" *ngIf="detalle.length; else sinResultados">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Fecha</th><th>Hora</th><th>Paciente</th>
-              <th>Profesional</th><th>Obra social</th><th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of detalle">
-              <td>{{ t.fechaHora | date:'dd/MM/yyyy' }}</td>
-              <td>{{ t.fechaHora | date:'HH:mm' }}</td>
-              <td>{{ t.pacienteNombre }}</td>
-              <td>{{ t.profesionalNombre }}</td>
-              <td>{{ t.obraSocialNombre }}</td>
-              <td><span class="estado" [ngClass]="claseEstado(t)">{{ t.estado }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Grilla de Desgloses Económicos -->
+      <div class="grilla-paneles">
+
+        <!-- Panel 1: Facturación por Obra Social -->
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Facturación por Obra Social</h2>
+            <span class="panel-sub">Participación sobre el total facturado</span>
+          </header>
+
+          <div class="barras" *ngIf="barrasObrasSociales(rf.topObrasSociales).length; else sinOsFin">
+            <div class="barra-fila" *ngFor="let b of barrasObrasSociales(rf.topObrasSociales)">
+              <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+              <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+              <span class="barra-valor">{{ b.monto | currency:'ARS':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+          <ng-template #sinOsFin><p class="vacio">No hay facturación registrada en este período.</p></ng-template>
+        </section>
+
+        <!-- Panel 2: Cobranzas por Medio de Pago -->
+        <section class="panel">
+          <header class="panel-header">
+            <h2>Cobranzas por Medio de Pago</h2>
+            <span class="panel-sub">Distribución del dinero recaudado</span>
+          </header>
+
+          <div class="barras" *ngIf="barrasMediosPago(rf.mediosPago).length; else sinMedios">
+            <div class="barra-fila" *ngFor="let b of barrasMediosPago(rf.mediosPago)">
+              <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
+              <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
+              <span class="barra-valor">{{ b.monto | currency:'ARS':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+          <ng-template #sinMedios><p class="vacio">No hay cobranzas registradas en este período.</p></ng-template>
+        </section>
+
+        <!-- Panel 3: Liquidaciones por Profesional -->
+        <section class="panel panel-ancho">
+          <header class="panel-header">
+            <h2>Liquidaciones por Profesional</h2>
+            <span class="panel-sub">Honorarios liquidados a médicos en el período</span>
+          </header>
+
+          <div class="table-container" *ngIf="rf.topLiquidacionesProfesionales.length; else sinLiq">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Profesional</th>
+                  <th>Especialidad</th>
+                  <th>Liquidaciones</th>
+                  <th>Estado</th>
+                  <th style="text-align: right;">Total Liquidado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let liq of rf.topLiquidacionesProfesionales">
+                  <td><strong>{{ liq.profesionalNombre }}</strong></td>
+                  <td>{{ liq.especialidad }}</td>
+                  <td>{{ liq.cantidadLiquidaciones }}</td>
+                  <td>
+                    <span class="estado" [ngClass]="liq.estado === 'Aprobada' || liq.estado === 'Pagada' ? 'estado-atendido' : 'estado-pendiente'">
+                      {{ liq.estado }}
+                    </span>
+                  </td>
+                  <td style="text-align: right; font-weight: 700;">{{ liq.totalLiquidado | currency:'ARS':'symbol':'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <ng-template #sinLiq><p class="vacio">No hay liquidaciones registradas en este período.</p></ng-template>
+        </section>
+
       </div>
-      <ng-template #sinResultados>
-        <p class="vacio">No se encontraron turnos con ese criterio.</p>
-      </ng-template>
-    </div>
-  </section>
+
+    </ng-container>
+
+  </ng-container>
+
 </div>

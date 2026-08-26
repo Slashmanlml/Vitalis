@@ -319,6 +319,18 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
             entity.Property(e => e.Asunto).HasMaxLength(200).IsRequired();
             entity.Property(e => e.Cuerpo).IsRequired();
             entity.Property(e => e.FechaEnvio).IsRequired();
+
+            entity.Property(e => e.Origen).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Evento).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.Estado).HasMaxLength(40).IsRequired();
+            entity.Property(e => e.MensajeError).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Turno)
+                .WithMany()
+                .HasForeignKey(e => e.TurnoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.TurnoId, e.Evento });
         });
     }
 

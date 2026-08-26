@@ -22,19 +22,27 @@ export class EmailLogsComponent implements OnInit {
   cargando = false;
   simulando = false;
   showSimularModal = false;
+
+  // Filtros
   filtroTexto = '';
+  filtroOrigen = '';
+  filtroEstado = '';
+  filtroEvento = '';
 
   simulacionForm: SimularEmailDto = {
     destinatario: '',
-    tipoNotificacion: 'ConfirmacionTurno',
+    tipoNotificacion: 'TurnoConfirmado',
     asunto: '',
     cuerpo: ''
   };
 
   tiposNotificacion = [
-    { valor: 'ConfirmacionTurno', label: 'Confirmación de Turno Reservado' },
-    { valor: 'RecordatorioTurno', label: 'Recordatorio de Cita (24hs antes)' },
-    { valor: 'CancelacionTurno', label: 'Aviso de Cancelación de Turno' },
+    { valor: 'TurnoCreado', label: 'Reserva de Turno Registrada' },
+    { valor: 'TurnoConfirmado', label: 'Turno Confirmado Oficialmente' },
+    { valor: 'RecordatorioTurno', label: 'Recordatorio Automático (24hs antes)' },
+    { valor: 'TurnoReprogramado', label: 'Aviso de Reprogramación de Turno' },
+    { valor: 'TurnoCancelado', label: 'Aviso de Cancelación de Turno' },
+    { valor: 'ResumenConsulta', label: 'Resumen de Consulta Médica' },
     { valor: 'NuevaPrescripcion', label: 'Emisión de Receta Médica Electrónica' },
     { valor: 'BienvenidaPaciente', label: 'Bienvenida / Alta de Paciente en Portal' },
     { valor: 'Personalizado', label: 'Notificación Libre / Personalizada' }
@@ -53,18 +61,24 @@ export class EmailLogsComponent implements OnInit {
 
   cargarEmails() {
     this.cargando = true;
-    this.emailService.obtenerTodos().subscribe({
+    this.emailService.obtenerTodos(
+      this.filtroOrigen || undefined,
+      this.filtroEvento || undefined,
+      this.filtroEstado || undefined
+    ).subscribe({
       next: (data) => {
         this.emails = data || [];
         this.aplicarFiltro();
-        if (this.filteredEmails.length > 0 && !this.selectedEmail) {
+        if (this.filteredEmails.length > 0 && (!this.selectedEmail || !this.filteredEmails.some(e => e.id === this.selectedEmail?.id))) {
           this.selectedEmail = this.filteredEmails[0];
+        } else if (this.filteredEmails.length === 0) {
+          this.selectedEmail = null;
         }
         this.cargando = false;
       },
       error: (err) => {
-        console.error('Error al obtener emails:', err);
-        this.toastService.error('Error al cargar logs de emails');
+        console.error('Error al obtener notificaciones:', err);
+        this.toastService.error('Error al cargar notificaciones');
         this.cargando = false;
       }
     });
@@ -73,9 +87,9 @@ export class EmailLogsComponent implements OnInit {
   cargarPacientes() {
     this.pacienteService.obtenerTodos().subscribe({
       next: (data) => {
-        this.pacientes = data || [];
+        this.pacientes = (data || []).filter(p => !!p.email);
         if (this.pacientes.length > 0 && !this.simulacionForm.destinatario) {
-          this.simulacionForm.destinatario = this.pacientes[0].email || 'paciente@vitalis.local';
+          this.simulacionForm.destinatario = this.pacientes[0].email || '';
         }
       },
       error: (err) => console.error('Error al cargar pacientes:', err)
@@ -83,15 +97,31 @@ export class EmailLogsComponent implements OnInit {
   }
 
   aplicarFiltro() {
-    if (!this.filtroTexto.trim()) {
-      this.filteredEmails = [...this.emails];
-    } else {
+    let resultado = [...this.emails];
+
+    if (this.filtroOrigen) {
+      resultado = resultado.filter(e => e.origen === this.filtroOrigen);
+    }
+
+    if (this.filtroEstado) {
+      resultado = resultado.filter(e => e.estado === this.filtroEstado);
+    }
+
+    if (this.filtroEvento) {
+      resultado = resultado.filter(e => e.evento === this.filtroEvento);
+    }
+
+    if (this.filtroTexto.trim()) {
       const q = this.filtroTexto.toLowerCase();
-      this.filteredEmails = this.emails.filter(e =>
+      resultado = resultado.filter(e =>
         e.destinatario.toLowerCase().includes(q) ||
-        e.asunto.toLowerCase().includes(q)
+        e.asunto.toLowerCase().includes(q) ||
+        (e.evento && e.evento.toLowerCase().includes(q))
       );
     }
+
+    this.filteredEmails = resultado;
+
     if (this.selectedEmail && !this.filteredEmails.some(e => e.id === this.selectedEmail?.id)) {
       this.selectedEmail = this.filteredEmails.length > 0 ? this.filteredEmails[0] : null;
     }
@@ -103,7 +133,7 @@ export class EmailLogsComponent implements OnInit {
 
   abrirModalSimulacion() {
     if (this.pacientes.length > 0 && !this.simulacionForm.destinatario) {
-      this.simulacionForm.destinatario = this.pacientes[0].email || 'paciente@vitalis.local';
+      this.simulacionForm.destinatario = this.pacientes[0].email || '';
     }
     this.showSimularModal = true;
   }
@@ -115,8 +145,8 @@ export class EmailLogsComponent implements OnInit {
   onPacienteSelect(event: any) {
     const id = Number(event.target.value);
     const pac = this.pacientes.find(p => p.id === id);
-    if (pac) {
-      this.simulacionForm.destinatario = pac.email || `${pac.nombre.toLowerCase()}.${pac.apellido.toLowerCase()}@vitalis.local`;
+    if (pac && pac.email) {
+      this.simulacionForm.destinatario = pac.email;
     }
   }
 
@@ -129,7 +159,7 @@ export class EmailLogsComponent implements OnInit {
     this.simulando = true;
     this.emailService.simularEnvio(this.simulacionForm).subscribe({
       next: (logCreado) => {
-        this.toastService.success(`Correo simulado enviado a ${logCreado.destinatario}`);
+        this.toastService.success(`Notificación simulada para ${logCreado.destinatario}`);
         this.simulando = false;
         this.showSimularModal = false;
         this.emails.unshift(logCreado);
@@ -138,46 +168,49 @@ export class EmailLogsComponent implements OnInit {
       },
       error: (err) => {
         this.simulando = false;
-        console.error('Error al simular email:', err);
-        this.toastService.error('Error al emitir correo simulado');
+        console.error('Error al simular notificación:', err);
+        this.toastService.error('Error al emitir notificación simulada');
       }
     });
   }
 
-  eliminarLog(id: number, event: Event) {
+  eliminarLog(email: EmailLog, event: Event) {
     event.stopPropagation();
-    if (!confirm('¿Desea eliminar este registro de correo?')) return;
+    if (email.origen === 'Sistema') {
+      this.toastService.error('No se pueden eliminar notificaciones auditadas del sistema.');
+      return;
+    }
 
-    this.emailService.eliminar(id).subscribe({
+    if (!confirm('¿Desea eliminar este registro de prueba simulada?')) return;
+
+    this.emailService.eliminar(email.id).subscribe({
       next: () => {
-        this.toastService.success('Registro eliminado');
-        this.emails = this.emails.filter(e => e.id !== id);
+        this.toastService.success('Registro de prueba eliminado');
+        this.emails = this.emails.filter(e => e.id !== email.id);
         this.aplicarFiltro();
-        if (this.selectedEmail?.id === id) {
+        if (this.selectedEmail?.id === email.id) {
           this.selectedEmail = this.filteredEmails.length > 0 ? this.filteredEmails[0] : null;
         }
       },
       error: (err) => {
         console.error('Error al eliminar log:', err);
-        this.toastService.error('Error al eliminar registro');
+        this.toastService.error(err?.error?.message || 'Error al eliminar registro');
       }
     });
   }
 
-  limpiarBandeja() {
-    if (!confirm('¿Está seguro de vaciar toda la bandeja de correos simulados?')) return;
-
-    this.emailService.limpiar().subscribe({
-      next: () => {
-        this.toastService.success('Bandeja de correos vaciada con éxito');
-        this.emails = [];
-        this.filteredEmails = [];
-        this.selectedEmail = null;
-      },
-      error: (err) => {
-        console.error('Error al limpiar logs:', err);
-        this.toastService.error('Error al vaciar bandeja');
-      }
-    });
+  getEventoLabel(evento: string): string {
+    const mapa: { [key: string]: string } = {
+      'TurnoCreado': 'Reserva de Turno',
+      'TurnoConfirmado': 'Turno Confirmado',
+      'TurnoReprogramado': 'Turno Reprogramado',
+      'TurnoCancelado': 'Cancelación de Turno',
+      'RecordatorioTurno': 'Recordatorio (24hs)',
+      'ResumenConsulta': 'Resumen de Atención',
+      'NuevaPrescripcion': 'Receta Médica',
+      'BienvenidaPaciente': 'Bienvenida al Portal',
+      'Personalizado': 'Notificación Manual'
+    };
+    return mapa[evento] || evento || 'Notificación';
   }
 }

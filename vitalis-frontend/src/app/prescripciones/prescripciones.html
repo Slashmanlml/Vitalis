@@ -147,6 +147,7 @@
             <div class="form-group">
               <label>Medicamento *</label>
               <select class="form-control" [(ngModel)]="det.medicamentoId">
+                <option [value]="0" disabled>-- Seleccione un medicamento --</option>
                 <option *ngFor="let m of medicamentos" [value]="m.id">
                   {{ m.nombre }} {{ m.presentacion ? '(' + m.presentacion + ')' : '' }}
                 </option>

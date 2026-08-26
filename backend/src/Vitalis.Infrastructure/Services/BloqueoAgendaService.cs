@@ -72,6 +72,56 @@ public class BloqueoAgendaService : IBloqueoAgendaService
         };
     }
 
+    /// <summary>
+    /// Turnos que un bloqueo dejaría fuera de juego.
+    ///
+    /// La usan tanto la previsualización como la cancelación real, a propósito:
+    /// si cada una tuviera su propia consulta, bastaría con tocar una para que el
+    /// número anunciado al usuario dejara de coincidir con lo que efectivamente
+    /// se cancela. Con una sola definición, eso no puede pasar.
+    /// </summary>
+    private IQueryable<Turno> TurnosAfectadosPor(int profesionalId, DateTime desdeUtc, DateTime hastaUtc)
+    {
+        return _context.Turnos
+            .Where(t => t.ProfesionalId == profesionalId
+                        && t.FechaHora >= desdeUtc
+                        && t.FechaHora <= hastaUtc
+                        && t.Estado != "Cancelado");
+    }
+
+    public async Task<ImpactoBloqueoDto> ObtenerImpactoAsync(int profesionalId, DateTime desde, DateTime hasta)
+    {
+        var desdeUtc = DateTime.SpecifyKind(desde, DateTimeKind.Utc);
+        var hastaUtc = DateTime.SpecifyKind(hasta, DateTimeKind.Utc);
+
+        if (desdeUtc >= hastaUtc)
+        {
+            throw new ValidationException("La fecha de inicio debe ser anterior a la de fin.");
+        }
+
+        var turnos = await TurnosAfectadosPor(profesionalId, desdeUtc, hastaUtc)
+            .Include(t => t.Paciente)
+            .OrderBy(t => t.FechaHora)
+            .Select(t => new TurnoAfectadoDto
+            {
+                TurnoId = t.Id,
+                FechaHora = t.FechaHora,
+                PacienteNombre = t.Paciente!.Nombre + " " + t.Paciente.Apellido,
+                Estado = t.Estado,
+                TieneEmail = t.Paciente.Email != null && t.Paciente.Email != ""
+            })
+            .ToListAsync();
+
+        return new ImpactoBloqueoDto
+        {
+            CantidadTurnos = turnos.Count,
+            PacientesAfectados = turnos.Select(t => t.PacienteNombre).Distinct().Count(),
+            PacientesConEmail = turnos.Where(t => t.TieneEmail)
+                                      .Select(t => t.PacienteNombre).Distinct().Count(),
+            Turnos = turnos
+        };
+    }
+
     public async Task<BloqueoAgendaDto> CrearAsync(CrearBloqueoDto dto)
     {
         // Se normaliza a Utc antes de usarla en cualquier consulta o guardado: Npgsql
@@ -108,37 +158,31 @@ public class BloqueoAgendaService : IBloqueoAgendaService
         await _context.SaveChangesAsync();
 
         // Buscar y cancelar turnos superpuestos
-        var turnosSuperpuestos = await _context.Turnos
+        var turnosSuperpuestos = await TurnosAfectadosPor(dto.ProfesionalId, fechaHoraInicioUtc, fechaHoraFinUtc)
             .Include(t => t.Paciente)
             .Include(t => t.Profesional)
-            .Where(t => t.ProfesionalId == dto.ProfesionalId
-                        && t.FechaHora >= fechaHoraInicioUtc
-                        && t.FechaHora <= fechaHoraFinUtc
-                        && t.Estado != "Cancelado")
             .ToListAsync();
 
         foreach (var turno in turnosSuperpuestos)
         {
             turno.Estado = "Cancelado";
             
-            // Simular envío de email al paciente
-            string emailDestinatario = turno.Paciente?.Email ?? "paciente@vitalis.local";
-            string nombrePaciente = turno.Paciente != null ? $"{turno.Paciente.Nombre} {turno.Paciente.Apellido}" : "Paciente";
-            string nombreMedico = $"{profesional.Nombre} {profesional.Apellido}";
-            string fechaHoraStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-
-            string asunto = "Cancelación de turno por fuerza mayor - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                <h2 style='color: #d9534f;'>Aviso de Cancelación de Turno</h2>
-                <p>Estimado/a <strong>{nombrePaciente}</strong>,</p>
-                <p>Lamentamos informarle que su turno programado con el profesional <strong>{nombreMedico}</strong> para el día <strong>{fechaHoraStr}</strong> ha sido cancelado debido a un bloqueo de agenda (Motivo: <em>{dto.Motivo}</em>).</p>
-                <p>Por favor, ingrese al portal o póngase en contacto con recepción para reprogramar su cita.</p>
-                <br/>
-                <p>Disculpe las molestias ocasionadas.</p>
-                <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
-            </div>";
-
-            await _emailService.SendEmailAsync(emailDestinatario, asunto, cuerpo);
+            if (turno.Paciente != null && !string.IsNullOrWhiteSpace(turno.Paciente.Email))
+            {
+                await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+                {
+                    Destinatario = turno.Paciente.Email,
+                    Evento = Domain.Constants.EventoNotificacion.TurnoCancelado,
+                    TurnoId = turno.Id,
+                    Datos = new Dictionary<string, string>
+                    {
+                        ["PacienteNombre"] = $"{turno.Paciente.Nombre} {turno.Paciente.Apellido}",
+                        ["ProfesionalNombre"] = $"{profesional.Nombre} {profesional.Apellido}",
+                        ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                        ["Motivo"] = $"Fuerza mayor / Bloqueo de agenda: {dto.Motivo}"
+                    }
+                });
+            }
         }
 
         if (turnosSuperpuestos.Any())

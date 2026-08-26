@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<ITurnoService, TurnoService>();
         services.AddScoped<IReporteService, ReporteService>();
+        services.AddScoped<IReporteFacturacionService, ReporteFacturacionService>();
         services.AddScoped<IConsultaMedicaService, ConsultaMedicaService>();
         services.AddScoped<IMedicamentoService, MedicamentoService>();
         services.AddScoped<IPrescripcionService, PrescripcionService>();
@@ -34,6 +35,11 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBloqueoAgendaService, BloqueoAgendaService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.Configure<Notificaciones.NotificacionesOptions>(
+            configuration.GetSection(Notificaciones.NotificacionesOptions.SectionName));
+
+        services.AddTransient<Notificaciones.IClienteSmtp, Notificaciones.ClienteSmtpMailKit>();
+        services.AddHostedService<Notificaciones.RecordatorioTurnosService>();
 
         return services;
     }

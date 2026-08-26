@@ -87,12 +87,50 @@
   flex-direction: column;
   gap: 0.5rem;
   flex-grow: 1;
+
+  /* La lista puede tener hasta 19 items segun el rol: mas alto del que entra en
+     una pantalla de notebook. Sin esto, los ultimos quedan fuera de la pantalla
+     y son inalcanzables, porque la barra esta fija (sticky) y no acompana el
+     desplazamiento de la pagina.
+     min-height: 0 es la clave: sin eso un item flexible nunca encoge por debajo
+     del alto de su contenido y overflow-y no llega a activarse nunca. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* aire para la barra de desplazamiento, sin correr el contenido */
+  padding-right: 6px;
+  margin-right: -6px;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 3px;
+}
+
+/* El encabezado, el buscador y el pie no se achican: siempre visibles. */
+.sidebar-brand,
+.search-container,
+.sidebar-footer {
+  flex-shrink: 0;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
   padding: 0.875rem 1rem;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
@@ -653,10 +691,10 @@
 
 /* Toast */
 .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-.toast { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; color: #fff; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: slideIn .3s ease-out; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--text-on-color); cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: slideIn .3s ease-out; }
 .toast-success { background: hsl(var(--hue-success), 70%, 26%); }
 .toast-error { background: hsl(var(--hue-danger), 70%, 42%); }
-.toast-info { background: #0284c7; }
+.toast-info { background: var(--color-info); }
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* Loading Spinner */
@@ -736,7 +774,7 @@
 }
 
 .bg-accent-gradient {
-  background: linear-gradient(90deg, #38bdf8, #0284c7);
+  background: linear-gradient(90deg, var(--color-primary-light), var(--color-info));
 }
 
 .row-value {
@@ -744,4 +782,176 @@
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL PRINCIPAL — actividad del día
+   Todo el color sale de los tokens de styles.css.
+   Criterio: los cinco números del encabezado son cifras sueltas, no una
+   serie, así que van como fichas y no como gráfico. La carga por
+   profesional sí compara magnitudes, y por eso va en barras de un solo
+   tono: la longitud ya codifica el valor.
+   ══════════════════════════════════════════════════════════════════ */
+
+.panel-encabezado {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin: 4px 0 18px;
+}
+.panel-encabezado h2 {
+  font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin: 0;
+}
+.panel-fecha {
+  color: var(--text-secondary); font-size: .92rem; margin: 2px 0 0;
+}
+.ver-agenda {
+  font-size: .88rem; font-weight: 600; color: var(--color-primary);
+  text-decoration: none; padding: .4rem .8rem; border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+.ver-agenda:hover { background: var(--color-primary-bg); }
+
+/* Aviso accionable. Aparece sólo si hay algo por hacer: un panel que
+   siempre muestra la misma alerta deja de leerse a los dos días. */
+.aviso-accion {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 16px; margin-bottom: 18px;
+  border: 1px solid var(--color-warning);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: hsl(var(--hue-warning), 80%, 96%);
+  color: var(--text-primary); font-size: .92rem;
+}
+.aviso-icono { display: inline-flex; color: var(--color-warning); }
+.aviso-accion a {
+  margin-left: auto; font-weight: 600; color: var(--color-primary);
+  text-decoration: none; white-space: nowrap;
+}
+.aviso-accion a:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------- indicadores */
+
+.indicadores {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+
+.indicador {
+  display: flex; flex-direction: column; gap: 3px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+.indicador:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* El borde superior lleva el color; el número se queda en tinta de texto
+   para no perder contraste de lectura. La etiqueta escrita es lo que
+   comunica el estado, nunca el color solo. */
+.indicador.tono-primary { border-top-color: var(--color-primary); }
+.indicador.tono-warning { border-top-color: var(--color-warning); }
+.indicador.tono-success { border-top-color: var(--color-success); }
+.indicador.tono-danger  { border-top-color: var(--color-danger); }
+.indicador.tono-neutro  { border-top-color: var(--text-muted); }
+
+.indicador-etiqueta {
+  font-size: .76rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--text-secondary);
+}
+.indicador-valor {
+  font-size: 2.1rem; font-weight: 700; line-height: 1.05; color: var(--text-primary);
+}
+.indicador-detalle { font-size: .78rem; color: var(--text-muted); }
+
+/* -------------------------------------------------------------- tarjetas */
+
+.panel-grilla {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;
+}
+
+.tarjeta {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.tarjeta-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+.tarjeta-header h3 {
+  font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0;
+}
+.tarjeta-sub { font-size: .78rem; color: var(--text-muted); }
+
+.vacio { color: var(--text-muted); font-size: .88rem; padding: 8px 0; margin: 0; }
+
+/* ------------------------------------------------------ próximos turnos */
+
+.lista-proximos { list-style: none; margin: 0; padding: 0; }
+.lista-proximos li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border-light);
+}
+.lista-proximos li:last-child { border-bottom: none; }
+
+.proximo-hora {
+  font-size: .92rem; font-weight: 700; color: var(--color-primary);
+  min-width: 3.4rem; font-variant-numeric: tabular-nums;
+}
+.proximo-datos { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.proximo-datos strong {
+  font-size: .92rem; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.proximo-datos em {
+  font-size: .78rem; font-style: normal; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.estado {
+  flex: none; padding: 3px 9px; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; white-space: nowrap;
+}
+.estado-confirmado { background: var(--color-primary-bg); color: var(--color-primary); }
+.estado-pendiente  { background: hsl(var(--hue-warning), 80%, 92%); color: hsl(var(--hue-warning), 85%, 26%); }
+.estado-atendido   { background: hsl(var(--hue-success), 55%, 92%); color: hsl(var(--hue-success), 70%, 24%); }
+
+/* ------------------------------------------------- carga por profesional */
+
+.barras { display: flex; flex-direction: column; gap: 9px; }
+.barra-fila {
+  display: grid; grid-template-columns: minmax(80px, 150px) 1fr auto;
+  align-items: center; gap: 12px;
+}
+.barra-etiqueta {
+  font-size: .85rem; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.barra-pista {
+  height: 10px; background: var(--bg-secondary); border-radius: 5px; overflow: hidden;
+}
+.barra-relleno {
+  display: block; height: 100%; background: var(--color-primary);
+  border-radius: 0 4px 4px 0;
+  transition: width .35s cubic-bezier(.4, 0, .2, 1);
+}
+.barra-valor {
+  font-size: .85rem; font-weight: 700; color: var(--text-primary);
+  min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-color-scheme: dark) {
+  .aviso-accion    { background: hsl(var(--hue-warning), 45%, 15%); }
+  .estado-pendiente { background: hsl(var(--hue-warning), 45%, 18%); color: hsl(var(--hue-warning), 85%, 72%); }
+  .estado-atendido  { background: hsl(var(--hue-success), 40%, 16%); color: hsl(var(--hue-success), 60%, 70%); }
+}
+
+@media (max-width: 640px) {
+  .panel-encabezado { align-items: flex-start; }
+  .aviso-accion a { margin-left: 0; }
+  .barra-fila { grid-template-columns: minmax(70px, 110px) 1fr auto; }
 }

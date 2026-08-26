@@ -4,19 +4,15 @@
     <div class="header-title">
       <h1>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Simulador y Auditoría de Notificaciones por Email
+        Notificaciones y Auditoría de Correo
       </h1>
-      <p>Emisión manual interactiva y registro de correos electrónicos generados para los pacientes</p>
+      <p>Registro histórico, monitoreo de envíos SMTP y simulación interactiva de comunicaciones con pacientes</p>
     </div>
 
     <div class="header-actions">
       <button class="btn-primary" (click)="abrirModalSimulacion()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Simular Notificación
-      </button>
-      <button class="btn-outline-danger" (click)="limpiarBandeja()" *ngIf="emails.length > 0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        Vaciar Bandeja
       </button>
       <button class="btn-refresh" (click)="cargarEmails()" [disabled]="cargando">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spinning]="cargando"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -25,43 +21,65 @@
     </div>
   </div>
 
-  <!-- Barra de Búsqueda y Filtro -->
+  <!-- Barra de Búsqueda y Filtros de Auditoría -->
   <div class="inbox-search-bar glass-panel">
     <div class="search-field">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" placeholder="Filtrar por destinatario o asunto..." [(ngModel)]="filtroTexto" (input)="aplicarFiltro()" />
+      <input type="text" placeholder="Buscar por destinatario, asunto o evento..." [(ngModel)]="filtroTexto" (input)="aplicarFiltro()" />
     </div>
+
+    <div class="filters-group">
+      <select class="filter-select" [(ngModel)]="filtroOrigen" (change)="aplicarFiltro()">
+        <option value="">Origen: Todos</option>
+        <option value="Sistema">Origen: Sistema</option>
+        <option value="Simulado">Origen: Simulado</option>
+      </select>
+
+      <select class="filter-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltro()">
+        <option value="">Estado: Todos</option>
+        <option value="Enviado">Estado: Enviado</option>
+        <option value="Fallido">Estado: Fallido</option>
+        <option value="Simulado">Estado: Simulado</option>
+      </select>
+
+      <select class="filter-select" [(ngModel)]="filtroEvento" (change)="aplicarFiltro()">
+        <option value="">Evento: Todos</option>
+        <option *ngFor="let t of tiposNotificacion" [value]="t.valor">{{ t.label }}</option>
+      </select>
+    </div>
+
     <span class="badge-total" *ngIf="!cargando">
-      <strong>{{ filteredEmails.length }}</strong> de {{ emails.length }} notificaciones
+      <strong>{{ filteredEmails.length }}</strong> de {{ emails.length }} registros
     </span>
   </div>
 
   <!-- Loading state -->
   <div class="loading-state" *ngIf="cargando">
     <div class="spinner"></div>
-    <p>Cargando registros de correo...</p>
+    <p>Cargando registros de auditoría y notificaciones...</p>
   </div>
 
   <!-- Empty state -->
-  <div class="empty-state glass-panel" *ngIf="!cargando && emails.length === 0">
+  <div class="empty-state glass-panel" *ngIf="!cargando && filteredEmails.length === 0">
     <div class="empty-icon">
       <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
     </div>
-    <h3>Sin correos en la bandeja</h3>
-    <p>Aún no se han generado notificaciones en el sistema. Puedes hacer clic en <strong>"Simular Notificación"</strong> para disparar una prueba ahora mismo o realizar una acción en el sistema (como agendar un turno o emitir una receta).</p>
-    <button class="btn-primary" style="margin: 16px auto 0;" (click)="abrirModalSimulacion()">
+    <h3>No se encontraron notificaciones</h3>
+    <p *ngIf="emails.length === 0">Aún no se han emitido notificaciones en el sistema. Puedes realizar una simulación de prueba o agendar un turno para ver el flujo en acción.</p>
+    <p *ngIf="emails.length > 0">No hay registros que coincidan con los filtros seleccionados.</p>
+    <button class="btn-primary" style="margin: 16px auto 0;" (click)="abrirModalSimulacion()" *ngIf="emails.length === 0">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      Enviar Primer Correo de Prueba
+      Emitir Notificación de Prueba
     </button>
   </div>
 
   <!-- Main layout: sidebar + viewer -->
-  <div class="inbox-layout glass-panel" *ngIf="!cargando && emails.length > 0">
+  <div class="inbox-layout glass-panel" *ngIf="!cargando && filteredEmails.length > 0">
 
     <!-- Left sidebar: email list -->
     <div class="inbox-sidebar">
       <div class="sidebar-header">
-        <span class="sidebar-title">Bandeja de Salida</span>
+        <span class="sidebar-title">Historial de Notificaciones</span>
         <span class="count-badge">{{ filteredEmails.length }}</span>
       </div>
       <div class="email-list">
@@ -69,8 +87,9 @@
           class="email-item"
           *ngFor="let mail of filteredEmails"
           [class.active]="selectedEmail?.id === mail.id"
+          [class.item-fallido]="mail.estado === 'Fallido'"
           (click)="seleccionarEmail(mail)">
-          <div class="email-avatar">
+          <div class="email-avatar" [class.avatar-sistema]="mail.origen === 'Sistema'" [class.avatar-simulado]="mail.origen === 'Simulado'">
             {{ mail.destinatario.charAt(0).toUpperCase() }}
           </div>
           <div class="email-content">
@@ -79,8 +98,20 @@
               <span class="email-time">{{ mail.fechaEnvio | date:'dd/MM HH:mm' }}</span>
             </div>
             <div class="email-subject">{{ mail.asunto }}</div>
+            <div class="email-tags">
+              <span class="badge-tag tag-evento">{{ getEventoLabel(mail.evento) }}</span>
+              <span class="badge-tag" [class.tag-origen-sistema]="mail.origen === 'Sistema'" [class.tag-origen-simulado]="mail.origen === 'Simulado'">
+                {{ mail.origen }}
+              </span>
+              <span class="badge-tag" 
+                [class.tag-estado-enviado]="mail.estado === 'Enviado'" 
+                [class.tag-estado-fallido]="mail.estado === 'Fallido'" 
+                [class.tag-estado-simulado]="mail.estado === 'Simulado'">
+                {{ mail.estado }}
+              </span>
+            </div>
           </div>
-          <button class="btn-delete-item" title="Eliminar registro" (click)="eliminarLog(mail.id, $event)">
+          <button class="btn-delete-item" *ngIf="mail.origen === 'Simulado'" title="Eliminar prueba simulada" (click)="eliminarLog(mail, $event)">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           </button>
         </div>
@@ -93,17 +124,24 @@
         <div class="empty-viewer-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
-        <p>Seleccione un correo de la lista para visualizar su diseño HTML</p>
+        <p>Seleccione una notificación de la lista para ver su auditoría y plantilla HTML</p>
       </div>
 
       <div class="email-details animate-fade-in" *ngIf="selectedEmail">
         <!-- Email header bar -->
         <div class="email-header">
           <div class="header-main">
+            <div class="header-top-badges">
+              <span class="badge-origen" [class.badge-sistema]="selectedEmail.origen === 'Sistema'" [class.badge-simulado]="selectedEmail.origen === 'Simulado'">
+                {{ selectedEmail.origen }}
+              </span>
+              <span class="badge-evento">{{ getEventoLabel(selectedEmail.evento) }}</span>
+              <span class="badge-turno" *ngIf="selectedEmail.turnoId">Turno #{{ selectedEmail.turnoId }}</span>
+            </div>
             <h2 class="viewer-subject">{{ selectedEmail.asunto }}</h2>
             <div class="header-meta-row">
               <div class="header-field">
-                <span class="field-label">Para:</span>
+                <span class="field-label">Destinatario:</span>
                 <span class="field-value to-email">{{ selectedEmail.destinatario }}</span>
               </div>
               <div class="header-field">
@@ -113,10 +151,26 @@
             </div>
           </div>
           <div class="header-actions-right">
-            <div class="status-pill">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Simulado / Entregado
+            <div class="status-pill" 
+              [class.pill-enviado]="selectedEmail.estado === 'Enviado'"
+              [class.pill-fallido]="selectedEmail.estado === 'Fallido'"
+              [class.pill-simulado]="selectedEmail.estado === 'Simulado'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" *ngIf="selectedEmail.estado !== 'Fallido'"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" *ngIf="selectedEmail.estado === 'Fallido'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ selectedEmail.estado }}
             </div>
+          </div>
+        </div>
+
+        <!-- Error panel if Fallido -->
+        <div class="error-banner" *ngIf="selectedEmail.estado === 'Fallido'">
+          <div class="error-banner-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div class="error-banner-content">
+            <strong>Fallo en la entrega SMTP:</strong>
+            <p>{{ selectedEmail.mensajeError || 'No se pudo contactar al servidor SMTP configurado.' }}</p>
+            <span class="error-hint">Verifique las credenciales SMTP en los secretos de la aplicación o compruebe la conectividad saliente.</span>
           </div>
         </div>
 
@@ -139,18 +193,18 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Plantilla / Tipo de Notificación *</label>
+        <label>Plantilla / Tipo de Evento *</label>
         <select class="form-control" [(ngModel)]="simulacionForm.tipoNotificacion">
           <option *ngFor="let t of tiposNotificacion" [value]="t.valor">{{ t.label }}</option>
         </select>
       </div>
 
       <div class="form-group" *ngIf="pacientes.length > 0">
-        <label>Cargar Destinatario desde Paciente Existente:</label>
+        <label>Cargar Email desde Paciente Registrado:</label>
         <select class="form-control" (change)="onPacienteSelect($event)">
-          <option [value]="0">-- Seleccionar de la lista de pacientes --</option>
+          <option [value]="0">-- Seleccionar paciente --</option>
           <option *ngFor="let p of pacientes" [value]="p.id">
-            {{ p.apellido }}, {{ p.nombre }} ({{ p.email || 'Sin email configurado' }})
+            {{ p.apellido }}, {{ p.nombre }} ({{ p.email }})
           </option>
         </select>
       </div>
@@ -166,13 +220,13 @@
       </div>
 
       <div class="form-group" *ngIf="simulacionForm.tipoNotificacion === 'Personalizado'">
-        <label>Cuerpo / Mensaje (Admite HTML básico)</label>
+        <label>Cuerpo / Mensaje (HTML básico)</label>
         <textarea class="form-control" rows="4" [(ngModel)]="simulacionForm.cuerpo" placeholder="Estimado paciente, le informamos..."></textarea>
       </div>
 
       <div class="simulation-note">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>El correo se registrará en la base de datos con el diseño HTML corporativo oficial de Vitalis y quedará inmediatamente visible en la bandeja.</span>
+        <span>La notificación se guardará con Origen <strong>"Simulado"</strong> en la auditoría sin invocar el servidor SMTP externo.</span>
       </div>
     </div>
 
@@ -180,7 +234,7 @@
       <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
       <button class="btn-primary" (click)="enviarSimulacion()" [disabled]="simulando">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" *ngIf="!simulando"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        {{ simulando ? 'Disparando...' : 'Enviar Simulación' }}
+        {{ simulando ? 'Generando...' : 'Generar Simulación' }}
       </button>
     </div>
   </div>

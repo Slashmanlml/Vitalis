@@ -1,700 +1,722 @@
-/* ============================= */
-/* Sala de Espera - Main Styles  */
-/* ============================= */
+/* ==========================================================================
+   SALA DE ESPERA VIRTUAL — SISTEMA VITALIS
+   Rediseño enfocado en lectura a distancia, protagonismo del tiempo de espera,
+   contraste accesible y coherencia con tokens de diseño (0 hex hardcodeados).
+   ========================================================================== */
 
 .sala-espera-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding: 24px;
-  background: var(--bg-secondary);
   min-height: 100vh;
+  background: var(--bg-primary);
 }
 
-/* ============================= */
-/* Header Section */
-/* ============================= */
+/* ==========================================================================
+   1. Cartelera Header & Métricas
+   ========================================================================== */
 
 .sala-header {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  border-radius: 16px;
-  padding: 32px;
-  color: white;
-  box-shadow: 0 10px 30px rgba(var(--color-primary-rgb), 0.3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.header-info {
+.header-main-info {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 32px;
+  gap: 24px;
   flex-wrap: wrap;
+}
+
+.header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--color-primary);
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.7);
+  animation: pulseLive 2s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(var(--color-primary-rgb), 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0); }
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
 .page-subtitle {
-  font-size: 15px;
-  opacity: 0.9;
-  margin: 0 0 20px 0;
-  font-weight: 400;
+  font-size: .92rem;
+  color: var(--text-secondary);
+  margin: 0;
 }
 
-.header-stats {
+/* Reloj Digital */
+.reloj-card {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+}
+
+.reloj-label {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--text-muted);
+}
+
+.reloj-hora {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: monospace;
+  color: var(--color-primary);
+  line-height: 1.1;
+  letter-spacing: .04em;
+}
+
+/* Grid de Métricas */
+.header-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  transition: all 0.3s ease;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: var(--transition-fast);
 }
 
 .stat-card:hover {
-  background: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
+  border-color: var(--color-primary);
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.stat-espera .stat-icon {
+  background: hsl(var(--hue-warning), 80%, 92%);
+  color: hsl(var(--hue-warning), 85%, 26%);
+  border-color: hsl(var(--hue-warning), 80%, 82%);
+}
+
+.stat-atencion .stat-icon {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+}
+
+.stat-atendido .stat-icon {
+  background: hsl(var(--hue-success), 55%, 92%);
+  color: hsl(var(--hue-success), 70%, 24%);
+  border-color: hsl(var(--hue-success), 55%, 82%);
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
 }
 
 .stat-label {
-  font-size: 12px;
-  opacity: 0.85;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ============================= */
-/* Filters Section */
-/* ============================= */
-
-.filters-container {
-  background: var(--bg-card);
-  border-radius: 14px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.filter-header {
-  margin-bottom: 16px;
-}
-
-.filter-header h3 {
-  font-size: 14px;
+  font-size: .78rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: .02em;
+}
+
+/* ==========================================================================
+   2. Barra de Filtros
+   ========================================================================== */
+
+.filters-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-sm);
 }
 
 .filter-tabs-wrapper {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.filter-tabs-wrapper::-webkit-scrollbar {
-  height: 4px;
-}
-
-.filter-tabs-wrapper::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-  border-radius: 2px;
-}
-
-.filter-tabs-wrapper::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 2px;
 }
 
 .filter-tab {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 24px;
-  border: 2px solid var(--border-color);
-  background: var(--bg-card);
-  font-size: 14px;
-  font-weight: 500;
+  padding: 8px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   color: var(--text-secondary);
+  font-size: .85rem;
+  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
+  font-family: var(--font-primary);
 }
 
 .filter-tab:hover {
-  border-color: var(--border-color);
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .filter-tab.active {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  background: var(--color-primary);
   color: white;
-  border-color: transparent;
-  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.25);
 }
 
-.filter-tab svg {
-  flex-shrink: 0;
+.tab-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
 }
 
-.tab-label {
-  font-weight: 500;
+.filter-tab.active .tab-dot {
+  background: white;
 }
 
-/* ============================= */
-/* Waiting Board Section */
-/* ============================= */
+.dot-warning { background: var(--color-warning); }
+.dot-primary { background: var(--color-primary); }
+.dot-info    { background: var(--color-info, var(--color-primary)); }
+.dot-success { background: var(--color-success); }
+.dot-danger  { background: var(--color-danger); }
+
+.tab-count {
+  font-size: .75rem;
+  padding: 1px 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.filter-tab.active .tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.count-highlight {
+  background: hsl(var(--hue-warning), 80%, 85%);
+  color: hsl(var(--hue-warning), 85%, 20%);
+}
+
+/* ==========================================================================
+   3. Tablero de Tarjetas (Lectura a distancia)
+   ========================================================================== */
 
 .waiting-board-section {
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
 }
 
 .waiting-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 20px;
-  animation: fadeIn 0.3s ease-in-out;
 }
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ============================= */
-/* Waiting Card Styles */
-/* ============================= */
 
 .waiting-card {
   background: var(--bg-card);
-  border-radius: 14px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  border-left: 5px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border-top: 5px solid var(--border-color);
 }
 
 .waiting-card:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-4px);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Card Status Colors */
-.waiting-card.status-solicitado {
-  border-left-color: var(--color-accent);
+/* Bordes Superiores por Estado */
+.card-estado-solicitado  { border-top-color: var(--color-warning); }
+.card-estado-confirmado  { border-top-color: var(--color-primary); }
+.card-estado-en-espera   { border-top-color: var(--color-warning); }
+.card-estado-en-atencion { border-top-color: var(--color-primary); }
+.card-estado-atendido    { border-top-color: var(--color-success); }
+.card-estado-cancelado   { border-top-color: var(--color-danger); opacity: 0.75; }
+
+/* Borde de Demora */
+.card-demorada {
+  border-left: 3px solid var(--color-danger);
 }
 
-.waiting-card.status-confirmado {
-  border-left-color: #3b82f6;
-}
-
-.waiting-card.status-en-espera {
-  border-left-color: var(--color-accent);
-}
-
-.waiting-card.status-en-atencion {
-  border-left-color: var(--color-primary);
-}
-
-.waiting-card.status-atendido {
-  border-left-color: var(--color-success);
-}
-
-.waiting-card.status-cancelado {
-  border-left-color: var(--color-danger);
-  opacity: 0.7;
-}
-
-/* Card Header */
-.card-header {
+/* Encabezado de la Tarjeta */
+.card-top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-secondary) 100%);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.card-time {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.card-time svg {
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-/* Card Badge */
-.card-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-block;
-}
-
-.badge-solicitado {
-  background: hsl(var(--hue-warning), 80%, 92%);
-  color: hsl(var(--hue-warning), 85%, 26%);
-}
-
-.badge-confirmado {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.badge-en-espera {
-  background: hsl(var(--hue-warning), 80%, 92%);
-  color: hsl(var(--hue-warning), 85%, 26%);
-}
-
-.badge-en-atencion {
-  background: #e9d5ff;
-  color: #6b21a8;
-}
-
-.badge-atendido {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge-cancelado {
-  background: hsl(var(--hue-danger), 75%, 94%);
-  color: hsl(var(--hue-danger), 72%, 31%);
-}
-
-/* Card Body */
-.card-body {
-  padding: 18px;
-  flex: 1;
-}
-
-.patient-info {
-  display: flex;
-  flex-direction: column;
+  padding: 12px 18px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
   gap: 10px;
-}
-
-.patient-name {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-}
-
-.patient-detail {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.patient-detail svg {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-/* Card Actions */
-.card-actions {
-  display: flex;
-  gap: 8px;
-  padding: 12px 18px 18px 18px;
   flex-wrap: wrap;
 }
 
-.btn-action {
-  flex: 1;
-  min-width: 100px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: none;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.card-time-group {
   display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: .95rem;
+}
+
+.card-time-group svg {
+  color: var(--color-primary);
+}
+
+.badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge-demora {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: .72rem;
+  font-weight: 700;
+  background: hsl(var(--hue-danger), 75%, 92%);
+  color: hsl(var(--hue-danger), 75%, 28%);
+}
+
+.card-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
+
+.status-badge-solicitado  { background: hsl(var(--hue-warning), 80%, 92%); color: hsl(var(--hue-warning), 85%, 26%); }
+.status-badge-confirmado  { background: var(--color-primary-bg); color: var(--color-primary); }
+.status-badge-en-espera   { background: hsl(var(--hue-warning), 80%, 92%); color: hsl(var(--hue-warning), 85%, 26%); }
+.status-badge-en-atencion { background: var(--color-primary-bg); color: var(--color-primary); font-weight: 800; }
+.status-badge-atendido    { background: hsl(var(--hue-success), 55%, 92%); color: hsl(var(--hue-success), 70%, 24%); }
+.status-badge-cancelado   { background: hsl(var(--hue-danger), 75%, 95%); color: hsl(var(--hue-danger), 70%, 38%); }
+
+/* Cuerpo de la Tarjeta */
+.card-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.patient-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.patient-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .88rem;
+  color: var(--text-secondary);
+}
+
+.detail-icon {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+
+.detail-text strong {
+  color: var(--text-primary);
+}
+
+.wait-tracker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  margin-top: 4px;
+}
+
+.tracker-val {
+  color: var(--color-warning);
+  font-weight: 700;
+}
+
+/* Acciones de la Tarjeta */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-flow {
+  flex: 1;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  white-space: nowrap;
-}
-
-.btn-action-confirm {
-  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-fast);
   color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-.btn-action-confirm:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+.btn-flow-confirm {
+  background: var(--color-primary);
+}
+.btn-flow-confirm:hover {
+  background: var(--color-primary-hover);
 }
 
-.btn-action-arrive {
-  background: linear-gradient(135deg, var(--color-accent) 0%, hsl(var(--hue-warning), 85%, 30%) 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+.btn-flow-arrive {
+  background: var(--color-warning);
+}
+.btn-flow-arrive:hover {
+  filter: brightness(0.92);
 }
 
-.btn-action-arrive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+.btn-flow-attend {
+  background: var(--color-primary);
+}
+.btn-flow-attend:hover {
+  background: var(--color-primary-hover);
 }
 
-.btn-action-attend {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.2);
+.btn-flow-finish {
+  background: var(--color-success);
+}
+.btn-flow-finish:hover {
+  filter: brightness(0.92);
 }
 
-.btn-action-attend:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(var(--color-primary-rgb), 0.3);
+.btn-action-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.btn-action-finish {
-  background: linear-gradient(135deg, var(--color-success) 0%, #059669 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+.btn-speak {
+  color: var(--color-primary);
+}
+.btn-speak:hover {
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary);
 }
 
-.btn-action-finish:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+.btn-cancel {
+  color: var(--color-danger);
+}
+.btn-cancel:hover {
+  background: hsl(var(--hue-danger), 75%, 95%);
+  border-color: var(--color-danger);
 }
 
-.btn-action-cancel {
-  background: hsl(var(--hue-danger), 75%, 94%);
-  color: hsl(var(--hue-danger), 70%, 42%);
-  border: 1px solid #fca5a5;
-  padding: 9px 13px;
-}
+/* ==========================================================================
+   4. Vacío Digno / Empty State
+   ========================================================================== */
 
-.btn-action-cancel:hover {
-  background: hsl(var(--hue-danger), 75%, 88%);
-  border-color: #f87171;
-}
-
-/* ============================= */
-/* Empty State */
-/* ============================= */
-
-.empty-state {
-  grid-column: 1 / -1;
+.empty-state-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 40px;
+  padding: 60px 24px;
   background: var(--bg-card);
-  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
 }
 
-.empty-state svg {
-  color: var(--border-color);
-  margin-bottom: 20px;
+.empty-state-illustration {
+  color: var(--text-muted);
+  margin-bottom: 16px;
   opacity: 0.6;
 }
 
-.empty-state h3 {
-  font-size: 18px;
-  font-weight: 600;
+.empty-state-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
-.empty-state p {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-/* ============================= */
-/* Responsive Design */
-/* ============================= */
-
-@media (max-width: 1024px) {
-  .sala-espera-container {
-    padding: 16px;
-    gap: 16px;
-  }
-
-  .sala-header {
-    padding: 24px;
-  }
-
-  .header-info {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .header-stats {
-    width: 100%;
-  }
-
-  .waiting-board {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-  }
-
-  .page-title {
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 640px) {
-  .sala-espera-container {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .sala-header {
-    padding: 20px;
-  }
-
-  .page-title {
-    font-size: 20px;
-  }
-
-  .page-subtitle {
-    font-size: 13px;
-  }
-
-  .header-stats {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .stat-card {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
-  }
-
-  .filters-container {
-    padding: 16px;
-  }
-
-  .filter-tabs-wrapper {
-    gap: 6px;
-  }
-
-  .filter-tab {
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-  .waiting-board {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .card-header {
-    padding: 12px 16px;
-  }
-
-  .card-body {
-    padding: 14px 16px;
-  }
-
-  .card-actions {
-    padding: 10px 16px 14px 16px;
-  }
-
-  .btn-action {
-    min-width: 80px;
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-
-  .patient-name {
-    font-size: 16px;
-  }
-
-  .empty-state {
-    padding: 60px 30px;
-  }
-}
-
-/* Custom Speaker & Full Screen Call Overlay Styles */
-.btn-action-speak {
-  background: var(--bg-secondary);
+.empty-state-card p {
+  font-size: .92rem;
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  padding: 9px 13px;
+  max-width: 520px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
 }
 
-.btn-action-speak:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
-  border-color: var(--text-muted);
+.btn-reset-filter {
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
 }
+
+.btn-reset-filter:hover {
+  background: var(--color-primary-hover);
+}
+
+/* ==========================================================================
+   5. Superposición a Pantalla Completa: LLAMADO A PACIENTE
+   ========================================================================== */
 
 .call-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(12px);
-  color: white;
-  animation: fadeInOverlay 0.3s ease-out;
+  background: rgba(10, 25, 35, 0.94);
+  backdrop-filter: blur(16px);
+  padding: 24px;
+  animation: fadeInOverlay 0.25s ease-out;
 }
 
-.call-content {
-  text-align: center;
-  max-width: 680px;
-  width: 90%;
+.call-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  background: var(--bg-card);
+  border: 2px solid var(--color-primary);
+  border-radius: 28px;
+  padding: 48px 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding: 48px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
-  border: 2px solid var(--color-primary-light);
-  box-shadow: 0 25px 50px -12px rgba(var(--color-primary-rgb), 0.4);
-  animation: scaleInCall 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+  gap: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: popModal 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.call-icon {
-  background: rgba(var(--color-primary-rgb), 0.15);
-  color: var(--color-primary-light);
+.call-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.call-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.call-bell-container {
   width: 110px;
   height: 110px;
   border-radius: 50%;
+  background: var(--color-primary-bg);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-primary-light);
-  box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.2);
 }
 
-.bell-icon {
-  animation: shakeBell 1.2s infinite ease-in-out;
+.animated-bell {
+  animation: ringBell 1.2s infinite ease-in-out;
 }
 
-@keyframes shakeBell {
-  0%, 100% { transform: rotate(0deg); }
-  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
-  20%, 40%, 60%, 80% { transform: rotate(10deg); }
+@keyframes ringBell {
+  0%, 100% { transform: rotate(0); }
+  15%, 45%, 75% { transform: rotate(-14deg); }
+  30%, 60% { transform: rotate(14deg); }
 }
 
-.call-banner {
-  font-size: 13px;
+.call-badge-pill {
+  font-size: .85rem;
   font-weight: 800;
-  color: var(--color-primary-light);
-  letter-spacing: 0.25em;
+  letter-spacing: .2em;
   text-transform: uppercase;
+  color: var(--color-primary);
+  background: var(--color-primary-bg);
+  padding: 6px 16px;
+  border-radius: 20px;
 }
 
-.call-patient-name {
-  font-size: 40px;
+.call-patient-title {
+  font-size: 2.5rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
-.call-divider {
+.call-divider-line {
   width: 80px;
   height: 4px;
-  background: var(--color-primary-light);
+  background: var(--color-primary);
   border-radius: 2px;
 }
 
-.call-details {
+.call-info-box {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 12px;
 }
 
-.call-detail-item {
-  font-size: 16px;
-  color: #e2e8f0;
+.call-info-row {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 8px;
+  font-size: 1.1rem;
 }
 
-.call-detail-item .call-label {
-  color: #94a3b8;
+.call-info-label {
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
-.call-detail-item .call-value {
-  font-weight: 600;
-  color: #ffffff;
+.call-info-val {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
-.call-detail-item .call-value.highlight {
-  color: #34d399;
-  font-size: 18px;
+.call-instruction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  animation: flashText 1.5s infinite;
+  letter-spacing: .04em;
+  margin-top: 6px;
+  animation: pulseInstruction 2s infinite;
+}
+
+@keyframes pulseInstruction {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.92; transform: scale(1.02); }
 }
 
 @keyframes fadeInOverlay {
@@ -702,12 +724,56 @@
   to { opacity: 1; }
 }
 
-@keyframes scaleInCall {
-  from { transform: scale(0.9); opacity: 0; }
+@keyframes popModal {
+  from { transform: scale(0.85); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-@keyframes flashText {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* ==========================================================================
+   6. Adaptación Modo Oscuro
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  .status-badge-solicitado  { background: hsl(var(--hue-warning), 45%, 18%); color: hsl(var(--hue-warning), 85%, 72%); }
+  .status-badge-en-espera   { background: hsl(var(--hue-warning), 45%, 18%); color: hsl(var(--hue-warning), 85%, 72%); }
+  .status-badge-atendido    { background: hsl(var(--hue-success), 40%, 16%); color: hsl(var(--hue-success), 60%, 70%); }
+  .status-badge-cancelado   { background: hsl(var(--hue-danger), 45%, 18%); color: hsl(var(--hue-danger), 80%, 74%); }
+  .badge-demora             { background: hsl(var(--hue-danger), 45%, 18%); color: hsl(var(--hue-danger), 80%, 74%); }
+  .count-highlight          { background: hsl(var(--hue-warning), 45%, 25%); color: hsl(var(--hue-warning), 85%, 75%); }
+}
+
+/* ==========================================================================
+   7. Responsividad Móvil / Pantallas Pequeñas
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .sala-espera-container {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .sala-header {
+    padding: 16px;
+  }
+
+  .header-main-info {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reloj-card {
+    align-items: center;
+  }
+
+  .waiting-board {
+    grid-template-columns: 1fr;
+  }
+
+  .call-patient-title {
+    font-size: 1.8rem;
+  }
+
+  .call-instruction-badge {
+    font-size: .95rem;
+  }
 }

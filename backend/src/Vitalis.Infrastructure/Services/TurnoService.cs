@@ -151,25 +151,22 @@ public class TurnoService : ITurnoService
 
         // Enviar Correo de Confirmación de Turno
         var pac = await _context.Pacientes.FindAsync(turno.PacienteId);
-        var prof = await _context.Profesionales.FindAsync(turno.ProfesionalId);
-        if (pac != null && prof != null)
+        var prof = await _context.Profesionales.Include(p => p.Especialidad).FirstOrDefaultAsync(p => p.Id == turno.ProfesionalId);
+        if (pac != null && !string.IsNullOrWhiteSpace(pac.Email))
         {
-            string fechaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string asunto = "Confirmación de Turno Reservado - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                <h2 style='color: #2b7a78;'>¡Su turno ha sido reservado!</h2>
-                <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
-                <p>Le confirmamos que se ha agendado exitosamente su turno en nuestro consultorio.</p>
-                <hr style='border: 0; border-top: 1px solid #ccc;'/>
-                <p><strong>Médico:</strong> Dr/Dra. {prof.Nombre} {prof.Apellido}</p>
-                <p><strong>Fecha y Hora:</strong> {fechaStr}</p>
-                <p><strong>Estado del Turno:</strong> Solicitado</p>
-                <hr style='border: 0; border-top: 1px solid #ccc;'/>
-                <p>Si necesita cancelar o reprogramar su cita, por favor hágalo con anticipación.</p>
-                <br/>
-                <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
-            </div>";
-            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.TurnoCreado,
+                TurnoId = turno.Id,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
+                    ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
+                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                }
+            });
         }
 
         return await ObtenerPorIdAsync(turno.Id) ?? throw new Exception("Error al crear turno");
@@ -203,58 +200,60 @@ public class TurnoService : ITurnoService
         await _context.SaveChangesAsync();
 
         var pac = await _context.Pacientes.FindAsync(turno.PacienteId);
-        var prof = await _context.Profesionales.FindAsync(turno.ProfesionalId);
+        var prof = await _context.Profesionales.Include(p => p.Especialidad).FirstOrDefaultAsync(p => p.Id == turno.ProfesionalId);
 
         // Notificar Reprogramación si cambió fecha y hora
-        if (turno.FechaHora != fechaAnterior && pac != null && prof != null)
+        if (turno.FechaHora != fechaAnterior && pac != null && !string.IsNullOrWhiteSpace(pac.Email))
         {
-            string fechaAntStr = fechaAnterior.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string fechaNuevaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string asunto = "Reprogramación de Turno - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                <h2 style='color: #e0a96d;'>Su turno ha sido reprogramado</h2>
-                <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
-                <p>Le informamos que su turno con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido reprogramado.</p>
-                <hr style='border: 0; border-top: 1px solid #ccc;'/>
-                <p><strong>Horario Anterior:</strong> {fechaAntStr}</p>
-                <p><strong>Nuevo Horario:</strong> {fechaNuevaStr}</p>
-                <hr style='border: 0; border-top: 1px solid #ccc;'/>
-                <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
-            </div>";
-            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.TurnoReprogramado,
+                TurnoId = turno.Id,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
+                    ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
+                    ["FechaAnterior"] = fechaAnterior.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                }
+            });
         }
 
         // Notificar Cancelación
-        if (turno.Estado == "Cancelado" && estadoAnterior != "Cancelado" && pac != null && prof != null)
+        if (turno.Estado == "Cancelado" && estadoAnterior != "Cancelado" && pac != null && !string.IsNullOrWhiteSpace(pac.Email))
         {
-            string fechaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string asunto = "Cancelación de Turno Confirmada - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                <h2 style='color: #d9534f;'>Cancelación de Turno</h2>
-                <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
-                <p>Le informamos que su turno para el día <strong>{fechaStr}</strong> con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido cancelado.</p>
-                <br/>
-                <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
-            </div>";
-            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.TurnoCancelado,
+                TurnoId = turno.Id,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
+                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                }
+            });
         }
 
-        // Notificar Confirmación
-        if (turno.Confirmado && !confirmadoAnterior && pac != null && prof != null)
+        // Notificar Confirmación (solo en transición false -> true)
+        if (turno.Confirmado && !confirmadoAnterior && pac != null && !string.IsNullOrWhiteSpace(pac.Email))
         {
-            string fechaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string asunto = "Turno Confirmado Oficialmente - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #1e293b; background: #f8fafc; border-radius: 8px;'>
-                <div style='background: #0f766e; color: #fff; padding: 15px 20px; border-radius: 6px; text-align: center;'>
-                    <h2 style='margin:0;'>¡Su turno ha sido confirmado!</h2>
-                </div>
-                <div style='padding: 20px; background: #fff; margin-top: 15px; border-radius: 6px; border: 1px solid #e2e8f0;'>
-                    <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
-                    <p>Le informamos que su turno para el día <strong>{fechaStr}</strong> con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido confirmado en la agenda.</p>
-                </div>
-                <p style='font-size: 12px; color: #64748b; text-align: center; margin-top: 15px;'>Equipo Vitalis - Consultorios Médicos</p>
-            </div>";
-            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.TurnoConfirmado,
+                TurnoId = turno.Id,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
+                    ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
+                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                }
+            });
         }
 
         return await ObtenerPorIdAsync(turno.Id);
@@ -265,21 +264,22 @@ public class TurnoService : ITurnoService
         var turno = await _context.Turnos.FindAsync(id);
         if (turno == null) return false;
 
-        // Enviar mail antes de eliminar (o si se marca como cancelado)
         var pac = await _context.Pacientes.FindAsync(turno.PacienteId);
         var prof = await _context.Profesionales.FindAsync(turno.ProfesionalId);
-        if (pac != null && prof != null)
+        if (pac != null && !string.IsNullOrWhiteSpace(pac.Email))
         {
-            string fechaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-            string asunto = "Cancelación de Turno - Vitalis";
-            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-                <h2 style='color: #d9534f;'>Cancelación de Turno</h2>
-                <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
-                <p>Le informamos que su turno para el día <strong>{fechaStr}</strong> con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido cancelado.</p>
-                <br/>
-                <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
-            </div>";
-            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.TurnoCancelado,
+                TurnoId = turno.Id,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
+                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                }
+            });
         }
 
         _context.Turnos.Remove(turno);

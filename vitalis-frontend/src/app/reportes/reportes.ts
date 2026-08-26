@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReporteService, EstadisticasGenerales, ConteoPorCategoria } from '../services/reporte.service';
+import { ReporteFacturacionService, ResumenFinanciero, FacturacionPorObraSocialItem, CobranzaPorMedioPagoItem, LiquidacionProfesionalItem } from '../services/reporte-facturacion.service';
 import { ProfesionalService } from '../services/profesional.service';
 import { PacienteService } from '../services/paciente.service';
 import { ObraSocialService } from '../services/obra-social.service';
@@ -11,14 +12,21 @@ import { Paciente } from '../models/paciente.model';
 import { ObraSocial } from '../models/obra-social.model';
 import { Turno } from '../models/turno.model';
 
-/** Una barra ya resuelta para pintar: ancho en % del máximo de su grupo. */
 export interface Barra {
   etiqueta: string;
   cantidad: number;
   porcentaje: number;
 }
 
-/** Un punto de la serie mensual, con sus coordenadas ya en el sistema del SVG. */
+export interface BarraMonto {
+  etiqueta: string;
+  subetiqueta?: string;
+  monto: number;
+  porcentaje: number;
+  cantidad?: number;
+  badge?: string;
+}
+
 export interface PuntoSerie {
   etiqueta: string;
   etiquetaCorta: string;
@@ -28,6 +36,7 @@ export interface PuntoSerie {
 }
 
 type Dimension = 'profesional' | 'paciente' | 'obraSocial';
+type PestanaReporte = 'agenda' | 'financiero';
 
 @Component({
   selector: 'app-reportes',
@@ -37,6 +46,9 @@ type Dimension = 'profesional' | 'paciente' | 'obraSocial';
   styleUrls: ['./reportes.css']
 })
 export class ReportesComponent implements OnInit {
+  pestanaActiva: PestanaReporte = 'agenda';
+
+  // --- Reporte Agenda (existente) ---
   estadisticas: EstadisticasGenerales | null = null;
   cargando = true;
 
@@ -44,7 +56,6 @@ export class ReportesComponent implements OnInit {
   pacientes: Paciente[] = [];
   obrasSociales: ObraSocial[] = [];
 
-  // --- consulta de detalle ---
   dimension: Dimension = 'profesional';
   entidadId: number = 0;
   desde = '';
@@ -53,7 +64,6 @@ export class ReportesComponent implements OnInit {
   consultaHecha = false;
   consultando = false;
 
-  // --- geometría del gráfico de línea ---
   readonly ANCHO = 640;
   readonly ALTO = 200;
   readonly MARGEN = { arriba: 16, derecha: 16, abajo: 28, izquierda: 40 };
@@ -66,8 +76,15 @@ export class ReportesComponent implements OnInit {
   private readonly MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
                             'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
+  // --- Reporte Financiero (nuevo) ---
+  resumenFinanciero: ResumenFinanciero | null = null;
+  cargandoFinanciero = false;
+  desdeFinanciero = '';
+  hastaFinanciero = '';
+
   constructor(
     private reporteService: ReporteService,
+    private reporteFacturacionService: ReporteFacturacionService,
     private profesionalService: ProfesionalService,
     private pacienteService: PacienteService,
     private obraSocialService: ObraSocialService,
@@ -76,7 +93,10 @@ export class ReportesComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.inicializarFechasFinanciero();
     this.cargarEstadisticas();
+    this.cargarReporteFinanciero();
+
     this.profesionalService.obtenerTodos().subscribe(d => {
       this.profesionales = d;
       this.cdr.detectChanges();
@@ -91,6 +111,15 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  cambiarPestana(pestana: PestanaReporte) {
+    this.pestanaActiva = pestana;
+    if (pestana === 'financiero' && !this.resumenFinanciero && !this.cargandoFinanciero) {
+      this.cargarReporteFinanciero();
+    }
+  }
+
+  // ------------------------------------------------------------- Agenda / Turnos
+
   cargarEstadisticas() {
     this.cargando = true;
     this.reporteService.estadisticas().subscribe({
@@ -101,7 +130,6 @@ export class ReportesComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: err => {
-        // El ErrorInterceptor global ya avisa al usuario.
         console.error('No se pudieron cargar las estadísticas', err);
         this.cargando = false;
         this.cdr.detectChanges();
@@ -109,13 +137,6 @@ export class ReportesComponent implements OnInit {
     });
   }
 
-  // ------------------------------------------------------------------ barras
-
-  /**
-   * Las barras se pintan todas del mismo color: la longitud ya codifica la
-   * magnitud, así que teñir cada barra de un color distinto gastaría el canal
-   * de identidad en repetir información que la barra ya da.
-   */
   barras(datos: ConteoPorCategoria[] | undefined, tope = 8): Barra[] {
     if (!datos || !datos.length) return [];
     const recortado = datos.slice(0, tope);
@@ -127,12 +148,9 @@ export class ReportesComponent implements OnInit {
     }));
   }
 
-  /** Cuántas categorías quedaron fuera del tope, para declararlo en pantalla. */
   restantes(datos: ConteoPorCategoria[] | undefined, tope = 8): number {
     return !datos || datos.length <= tope ? 0 : datos.length - tope;
   }
-
-  // ------------------------------------------------------------ serie mensual
 
   private construirSerieMensual(datos: ConteoPorCategoria[]) {
     this.serieMensual = [];
@@ -174,15 +192,6 @@ export class ReportesComponent implements OnInit {
     }
   }
 
-  /**
-   * Separación entre marcas del eje Y, tomada de la familia 1/2/5 x 10^n y
-   * forzada a entero porque el eje cuenta turnos. Sin esto, un máximo de 68
-   * producía marcas en 0-18-35-52-70: correcto pero ilegible.
-   *
-   * Se devuelve el paso (y no el techo) para que el techo se calcule como el
-   * primer múltiplo por encima del máximo: así un máximo de 264 llega a 300 y
-   * no a 400, sin desperdiciar un tercio de la altura del gráfico.
-   */
   private pasoAgradable(max: number, divisiones = 4): number {
     if (max <= 0) return 1;
     const bruto = max / divisiones;
@@ -198,7 +207,6 @@ export class ReportesComponent implements OnInit {
     return i >= 0 && i < 12 ? `${this.MESES[i]} ${anio.slice(2)}` : etiqueta;
   }
 
-  /** Resalta el punto más cercano al cursor, para el tooltip del gráfico. */
   moverSobreSerie(evento: MouseEvent, svg: Element) {
     if (!this.serieMensual.length) return;
     const caja = svg.getBoundingClientRect();
@@ -213,8 +221,6 @@ export class ReportesComponent implements OnInit {
   salirDeSerie() {
     this.puntoActivo = null;
   }
-
-  // --------------------------------------------------------- consulta detalle
 
   get entidades(): { id: number; nombre: string }[] {
     if (this.dimension === 'profesional') {
@@ -251,9 +257,6 @@ export class ReportesComponent implements OnInit {
 
     if (this.dimension === 'profesional') {
       const desde = this.desde ? new Date(this.desde).toISOString() : undefined;
-      // El "hasta" se lleva al final del día para que el rango sea inclusivo:
-      // de lo contrario un turno de las 15:00 quedaría fuera de un filtro que
-      // termina ese mismo día a las 00:00.
       const hasta = this.hasta
         ? new Date(new Date(this.hasta).setHours(23, 59, 59, 999)).toISOString()
         : undefined;
@@ -286,7 +289,83 @@ export class ReportesComponent implements OnInit {
     return t.confirmado ? 'estado-confirmado' : 'estado-pendiente';
   }
 
-  // ------------------------------------------------------------- exportación
+  // -------------------------------------------------------- Reporte Financiero
+
+  inicializarFechasFinanciero() {
+    const ahora = new Date();
+    const primerDiaMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    this.desdeFinanciero = primerDiaMes.toISOString().slice(0, 10);
+    this.hastaFinanciero = ahora.toISOString().slice(0, 10);
+  }
+
+  cargarReporteFinanciero() {
+    this.cargandoFinanciero = true;
+    this.reporteFacturacionService.obtenerResumenFinanciero(
+      this.desdeFinanciero || undefined,
+      this.hastaFinanciero || undefined
+    ).subscribe({
+      next: (data) => {
+        this.resumenFinanciero = data;
+        this.cargandoFinanciero = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al cargar reporte financiero:', err);
+        this.cargandoFinanciero = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  establecerMesActual() {
+    this.inicializarFechasFinanciero();
+    this.cargarReporteFinanciero();
+  }
+
+  establecerUltimos30Dias() {
+    const ahora = new Date();
+    const hace30 = new Date(ahora.getTime() - (30 * 24 * 60 * 60 * 1000));
+    this.desdeFinanciero = hace30.toISOString().slice(0, 10);
+    this.hastaFinanciero = ahora.toISOString().slice(0, 10);
+    this.cargarReporteFinanciero();
+  }
+
+  barrasObrasSociales(items: FacturacionPorObraSocialItem[] | undefined): BarraMonto[] {
+    if (!items || !items.length) return [];
+    const max = Math.max(...items.map(i => i.totalFacturado), 1);
+    return items.map(i => ({
+      etiqueta: i.obraSocialNombre,
+      monto: i.totalFacturado,
+      cantidad: i.cantidadFacturas,
+      porcentaje: Math.round((i.totalFacturado / max) * 100)
+    }));
+  }
+
+  barrasMediosPago(items: CobranzaPorMedioPagoItem[] | undefined): BarraMonto[] {
+    if (!items || !items.length) return [];
+    const max = Math.max(...items.map(i => i.totalCobrado), 1);
+    return items.map(i => ({
+      etiqueta: i.medioPago,
+      monto: i.totalCobrado,
+      cantidad: i.cantidadPagos,
+      porcentaje: Math.round((i.totalCobrado / max) * 100)
+    }));
+  }
+
+  barrasLiquidaciones(items: LiquidacionProfesionalItem[] | undefined): BarraMonto[] {
+    if (!items || !items.length) return [];
+    const max = Math.max(...items.map(i => i.totalLiquidado), 1);
+    return items.map(i => ({
+      etiqueta: i.profesionalNombre,
+      subetiqueta: i.especialidad,
+      monto: i.totalLiquidado,
+      cantidad: i.cantidadLiquidaciones,
+      badge: i.estado,
+      porcentaje: Math.round((i.totalLiquidado / max) * 100)
+    }));
+  }
+
+  // ------------------------------------------------------------- Exportaciones
 
   exportarDetalle() {
     if (!this.detalle.length) return;
@@ -316,6 +395,23 @@ export class ReportesComponent implements OnInit {
       ...e.porMes.map(x => ({ Indicador: `Mes · ${x.etiqueta}`, Valor: x.cantidad }))
     ];
     this.csvExportService.exportToCSV(filas, `resumen_general_${this.marcaDeTiempo()}`);
+  }
+
+  exportarResumenFinanciero() {
+    if (!this.resumenFinanciero) return;
+    const r = this.resumenFinanciero;
+    const filas = [
+      { Indicador: 'Total Facturado', Monto: r.totalFacturado },
+      { Indicador: 'Total Cobrado', Monto: r.totalCobrado },
+      { Indicador: 'Saldo Pendiente de Cobro', Monto: r.saldoPendiente },
+      { Indicador: 'Total Liquidado a Profesionales', Monto: r.totalLiquidado },
+      { Indicador: 'Margen Bruto Estimado', Monto: r.margenBruto },
+      { Indicador: 'Tasa de Cobranza (%)', Monto: `${r.tasaCobranzaPorcentaje}%` },
+      ...r.topObrasSociales.map(x => ({ Indicador: `Obra Social · ${x.obraSocialNombre}`, Monto: x.totalFacturado })),
+      ...r.mediosPago.map(x => ({ Indicador: `Medio de Pago · ${x.medioPago}`, Monto: x.totalCobrado })),
+      ...r.topLiquidacionesProfesionales.map(x => ({ Indicador: `Liquidación · ${x.profesionalNombre} (${x.especialidad})`, Monto: x.totalLiquidado }))
+    ];
+    this.csvExportService.exportToCSV(filas, `reporte_financiero_${this.marcaDeTiempo()}`);
   }
 
   private marcaDeTiempo(): string {

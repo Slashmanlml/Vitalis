@@ -142,14 +142,11 @@ export class PrescripcionesComponent implements OnInit, OnDestroy {
       pacienteId: this.selectedPacienteId,
       profesionalId: defaultConsulta ? defaultConsulta.profesionalId : (this.profesionales.length > 0 ? this.profesionales[0].id : 0),
       observaciones: '',
+      // Sin posología precargada a propósito: los ejemplos viven como placeholder
+      // en el formulario, nunca como valor. Precargar una dosis real haría posible
+      // emitir una receta que ningún profesional indicó.
       detalles: [
-        {
-          medicamentoId: this.medicamentos.length > 0 ? this.medicamentos[0].id : 0,
-          dosis: '500 mg',
-          frecuencia: 'Cada 8 horas',
-          duracion: '7 días',
-          indicaciones: 'Tomar con las comidas'
-        }
+        { medicamentoId: 0, dosis: '', frecuencia: '', duracion: '', indicaciones: '' }
       ]
     };
     this.showModal = true;
@@ -163,9 +160,9 @@ export class PrescripcionesComponent implements OnInit, OnDestroy {
   }
 
   agregarDetalle() {
-    const defaultMedId = this.medicamentos.length > 0 ? this.medicamentos[0].id : 0;
+    // Idem: el medicamento se elige explícitamente, no se hereda del catálogo.
     this.form.detalles.push({
-      medicamentoId: defaultMedId,
+      medicamentoId: 0,
       dosis: '',
       frecuencia: '',
       duracion: '',

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Vitalis.Application.DTOs.Emails;
 using Vitalis.Application.DTOs.Turnos;
 using Vitalis.Application.Interfaces;
+using Vitalis.Domain.Constants;
 using Vitalis.Domain.Entities;
 using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
@@ -16,18 +19,30 @@ namespace Vitalis.Tests;
 
 public class NoOpEmailService : IEmailService
 {
-    public Task SendEmailAsync(string to, string subject, string body) => Task.CompletedTask;
-    public Task<IEnumerable<EmailLog>> GetEmailLogsAsync() => Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
+    public bool DebeFallar { get; set; }
+    public List<NotificacionRequest> NotificacionesEnviadas { get; } = new();
+
+    public Task<bool> NotificarAsync(NotificacionRequest request)
+    {
+        if (DebeFallar) return Task.FromResult(false);
+        NotificacionesEnviadas.Add(request);
+        return Task.FromResult(true);
+    }
+
+    public Task<IEnumerable<EmailLog>> GetEmailLogsAsync(string? origen = null, string? evento = null, string? estado = null) =>
+        Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
+
     public Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion, string? asuntoPersonalizado = null, string? cuerpoPersonalizado = null) =>
-        Task.FromResult(new EmailLog { Destinatario = to, Asunto = asuntoPersonalizado ?? tipoNotificacion, Cuerpo = cuerpoPersonalizado ?? "" });
+        Task.FromResult(new EmailLog { Destinatario = to, Asunto = asuntoPersonalizado ?? tipoNotificacion, Cuerpo = cuerpoPersonalizado ?? "", Origen = OrigenNotificacion.Simulado, Estado = EstadoNotificacion.Simulado });
+
     public Task<bool> EliminarLogAsync(int id) => Task.FromResult(true);
-    public Task<bool> LimpiarLogsAsync() => Task.FromResult(true);
 }
 
 public class TurnoServiceTests
 {
     private readonly ITurnoService _service;
     private readonly VitalisDbContext _context;
+    private readonly NoOpEmailService _emailService;
 
     public TurnoServiceTests()
     {
@@ -35,7 +50,8 @@ public class TurnoServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new TurnoService(_context, new NoOpEmailService());
+        _emailService = new NoOpEmailService();
+        _service = new TurnoService(_context, _emailService);
 
         SeedRelatedEntities();
     }
@@ -51,6 +67,7 @@ public class TurnoServiceTests
             Nombre = "Juan",
             Apellido = "Perez",
             Dni = "12345678",
+            Email = "juan.perez@test.com",
             FechaNacimiento = new DateTime(1990, 1, 1),
             ObraSocialId = 1,
             Activo = true,
@@ -95,6 +112,95 @@ public class TurnoServiceTests
         result.Id.Should().BeGreaterThan(0);
         result.Confirmado.Should().BeFalse();
         result.Estado.Should().Be("Solicitado");
+    }
+
+    [Fact]
+    public async Task CrearAsync_GeneraNotificacionTurnoCreado()
+    {
+        // Arrange
+        var dto = new CrearTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = ProximoHorarioLaboralValido()
+        };
+
+        // Act
+        var result = await _service.CrearAsync(dto);
+
+        // Assert
+        _emailService.NotificacionesEnviadas.Should().ContainSingle();
+        var notif = _emailService.NotificacionesEnviadas.First();
+        notif.Evento.Should().Be(EventoNotificacion.TurnoCreado);
+        notif.Destinatario.Should().Be("juan.perez@test.com");
+        notif.TurnoId.Should().Be(result.Id);
+    }
+
+    [Fact]
+    public async Task CrearAsync_CuandoEnvioNotificacionFalla_TurnoSeCreaIgual()
+    {
+        // Arrange
+        _emailService.DebeFallar = true;
+        var dto = new CrearTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = ProximoHorarioLaboralValido()
+        };
+
+        // Act
+        var result = await _service.CrearAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().BeGreaterThan(0);
+        var enDb = await _context.Turnos.FindAsync(result.Id);
+        enDb.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task EditarAsync_ConfirmarTurnoYaConfirmado_NoGeneraSegundoCorreo()
+    {
+        // Arrange
+        var fecha = ProximoHorarioLaboralValido();
+        var turno = await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fecha
+        });
+        _emailService.NotificacionesEnviadas.Clear();
+
+        // Act 1: Primera confirmación (false -> true)
+        await _service.EditarAsync(turno.Id, new EditarTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fecha,
+            Confirmado = true,
+            Estado = "Confirmado"
+        });
+
+        _emailService.NotificacionesEnviadas.Should().ContainSingle(n => n.Evento == EventoNotificacion.TurnoConfirmado);
+        _emailService.NotificacionesEnviadas.Clear();
+
+        // Act 2: Segunda edición con Confirmado = true (sin transición)
+        await _service.EditarAsync(turno.Id, new EditarTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fecha,
+            Confirmado = true,
+            Estado = "Confirmado"
+        });
+
+        // Assert
+        _emailService.NotificacionesEnviadas.Should().BeEmpty();
     }
 
     [Fact]
@@ -145,8 +251,75 @@ public class TurnoServiceTests
             .WithMessage("El médico ya tiene asignado un turno en ese rango horario (se requiere un intervalo de 30 minutos).");
     }
 
-    /// Mediodía local, 2 días hábiles hacia adelante: evita caer fuera de horario/fin de
-    /// semana sin importar la zona horaria de la máquina que corre el test.
+    [Fact]
+    public async Task EditarAsync_CambiarFecha_GeneraNotificacionDeReprogramacion()
+    {
+        // Arrange: un turno ya creado, y limpiamos el correo de creación
+        var fechaOriginal = ProximoHorarioLaboralValido();
+        var turno = await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fechaOriginal
+        });
+        _emailService.NotificacionesEnviadas.Clear();
+
+        var fechaNueva = fechaOriginal.AddHours(2);
+
+        // Act
+        await _service.EditarAsync(turno.Id, new EditarTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fechaNueva,
+            Confirmado = false,
+            Estado = "Solicitado"
+        });
+
+        // Assert: el evento debe ser Reprogramado, NO TurnoCreado. Antes de este
+        // arreglo el paciente recibía un correo de "turno reservado con éxito"
+        // cuando en realidad le habían movido la fecha.
+        _emailService.NotificacionesEnviadas.Should().ContainSingle();
+        var notif = _emailService.NotificacionesEnviadas.First();
+        notif.Evento.Should().Be(EventoNotificacion.TurnoReprogramado);
+        notif.TurnoId.Should().Be(turno.Id);
+        notif.Datos.Should().ContainKey("FechaAnterior");
+        notif.Datos!["FechaAnterior"].Should().Be(fechaOriginal.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+        notif.Datos["FechaHora"].Should().Be(fechaNueva.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+    }
+
+    [Fact]
+    public async Task EditarAsync_SinCambiarFecha_NoGeneraNotificacionDeReprogramacion()
+    {
+        // Arrange
+        var fecha = ProximoHorarioLaboralValido();
+        var turno = await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fecha
+        });
+        _emailService.NotificacionesEnviadas.Clear();
+
+        // Act: se edita el turno pero la fecha queda igual
+        await _service.EditarAsync(turno.Id, new EditarTurnoDto
+        {
+            PacienteId = 1,
+            ProfesionalId = 1,
+            ObraSocialId = 1,
+            FechaHora = fecha,
+            Confirmado = false,
+            Estado = "Solicitado"
+        });
+
+        // Assert
+        _emailService.NotificacionesEnviadas
+            .Should().NotContain(n => n.Evento == EventoNotificacion.TurnoReprogramado);
+    }
+
     private static DateTime ProximoHorarioLaboralValido()
     {
         var fecha = DateTime.Now.Date.AddDays(2).AddHours(12);

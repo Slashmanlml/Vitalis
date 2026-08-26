@@ -25,7 +25,7 @@ public class ConsultaMedicaServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new ConsultaMedicaService(_context);
+        _service = new ConsultaMedicaService(_context, new NoOpEmailService());
 
         SeedRelatedEntities();
     }

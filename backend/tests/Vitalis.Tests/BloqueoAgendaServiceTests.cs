@@ -6,7 +6,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Bloqueos;
+using Vitalis.Application.DTOs.Emails;
 using Vitalis.Application.Interfaces;
+using Vitalis.Domain.Constants;
 using Vitalis.Domain.Entities;
 using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
@@ -23,23 +25,23 @@ public class RecordingEmailService : IEmailService
 {
     public List<(string To, string Subject)> Enviados { get; } = new();
 
-    public Task SendEmailAsync(string to, string subject, string body)
+    public Task<bool> NotificarAsync(NotificacionRequest request)
     {
-        Enviados.Add((to, subject));
-        return Task.CompletedTask;
+        Enviados.Add((request.Destinatario, request.Evento));
+        return Task.FromResult(true);
     }
 
-    public Task<IEnumerable<EmailLog>> GetEmailLogsAsync() => Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
+    public Task<IEnumerable<EmailLog>> GetEmailLogsAsync(string? origen = null, string? evento = null, string? estado = null) =>
+        Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
 
     public Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion, string? asuntoPersonalizado = null, string? cuerpoPersonalizado = null)
     {
         var subject = asuntoPersonalizado ?? tipoNotificacion;
         Enviados.Add((to, subject));
-        return Task.FromResult(new EmailLog { Destinatario = to, Asunto = subject, Cuerpo = cuerpoPersonalizado ?? "" });
+        return Task.FromResult(new EmailLog { Destinatario = to, Asunto = subject, Cuerpo = cuerpoPersonalizado ?? "", Origen = OrigenNotificacion.Simulado, Estado = EstadoNotificacion.Simulado });
     }
 
     public Task<bool> EliminarLogAsync(int id) => Task.FromResult(true);
-    public Task<bool> LimpiarLogsAsync() => Task.FromResult(true);
 }
 
 public class BloqueoAgendaServiceTests
@@ -283,5 +285,123 @@ public class BloqueoAgendaServiceTests
         var resultado = await _service.EsHorarioBloqueadoAsync(1, fin.AddHours(3));
 
         resultado.Should().BeFalse();
+    }
+
+    // ------------------------------------------------------------------------
+    // Previsualización de impacto
+    //
+    // La prueba central es la última: el número que se le anuncia al usuario
+    // antes de confirmar tiene que coincidir con lo que efectivamente se cancela.
+    // Si alguien toca una de las dos consultas y no la otra, ese test se cae.
+    // ------------------------------------------------------------------------
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Listar_Los_Turnos_Que_Se_Cancelarian()
+    {
+        var (inicio, fin) = RangoBloqueoValido();
+        _context.Turnos.Add(NuevoTurno(1, inicio.AddMinutes(30), "Confirmado"));
+        _context.Turnos.Add(NuevoTurno(2, inicio.AddMinutes(90), "Solicitado"));
+        await _context.SaveChangesAsync();
+
+        var impacto = await _service.ObtenerImpactoAsync(1, inicio, fin);
+
+        impacto.CantidadTurnos.Should().Be(2);
+        impacto.Turnos.Select(t => t.TurnoId).Should().BeEquivalentTo(new[] { 1, 2 });
+        impacto.Turnos.First().PacienteNombre.Should().Be("Juan Perez");
+    }
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Excluir_Turnos_Fuera_Del_Rango()
+    {
+        var (inicio, fin) = RangoBloqueoValido();
+        _context.Turnos.Add(NuevoTurno(1, inicio.AddMinutes(30), "Confirmado"));
+        _context.Turnos.Add(NuevoTurno(2, fin.AddHours(3), "Confirmado"));
+        await _context.SaveChangesAsync();
+
+        var impacto = await _service.ObtenerImpactoAsync(1, inicio, fin);
+
+        impacto.CantidadTurnos.Should().Be(1);
+        impacto.Turnos.Single().TurnoId.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Excluir_Turnos_Ya_Cancelados()
+    {
+        var (inicio, fin) = RangoBloqueoValido();
+        _context.Turnos.Add(NuevoTurno(1, inicio.AddMinutes(30), "Cancelado"));
+        await _context.SaveChangesAsync();
+
+        var impacto = await _service.ObtenerImpactoAsync(1, inicio, fin);
+
+        impacto.CantidadTurnos.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Distinguir_Pacientes_Sin_Email()
+    {
+        // Un paciente sin email no va a recibir el aviso de cancelación. Que el
+        // formulario lo diga antes de confirmar evita la sorpresa de descubrirlo
+        // cuando el paciente se presenta igual al turno.
+        _context.Pacientes.Add(new Paciente
+        {
+            Id = 2, Nombre = "Ana", Apellido = "Lopez", Dni = "22222222",
+            FechaNacimiento = new DateTime(1988, 3, 3), Email = null,
+            ObraSocialId = 1, Activo = true, FechaCreacion = DateTime.UtcNow
+        });
+        var (inicio, fin) = RangoBloqueoValido();
+        _context.Turnos.Add(NuevoTurno(1, inicio.AddMinutes(30), "Confirmado"));
+        var sinEmail = NuevoTurno(2, inicio.AddMinutes(60), "Confirmado");
+        sinEmail.PacienteId = 2;
+        _context.Turnos.Add(sinEmail);
+        await _context.SaveChangesAsync();
+
+        var impacto = await _service.ObtenerImpactoAsync(1, inicio, fin);
+
+        impacto.CantidadTurnos.Should().Be(2);
+        impacto.PacientesAfectados.Should().Be(2);
+        impacto.PacientesConEmail.Should().Be(1);
+        impacto.Turnos.Single(t => t.TurnoId == 2).TieneEmail.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Throw_ValidationException_Con_Rango_Invertido()
+    {
+        var (inicio, fin) = RangoBloqueoValido();
+
+        var accion = async () => await _service.ObtenerImpactoAsync(1, fin, inicio);
+
+        await accion.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
+    public async Task ObtenerImpactoAsync_Should_Anticipar_Exactamente_Lo_Que_CrearAsync_Cancela()
+    {
+        // Este es el test que le da sentido a la previsualización: si predice 3 y
+        // se cancelan 4, la confirmación que vio el usuario era una mentira.
+        var (inicio, fin) = RangoBloqueoValido();
+        _context.Turnos.Add(NuevoTurno(1, inicio, "Confirmado"));                 // borde inferior
+        _context.Turnos.Add(NuevoTurno(2, inicio.AddMinutes(45), "Solicitado"));
+        _context.Turnos.Add(NuevoTurno(3, fin, "Confirmado"));                    // borde superior
+        _context.Turnos.Add(NuevoTurno(4, inicio.AddMinutes(20), "Cancelado"));   // no cuenta
+        _context.Turnos.Add(NuevoTurno(5, fin.AddHours(1), "Confirmado"));        // fuera
+        await _context.SaveChangesAsync();
+
+        var anticipados = await _service.ObtenerImpactoAsync(1, inicio, fin);
+
+        await _service.CrearAsync(new CrearBloqueoDto
+        {
+            ProfesionalId = 1,
+            FechaHoraInicio = inicio,
+            FechaHoraFin = fin,
+            Motivo = "Congreso médico"
+        });
+
+        var cancelados = await _context.Turnos
+            .Where(t => t.Estado == "Cancelado" && t.Id != 4)
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        cancelados.Should().BeEquivalentTo(anticipados.Turnos.Select(t => t.TurnoId));
+        anticipados.CantidadTurnos.Should().Be(3);
     }
 }

@@ -121,6 +121,10 @@
       </a>
 
       <!-- Auditorías: solo Admin -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/usuarios" routerLinkActive="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Usuarios</span>
+      </a>
       <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/auditorias" routerLinkActive="active">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
         <span>Auditorías</span>
@@ -138,10 +142,10 @@
         <span>Especialidades</span>
       </a>
 
-      <!-- Simulación Mails: solo Admin -->
-      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/mails-simulados" routerLinkActive="active">
+      <!-- Notificaciones / Auditoría: solo Admin -->
+      <a class="menu-item" *ngIf="rolUsuario === 'Administrador'" routerLink="/dashboard/notificaciones" routerLinkActive="active">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        <span>Simulación Mails</span>
+        <span>Notificaciones</span>
       </a>
     </nav>
 
@@ -177,62 +181,84 @@
       </header>
 
       <div class="loading-overlay" *ngIf="cargando"><div class="spinner"></div></div>
-      <section class="stats-grid" *ngIf="!cargando">
-        <div *ngFor="let stat of estadisticas" class="stat-card glass-panel" [ngClass]="stat.color">
-          <div class="stat-header">
-            <span class="stat-title">{{ stat.titulo }}</span>
-            <div class="stat-icon-wrapper">
-              <svg *ngIf="stat.icono === 'users'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <svg *ngIf="stat.icono === 'doctor'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <svg *ngIf="stat.icono === 'calendar'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              <svg *ngIf="stat.icono === 'shield'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-          </div>
-          <div class="stat-body">
-            <h2 class="stat-value">{{ stat.valor }}</h2>
-            <span class="stat-subtext">{{ stat.cambio }}</span>
-          </div>
-        </div>
-      </section>
 
-      <!-- Analytics Dashboard Charts Section -->
-      <section class="dashboard-analytics-grid" *ngIf="!cargando">
-        <div class="analytics-card glass-panel">
-          <div class="analytics-card-header">
-            <h2>Distribución de Pacientes por Obra Social</h2>
-            <p>Porcentaje de cobertura de salud sobre el total de pacientes</p>
+      <ng-container *ngIf="!cargando">
+
+        <div class="panel-encabezado">
+          <div>
+            <h2>Actividad de hoy</h2>
+            <p class="panel-fecha">{{ hoyTexto }}</p>
           </div>
-          <div class="analytics-card-body">
-            <div class="bar-chart-vertical">
-              <div *ngFor="let os of obrasSocialesStats" class="bar-chart-row">
-                <span class="row-label">{{ os.nombre }}</span>
-                <div class="row-bar-container">
-                  <div class="row-bar bg-primary-gradient" [style.width.%]="os.porcentaje"></div>
-                  <span class="row-value">{{ os.cantidad }} ({{ os.porcentaje }}%)</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <a class="ver-agenda" routerLink="/dashboard/turnos">Ver agenda completa</a>
         </div>
 
-        <div class="analytics-card glass-panel">
-          <div class="analytics-card-header">
-            <h2>Volumen de Turnos por Médico</h2>
-            <p>Médicos con mayor volumen de consultas registradas</p>
+        <!-- Aviso accionable: sólo aparece si hay algo que hacer. -->
+        <div class="aviso-accion" *ngIf="pendientesHoy > 0">
+          <span class="aviso-icono" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>
+          <span>
+            Hay <strong>{{ pendientesHoy }}</strong>
+            turno{{ pendientesHoy === 1 ? '' : 's' }} de hoy sin confirmar.
+          </span>
+          <a routerLink="/dashboard/turnos">Revisarlos</a>
+        </div>
+
+        <section class="indicadores">
+          <div class="indicador" *ngFor="let i of indicadores" [ngClass]="'tono-' + i.tono">
+            <span class="indicador-etiqueta">{{ i.etiqueta }}</span>
+            <span class="indicador-valor">{{ i.valor }}</span>
+            <span class="indicador-detalle" *ngIf="i.detalle">{{ i.detalle }}</span>
           </div>
-          <div class="analytics-card-body">
-            <div class="bar-chart-vertical">
-              <div *ngFor="let doc of consultasStats" class="bar-chart-row">
-                <span class="row-label">{{ doc.nombre }}</span>
-                <div class="row-bar-container">
-                  <div class="row-bar bg-accent-gradient" [style.width.%]="doc.porcentaje"></div>
-                  <span class="row-value">{{ doc.cantidad }}</span>
-                </div>
+        </section>
+
+        <div class="panel-grilla">
+
+          <section class="tarjeta">
+            <header class="tarjeta-header">
+              <h3>Próximos turnos</h3>
+              <span class="tarjeta-sub" *ngIf="proximos.length">Lo que viene hoy</span>
+            </header>
+
+            <ul class="lista-proximos" *ngIf="proximos.length; else sinProximos">
+              <li *ngFor="let t of proximos">
+                <span class="proximo-hora">{{ t.hora }}</span>
+                <span class="proximo-datos">
+                  <strong>{{ t.paciente }}</strong>
+                  <em>{{ t.profesional }}</em>
+                </span>
+                <span class="estado" [ngClass]="t.clase">{{ t.estado }}</span>
+              </li>
+            </ul>
+            <ng-template #sinProximos>
+              <p class="vacio">
+                {{ turnosHoyTotal > 0
+                   ? 'No quedan turnos por delante hoy.'
+                   : 'No hay turnos agendados para hoy.' }}
+              </p>
+            </ng-template>
+          </section>
+
+          <section class="tarjeta">
+            <header class="tarjeta-header">
+              <h3>Carga por profesional</h3>
+              <span class="tarjeta-sub" *ngIf="cargaHoy.length">Turnos de hoy</span>
+            </header>
+
+            <div class="barras" *ngIf="cargaHoy.length; else sinCarga">
+              <div class="barra-fila" *ngFor="let c of cargaHoy">
+                <span class="barra-etiqueta" [title]="c.nombre">{{ c.nombre }}</span>
+                <span class="barra-pista"><span class="barra-relleno" [style.width.%]="c.porcentaje"></span></span>
+                <span class="barra-valor">{{ c.cantidad }}</span>
               </div>
             </div>
-          </div>
+            <ng-template #sinCarga>
+              <p class="vacio">Sin turnos asignados hoy.</p>
+            </ng-template>
+          </section>
+
         </div>
-      </section>
+      </ng-container>
     </ng-container>
 
     <router-outlet></router-outlet>

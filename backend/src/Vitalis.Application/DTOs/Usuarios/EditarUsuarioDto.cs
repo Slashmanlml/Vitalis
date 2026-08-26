@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 // EditarUsuarioDto.cs
-using System.ComponentModel.DataAnnotations;
 
 namespace Vitalis.Application.DTOs.Usuarios;
 

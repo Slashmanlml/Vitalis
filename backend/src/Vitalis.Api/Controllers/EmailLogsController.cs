@@ -19,9 +19,12 @@ public class EmailLogsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> Get(
+        [FromQuery] string? origen = null, 
+        [FromQuery] string? evento = null, 
+        [FromQuery] string? estado = null)
     {
-        var logs = await _emailService.GetEmailLogsAsync();
+        var logs = await _emailService.GetEmailLogsAsync(origen, evento, estado);
         return Ok(logs);
     }
 
@@ -48,13 +51,6 @@ public class EmailLogsController : ControllerBase
     {
         var result = await _emailService.EliminarLogAsync(id);
         if (!result) return NotFound();
-        return NoContent();
-    }
-
-    [HttpDelete("limpiar")]
-    public async Task<IActionResult> Limpiar()
-    {
-        await _emailService.LimpiarLogsAsync();
         return NoContent();
     }
 }

@@ -1,199 +1,310 @@
 <div class="sala-espera-container">
-  <!-- Header Section -->
+
+  <!-- Header / Cartelera en Vivo -->
   <div class="sala-header">
-    <div class="header-content">
-      <div class="header-info">
+    <div class="header-main-info">
+      <div class="header-title-group">
+        <div class="live-indicator">
+          <span class="live-dot"></span>
+          <span class="live-text">MONITOREO EN VIVO</span>
+        </div>
         <h1 class="page-title">Sala de Espera Virtual</h1>
-        <p class="page-subtitle">Monitoreo en tiempo real del flujo de atención de hoy</p>
-        <div class="header-stats">
-          <div class="stat-card">
-            <span class="stat-value">{{ turnosHoy.length }}</span>
-            <span class="stat-label">Turnos del día</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-value">{{ filteredTurnos.length }}</span>
-            <span class="stat-label">En filtro actual</span>
-          </div>
+        <p class="page-subtitle">Flujo de atención ambulatoria, tiempos de espera y llamados en tiempo real</p>
+      </div>
+
+      <div class="reloj-card">
+        <div class="reloj-label">HORA OFICIAL</div>
+        <div class="reloj-hora">{{ horaActual || '--:--:--' }}</div>
+      </div>
+    </div>
+
+    <!-- Fichas de Métricas Rápidas -->
+    <div class="header-stats-grid">
+      <div class="stat-card stat-espera">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ countEnEspera }}</span>
+          <span class="stat-label">En Espera Ahora</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-atencion">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ countEnAtencion }}</span>
+          <span class="stat-label">En Consulta Médica</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-atendido">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ countAtendidos }}</span>
+          <span class="stat-label">Atendidos Hoy</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-total">
+        <div class="stat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value">{{ turnosHoy.length }}</span>
+          <span class="stat-label">Total del Día</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Filters Section -->
-  <div class="filters-container">
-    <div class="filter-header">
-      <h3>Filtrar por estado</h3>
-    </div>
+  <!-- Barra de Filtros por Estado -->
+  <div class="filters-bar">
     <div class="filter-tabs-wrapper">
       <button 
-        *ngFor="let estado of ['todos', 'Solicitado', 'Confirmado', 'En Espera', 'En Atencion', 'Atendido', 'Cancelado']"
         class="filter-tab" 
-        [ngClass]="{'active': filtroEstado === estado}"
-        (click)="filtroEstado = estado">
-        <span>
-          <svg *ngIf="estado === 'todos'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <svg *ngIf="estado === 'Solicitado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="12" r="9"/></svg>
-          <svg *ngIf="estado === 'Confirmado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          <svg *ngIf="estado === 'En Espera'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <svg *ngIf="estado === 'En Atencion'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/><path d="M15 12a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/></svg>
-          <svg *ngIf="estado === 'Atendido'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <svg *ngIf="estado === 'Cancelado'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-        </span>
-        <span class="tab-label">
-          {{ estado === 'todos' ? 'Todos' : estado }}
-        </span>
+        [class.active]="filtroEstado === 'todos'"
+        (click)="filtroEstado = 'todos'">
+        <span class="tab-dot"></span>
+        <span class="tab-label">Todos los pacientes</span>
+        <span class="tab-count">{{ turnosHoy.length }}</span>
+      </button>
+
+      <button 
+        class="filter-tab tab-warning" 
+        [class.active]="filtroEstado === 'En Espera'"
+        (click)="filtroEstado = 'En Espera'">
+        <span class="tab-dot dot-warning"></span>
+        <span class="tab-label">En Espera</span>
+        <span class="tab-count count-highlight">{{ countEnEspera }}</span>
+      </button>
+
+      <button 
+        class="filter-tab tab-primary" 
+        [class.active]="filtroEstado === 'En Atencion'"
+        (click)="filtroEstado = 'En Atencion'">
+        <span class="tab-dot dot-primary"></span>
+        <span class="tab-label">En Atención</span>
+        <span class="tab-count">{{ countEnAtencion }}</span>
+      </button>
+
+      <button 
+        class="filter-tab" 
+        [class.active]="filtroEstado === 'Confirmado'"
+        (click)="filtroEstado = 'Confirmado'">
+        <span class="tab-dot dot-info"></span>
+        <span class="tab-label">Confirmados</span>
+      </button>
+
+      <button 
+        class="filter-tab" 
+        [class.active]="filtroEstado === 'Atendido'"
+        (click)="filtroEstado = 'Atendido'">
+        <span class="tab-dot dot-success"></span>
+        <span class="tab-label">Atendidos</span>
+        <span class="tab-count">{{ countAtendidos }}</span>
+      </button>
+
+      <button 
+        class="filter-tab" 
+        [class.active]="filtroEstado === 'Cancelado'"
+        (click)="filtroEstado = 'Cancelado'">
+        <span class="tab-dot dot-danger"></span>
+        <span class="tab-label">Cancelados</span>
       </button>
     </div>
   </div>
 
-  <!-- Waiting Board Section -->
+  <!-- Tablero de Tarjetas de Pacientes -->
   <div class="waiting-board-section">
     <div *ngIf="filteredTurnos.length > 0; else emptyState" class="waiting-board">
+      
       <div 
         *ngFor="let turno of filteredTurnos" 
         class="waiting-card" 
-        [ngClass]="'status-' + turno.estado.toLowerCase().replace(' ', '-')">
+        [ngClass]="'card-estado-' + turno.estado.toLowerCase().replace(' ', '-')"
+        [class.card-demorada]="esDemorado(turno)">
         
-        <!-- Card Header -->
-        <div class="card-header">
-          <div class="card-time">
+        <!-- Encabezado de la Tarjeta (Horario + Estado + Tiempos) -->
+        <div class="card-top-bar">
+          <div class="card-time-group">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span>{{ turno.fechaHora | date:'HH:mm' }} hs</span>
+            <span class="card-time-value">{{ turno.fechaHora | date:'HH:mm' }} hs</span>
           </div>
-          <span class="card-badge" [ngClass]="'badge-' + turno.estado.toLowerCase().replace(' ', '-')">
-            {{ turno.estado }}
-          </span>
+
+          <div class="badges-row">
+            <span class="badge-demora" *ngIf="esDemorado(turno)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Demora: +{{ calcularMinutosEspera(turno.fechaHora) }} min
+            </span>
+
+            <span class="card-status-badge" [ngClass]="'status-badge-' + turno.estado.toLowerCase().replace(' ', '-')">
+              {{ turno.estado }}
+            </span>
+          </div>
         </div>
 
-        <!-- Card Body -->
+        <!-- Cuerpo de la Tarjeta (Lectura a distancia del Paciente y Médico) -->
         <div class="card-body">
-          <div class="patient-info">
-            <h3 class="patient-name">{{ turno.pacienteNombre }}</h3>
-            <p class="patient-detail">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-              {{ turno.profesionalNombre }}
-            </p>
-            <p class="patient-detail" *ngIf="turno.obraSocialNombre">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21H4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><line x1="6" y1="7" x2="6" y2="18"/><line x1="18" y1="7" x2="18" y2="18"/>
-              </svg>
-              {{ turno.obraSocialNombre }}
-            </p>
+          <h2 class="patient-name" [title]="turno.pacienteNombre">{{ turno.pacienteNombre }}</h2>
+          
+          <div class="patient-details-list">
+            <div class="detail-row">
+              <span class="detail-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <span class="detail-text"><strong>Dr/Dra.</strong> {{ turno.profesionalNombre }}</span>
+            </div>
+
+            <div class="detail-row" *ngIf="turno.obraSocialNombre">
+              <span class="detail-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="14" x="3" y="5" rx="2"/><path d="M3 10h18"/></svg>
+              </span>
+              <span class="detail-text">{{ turno.obraSocialNombre }}</span>
+            </div>
+
+            <!-- Indicador dinámico de espera -->
+            <div class="wait-tracker" *ngIf="turno.estado === 'En Espera'">
+              <span class="tracker-icon">⏳</span>
+              <span class="tracker-label">Tiempo transcurrido en sala:</span>
+              <strong class="tracker-val">{{ calcularMinutosEspera(turno.fechaHora) }} minutos</strong>
+            </div>
           </div>
         </div>
 
-        <!-- Card Actions -->
+        <!-- Acciones de Flujo de Atención -->
         <div class="card-actions">
           <ng-container [ngSwitch]="turno.estado">
             <button 
               *ngSwitchCase="'Solicitado'" 
-              class="btn-action btn-action-confirm" 
+              class="btn-flow btn-flow-confirm" 
               (click)="cambiarEstado(turno, 'Confirmado')"
-              title="Confirmar turno">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              title="Confirmar presencia en agenda">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
               Confirmar
             </button>
+
             <button 
               *ngSwitchCase="'Confirmado'" 
-              class="btn-action btn-action-arrive" 
+              class="btn-flow btn-flow-arrive" 
               (click)="cambiarEstado(turno, 'En Espera')"
-              title="Paciente llegó">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
-              </svg>
-              Llegó
+              title="Anunciar recepción del paciente en sala">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Paciente en Sala
             </button>
+
             <button 
               *ngSwitchCase="'En Espera'" 
-              class="btn-action btn-action-attend" 
+              class="btn-flow btn-flow-attend" 
               (click)="cambiarEstado(turno, 'En Atencion')"
-              title="Iniciar atención">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/>
-              </svg>
-              Atender
+              title="Hacer pasar al consultorio e iniciar atención">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/></svg>
+              Llamar a Consulta
             </button>
+
             <button 
               *ngSwitchCase="'En Atencion'" 
-              class="btn-action btn-action-finish" 
+              class="btn-flow btn-flow-finish" 
               (click)="cambiarEstado(turno, 'Atendido')"
-              title="Finalizar atención">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
+              title="Finalizar consulta médica">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               Finalizar
             </button>
           </ng-container>
+
+          <!-- Botón de Altavoz / Chime manual -->
           <button 
             *ngIf="turno.estado === 'En Atencion' || turno.estado === 'En Espera'"
-            class="btn-action btn-action-speak"
+            class="btn-action-icon btn-speak"
             (click)="llamarPaciente(turno)"
-            title="Llamar por Altavoz (Chime)">
+            title="Llamar por Altavoz (Pantalla Gigante)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
             </svg>
           </button>
+
+          <!-- Botón de Cancelación -->
           <button 
             *ngIf="turno.estado !== 'Atendido' && turno.estado !== 'Cancelado'" 
-            class="btn-action btn-action-cancel" 
+            class="btn-action-icon btn-cancel" 
             (click)="cambiarEstado(turno, 'Cancelado')"
-            title="Cancelar turno">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
+            title="Cancelar o declarar ausente">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </button>
         </div>
       </div>
+
     </div>
 
-    <!-- Empty State -->
+    <!-- Vacío Digno / Empty State -->
     <ng-template #emptyState>
-      <div class="empty-state">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <h3>No hay turnos para el filtro seleccionado</h3>
-        <p>Intenta cambiar los filtros o vuelve más tarde</p>
+      <div class="empty-state-card">
+        <div class="empty-state-illustration">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10M6 10h10M6 14h6"/>
+            <circle cx="18" cy="18" r="3"/>
+            <path d="m17 18 1 1 2-2"/>
+          </svg>
+        </div>
+        <h3>Sala de Espera Despejada</h3>
+        <p *ngIf="filtroEstado === 'todos' && turnosHoy.length === 0">
+          No hay turnos registrados en la agenda del día de hoy. Cuando se reserven turnos o lleguen pacientes, aparecerán automáticamente en esta pantalla.
+        </p>
+        <p *ngIf="turnosHoy.length > 0">
+          No hay pacientes en la sala bajo el estado <strong>{{ filtroEstado }}</strong>. Los pacientes en otros estados continúan su curso habitual en la agenda.
+        </p>
+        <button class="btn-reset-filter" (click)="filtroEstado = 'todos'" *ngIf="filtroEstado !== 'todos'">
+          Ver todos los pacientes del día
+        </button>
       </div>
     </ng-template>
   </div>
+
 </div>
 
-<!-- Full screen Patient Call Alert Overlay -->
+<!-- Superposición a Pantalla Completa: LLAMADO A PACIENTE -->
 <div class="call-overlay" *ngIf="showCallAlert && pacienteLlamado">
-  <div class="call-content">
-    <div class="call-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bell-icon">
+  <div class="call-modal-card">
+    <button class="call-close-btn" (click)="cerrarLlamadoManual()" title="Cerrar aviso">×</button>
+
+    <div class="call-bell-container">
+      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animated-bell">
         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
     </div>
-    <div class="call-banner">LLAMADO A PACIENTE</div>
-    <h1 class="call-patient-name">{{ pacienteLlamado.pacienteNombre }}</h1>
-    <div class="call-divider"></div>
-    <div class="call-details">
-      <div class="call-detail-item">
-        <span class="call-label">Médico:</span>
-        <span class="call-value">{{ pacienteLlamado.profesionalNombre }}</span>
+
+    <div class="call-badge-pill">LLAMADO DE CONSULTORIO</div>
+
+    <h1 class="call-patient-title">{{ pacienteLlamado.pacienteNombre }}</h1>
+
+    <div class="call-divider-line"></div>
+
+    <div class="call-info-box">
+      <div class="call-info-row">
+        <span class="call-info-label">Profesional:</span>
+        <span class="call-info-val">Dr/Dra. {{ pacienteLlamado.profesionalNombre }}</span>
       </div>
-      <div class="call-detail-item" *ngIf="pacienteLlamado.obraSocialNombre">
-        <span class="call-label">Obra Social:</span>
-        <span class="call-value">{{ pacienteLlamado.obraSocialNombre }}</span>
+
+      <div class="call-info-row" *ngIf="pacienteLlamado.obraSocialNombre">
+        <span class="call-info-label">Cobertura:</span>
+        <span class="call-info-val">{{ pacienteLlamado.obraSocialNombre }}</span>
       </div>
-      <div class="call-detail-item">
-        <span class="call-label">Estado:</span>
-        <span class="call-value highlight">POR FAVOR, INGRESE AL CONSULTORIO</span>
+
+      <div class="call-instruction-badge">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        POR FAVOR, INGRESE AL CONSULTORIO
       </div>
     </div>
   </div>

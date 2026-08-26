@@ -10,8 +10,13 @@ namespace Vitalis.Infrastructure.Services;
 public class ConsultaMedicaService : IConsultaMedicaService
 {
     private readonly VitalisDbContext _context;
+    private readonly IEmailService _emailService;
 
-    public ConsultaMedicaService(VitalisDbContext context) => _context = context;
+    public ConsultaMedicaService(VitalisDbContext context, IEmailService emailService)
+    {
+        _context = context;
+        _emailService = emailService;
+    }
 
     public async Task<List<ConsultaMedicaDto>> ObtenerPorPacienteAsync(int pacienteId)
     {
@@ -103,6 +108,27 @@ public class ConsultaMedicaService : IConsultaMedicaService
 
         _context.ConsultasMedicas.Add(consulta);
         await _context.SaveChangesAsync();
+
+        var pac = await _context.Pacientes.FindAsync(consulta.PacienteId);
+        var prof = await _context.Profesionales.FindAsync(consulta.ProfesionalId);
+        if (pac != null && !string.IsNullOrWhiteSpace(pac.Email))
+        {
+            await _emailService.NotificarAsync(new Application.DTOs.Emails.NotificacionRequest
+            {
+                Destinatario = pac.Email,
+                Evento = Domain.Constants.EventoNotificacion.ResumenConsulta,
+                TurnoId = consulta.TurnoId,
+                Datos = new Dictionary<string, string>
+                {
+                    ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
+                    ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Tratante",
+                    ["FechaHora"] = consulta.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                    ["Indicaciones"] = string.IsNullOrWhiteSpace(consulta.Indicaciones)
+                        ? "Seguir las pautas acordadas durante la consulta médica."
+                        : consulta.Indicaciones
+                }
+            });
+        }
 
         return await ObtenerPorIdAsync(consulta.Id) ?? throw new Exception("Error al crear consulta");
     }

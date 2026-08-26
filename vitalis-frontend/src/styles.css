@@ -47,6 +47,8 @@
   --color-success: hsl(var(--hue-success), 62%, 36%);
   --color-warning: hsl(var(--hue-warning), 90%, 48%);
   --color-danger: hsl(var(--hue-danger), 74%, 51%);
+  --color-info: hsl(var(--hue-primary), 60%, 38%);           /* informativo, dentro de la familia teal */
+  --text-on-color: hsl(0, 0%, 100%);                         /* texto sobre fondos saturados (toasts, insignias) */
 
   --border-color: hsl(var(--hue-neutral), 15%, 89%);
   --border-light: hsl(var(--hue-neutral), 15%, 94%);

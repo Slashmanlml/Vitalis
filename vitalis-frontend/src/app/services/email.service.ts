@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface EmailLog {
@@ -9,6 +9,11 @@ export interface EmailLog {
   asunto: string;
   cuerpo: string;
   fechaEnvio: string;
+  origen: string;
+  evento: string;
+  turnoId?: number;
+  estado: string;
+  mensajeError?: string;
 }
 
 export interface SimularEmailDto {
@@ -24,8 +29,12 @@ export class EmailService {
 
   constructor(private http: HttpClient) {}
 
-  obtenerTodos(): Observable<EmailLog[]> {
-    return this.http.get<EmailLog[]>(this.apiUrl);
+  obtenerTodos(origen?: string, evento?: string, estado?: string): Observable<EmailLog[]> {
+    let params = new HttpParams();
+    if (origen) params = params.set('origen', origen);
+    if (evento) params = params.set('evento', evento);
+    if (estado) params = params.set('estado', estado);
+    return this.http.get<EmailLog[]>(this.apiUrl, { params });
   }
 
   simularEnvio(dto: SimularEmailDto): Observable<EmailLog> {
@@ -34,9 +43,5 @@ export class EmailService {
 
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  limpiar(): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/limpiar`);
   }
 }

@@ -1,0 +1,10 @@
+Esta carpeta debe existir ANTES de que arranque la API.
+
+UseStaticFiles() se enlaza al directorio raíz web durante el arranque: si wwwroot
+no existe en ese momento, ASP.NET avisa "Static files may be unavailable" y las
+imágenes subidas se guardan pero no se pueden servir. UploadsController crea la
+carpeta al subir el primer archivo, pero para entonces el middleware ya quedó sin
+raíz, así que la foto aparece rota hasta reiniciar.
+
+Se versiona la carpeta vacía (no su contenido) para que el sistema funcione en
+una máquina recién clonada.

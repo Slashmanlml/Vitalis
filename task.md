@@ -217,16 +217,151 @@
       fichas con etiqueta escrita y barras de un solo tono, donde la longitud codifica la
       magnitud y el color no carga información.
 
+- [x] Confirmado por Tito: **73/73** tras rehacer Reportes, y **79/79** tras el módulo
+      de mails que sumó Gemini.
+- [x] **[Módulo] Pantalla de Prescripciones — la construyó Gemini** (commit `28bea73`).
+      Claude estuvo a punto de construirla de nuevo y la habría sobrescrito; se detectó
+      revisando `git log` antes de escribir. De ahí salió el plan de trabajo en paralelo
+      (docs/11). Se revisó y se le corrigió un problema de seguridad clínica: el
+      formulario abría con una **posología precargada** ("500 mg / cada 8 horas / 7 días")
+      y el primer medicamento del catálogo preseleccionado, con lo cual alcanzaba con no
+      mirar para emitir una receta que ningún profesional indicó. La plantilla ya mostraba
+      esos ejemplos como *placeholder*; ahora arrancan vacíos y el medicamento se elige.
+- [x] **[Módulo] Bloqueo de agenda completado.** El hueco real no era estético: crear un
+      bloqueo **cancela turnos y notifica pacientes de forma irreversible, y no avisaba
+      cuántos**. Se agregó `GET /api/BloqueosAgenda/impacto`, que simula el bloqueo sin
+      aplicarlo y devuelve los turnos que se perderían, cuántos pacientes afecta y cuántos
+      de ellos no tienen correo cargado (o sea, no se van a enterar). El formulario ahora
+      exige revisar antes de confirmar.
+      Decisión de diseño importante: la previsualización y la cancelación real comparten
+      **una sola consulta** (`TurnosAfectadosPor`), porque si cada una tuviera la suya,
+      tocar una sola haría que el número anunciado dejara de coincidir con lo que se
+      cancela. Hay un test específico que compara ambas.
+      Además: separación entre bloqueos vigentes y pasados con marca de "en curso", el
+      componente pasó a usar `jwt.util.ts` en vez de decodificar el token a mano (era el
+      segundo lugar que lo duplicaba), se sacaron los toasts duplicados, se dejó de pedir
+      dos veces la lista de profesionales, y el aviso al eliminar ahora aclara que los
+      turnos cancelados **no** se restauran. Tests de BloqueoAgendaService: de 10 a **16**.
+- [x] **[Coordinación] Especificaciones para trabajo en paralelo.** Con tres asistentes
+      sobre el mismo repositorio, se escribieron dos documentos:
+      `docs/10-especificacion-modulo-notificaciones.md` (para Gemini) y
+      `docs/11-plan-de-trabajo-en-paralelo.md` (reparto de territorios + brief de la
+      pantalla de usuarios para OpenCode/DeepSeek). La regla base: cada archivo tiene un
+      único dueño, y los archivos compartidos (rutas, menú, tokens de estilo,
+      inyección de dependencias) los toca sólo Claude.
+- [x] Limpiadas dos advertencias CS0105 (`using` duplicado en CrearUsuarioDto.cs y
+      EditarUsuarioDto.cs).
+
+- [x] **[Documento] Formato APA 7 aplicado a la tesina.** Diagnóstico previo: el
+      contenido estaba bien escrito y las 10 referencias todas citadas en el texto (sin
+      huérfanas), y ya cumplía Times New Roman 12, interlineado doble y márgenes de
+      2,54 cm. Lo que faltaba: **no tenía números de página** (no existía encabezado ni
+      pie en todo el documento), los títulos estaban en el azul por defecto de Word
+      (`#2E74B5`) y escalonados en 16/13/12 pt, no había sangría de primera línea, y los
+      estilos de título carecían de nivel de esquema, que es lo que impide generar el
+      índice automático.
+      Corregido: títulos en negro al mismo cuerpo que el texto (12 pt), diferenciados por
+      negrita y cursiva según nivel APA, con `outlineLvl`; encabezado nuevo con número de
+      página arriba a la derecha en las 11 secciones; sangría de 1,27 cm y sin espacio
+      extra entre párrafos en los 109 párrafos de cuerpo. Se conservó la numeración de
+      secciones por decisión de Tito (convención en tesinas técnicas en español, y el
+      propio texto se referencia por número de sección).
+      Detalle que importaba: los títulos tenían **formato directo en los runs** que pisaba
+      al estilo, así que cambiar sólo la hoja de estilos no habría servido; hubo que
+      limpiar los 81. Validado contra el esquema XSD y renderizado a PDF para revisarlo.
+- [x] **[Coordinación] Primera ronda en paralelo verificada.** Gemini entregó el módulo de
+      notificaciones (MailKit, `IClienteSmtp`, `PlantillasEmail`, `RecordatorioTurnosService`,
+      migración `EnriquecerEmailLogParaAuditoria`) y DeepSeek la pantalla de usuarios.
+      Ambos respetaron los territorios. Se corrió la lista de aceptación de la
+      especificación: cero apariciones de `paciente@vitalis.local`, `SendEmailAsync` y
+      `LimpiarLogsAsync` eliminados del contrato, cero hexadecimales en `usuarios.css`,
+      `EmailLog` con Origen/Evento/Estado/TurnoId/MensajeError. Verificado por Claude con
+      el trabajo de los tres combinado: plantillas estrictas en cero errores, build limpio
+      y `ng test` en verde.
+      Claude agregó lo que le correspondía: ruta `usuarios` y entrada de menú (sólo
+      Administrador). DeepSeek hizo bien en no agregarlas.
+
+- [x] Confirmado por Tito: **100/100** en el backend.
+- [x] **[Documento] Defecto grave corregido: las tres figuras se imprimían recortadas.**
+      El modelo entidad-relación, la arquitectura y el flujo de información se veían como
+      una franja de medio centímetro. La imagen fuente y el tamaño declarado en el XML
+      estaban perfectos (6,88 × 4,98 pulgadas, sin recorte); la causa era que los párrafos
+      que las contienen heredaban interlineado **exacto** de 24 pt, y una imagen en línea
+      dentro de un párrafo con interlineado exacto queda recortada a esa altura. Se les
+      puso interlineado simple explícito. Se verificó contra el documento original que el
+      defecto era preexistente y no introducido por los cambios de formato.
+- [x] **[Documento] Rótulos de figuras y tablas en formato APA 7.** Los 9 estaban debajo
+      del elemento, en cursiva y en una sola línea. Ahora van arriba, con el número en
+      negrita en su propia línea y el título en cursiva debajo, sin punto final.
+- [x] **[Documento] Contenido puesto al día.** Resumen y abstract reescritos (de "trece
+      pruebas" a cien, notificaciones reales en lugar de simuladas). Sección 5.3 ampliada
+      con la agenda semanal, la previsualización de impacto de bloqueos y los reportes de
+      gestión. Sección 6.3 corregida: decía que sólo cuatro servicios tenían pruebas
+      dedicadas y que el resto se validaba a mano, cuando hoy están todos cubiertos.
+      Sección 6.4 depurada: **tres de las cuatro limitaciones listadas ya estaban
+      resueltas** (menú por rol, expiración de token en el guard, notificaciones
+      simuladas). Se reemplazaron por limitaciones ciertas —dependencia de que la API
+      esté corriendo para los recordatorios, ausencia de cola de reintentos de correo,
+      falta de preferencias de notificación del paciente y cobertura acotada del
+      frontend— en lugar de simplemente borrarlas: una sección de limitaciones específica
+      dice más de un trabajo que una lista corta.
+
+- [x] **[Coordinación] Segunda ronda verificada.** DeepSeek entregó 28 pruebas de
+      frontend (jwt.util + 4 servicios) y Gemini el módulo de reportes de facturación.
+      Verificado con todo combinado: plantillas estrictas sin errores, build limpio,
+      **33 pruebas de frontend en verde** (antes 5).
+- [x] **[Módulo] Panel principal rehecho.** Antes mostraba totales históricos —cuántos
+      pacientes hay en la base, cuántas obras sociales— que no le sirven a nadie que abre
+      el sistema a la mañana. Ahora muestra **la operación del día**: turnos de hoy
+      desglosados por estado, los próximos turnos con hora y paciente, y la carga de la
+      jornada por profesional. Es sensible al rol: un médico ve su propia jornada, no la
+      de toda la clínica.
+      Se agregó un aviso accionable que aparece **sólo si hay turnos sin confirmar** —un
+      panel que siempre muestra la misma alerta deja de leerse a los dos días— con enlace
+      directo a la agenda. Se eliminaron dos servicios inyectados que ya no se usaban y el
+      toast de error duplicado, que violaba nuestra propia regla.
+      Criterio visual: los cuatro números del encabezado van como fichas y no como
+      gráfico, porque son cifras sueltas y no una serie; el color vive en el borde
+      superior y el número se queda en tinta de texto para no perder contraste; y la
+      etiqueta escrita es lo que comunica el estado, nunca el color solo.
+
 ## Pendiente
-- [x] **Confirmar 73/73 en el backend**: `dotnet test tests\Vitalis.Tests` (65 previos − 5
-      tests viejos de Reporte + 13 nuevos). Cambió `ReporteService`, su interfaz y su DTO. (Completado: se ejecutó dotnet test y pasaron las 81 pruebas con éxito).
+- [ ] **[Tito] Nombre del director** para la portada. Es lo único que bloquea el cierre
+      del documento. Pospuesto: todavía no se sabe quién integra la mesa.
+- [ ] **[Gemini] Rediseño de la Sala de Espera** — ver `docs/13`.
+- [ ] **[DeepSeek] Datos de demostración clínicos en `DbSeeder.cs`** — ver `docs/13`.
+      Hallazgo: el seeder no siembra consultas, antecedentes, alergias ni prescripciones,
+      así que en la demo Historia Clínica y Prescripciones aparecen **vacías**.
+- [ ] **Actualizar el índice en Word**: abrir el documento y hacer Referencias →
+      Actualizar tabla → Actualizar todo. Ahora sí funciona (los estilos de título ya
+      tienen nivel de esquema).
+- [ ] **Borrar `_verif.tgz` y `_build-check.tgz`** de la raíz (temporales de compilación
+      míos; perdí el permiso de borrado al reconectarse el puente).
+- [ ] **Ensayar la demo** con `docs/09-guion-demo-y-defensa.md` y el sistema corriendo, y
+      grabar el video de respaldo. Es lo que separa "documento terminado" de "listo para
+      defender": la mayoría de los tropiezos en una defensa son operativos, no
+      conceptuales.
+- [ ] **Revisión final de coherencia** del documento, cuando el texto ya no cambie más.
 - [ ] **Confirmar visualmente la paleta teal** corriendo `ng serve` y recorriendo las
       pantallas. Agenda y Reportes ya se validaron con capturas, pero el resto cambió de
       base cromática y conviene mirarlas.
-- [x] **[Módulo] Pantalla de Prescripciones** (Construida y verificada). Se creó el componente
-      `app/prescripciones` con selector de paciente, modal para emitir recetas dinámicas
-      con fármacos del catálogo, vista de detalle e impresión formal con PrintService. Se
-      conectó la ruta en `app.config.ts` y se agregó el acceso al menú lateral por rol.
+- [ ] **[Gemini] Módulo de notificaciones por correo** — ver docs/10. Envío real por SMTP
+      (Brevo), aviso de turno, recordatorio automático 24 h antes, resumen de consulta, y
+      `EmailLog` enriquecido para que un correo del sistema no sea indistinguible de uno
+      fabricado a mano.
+- [ ] **[DeepSeek] Pantalla de gestión de usuarios** — ver docs/11 sección 5. El backend
+      ya expone los 5 endpoints y ningún componente los consume.
+- [ ] **[Claude] Panel principal.** Rehacerlo con métricas reales aprovechando los
+      endpoints de reportes ya conectados.
+- [ ] **[Claude] Documento de la tesina.** Es lo único que efectivamente se entrega y
+      sigue con el nombre del director en blanco, sin revisión final de ortografía y
+      referencias, sin índice actualizado, y **sin documentar nada de lo construido en
+      estas rondas** (agenda, reportes, prescripciones, bloqueos, notificaciones).
+- [ ] ~~Pantalla de Prescripciones~~ — hecha por Gemini, ver arriba. Detalle original: el backend
+      tiene `PrescripcionesController` completo con 9 tests, y el frontend tenía
+      `prescripcion.service.ts` y su modelo con **0 usos** — faltaba la pantalla: emitir
+      receta desde una consulta, elegir medicamentos del catálogo, historial por paciente
+      e impresión.
 - [ ] **[Reportes] Ampliar a facturación y liquidaciones.** Los reportes actuales cubren
       la agenda (turnos). El backend no expone todavía indicadores de facturación,
       cobranzas ni liquidaciones a profesionales, que es el otro sector con peso propio.
@@ -235,10 +370,10 @@
       sobre los turnos antes de confirmar.
 - [ ] **[Módulo] Panel principal básico** (marcado por Tito). Rehacerlo con métricas reales:
       turnos del día, ocupación por profesional, facturación del mes, alertas.
-- [x] **[Módulo] Simulador de correos y auditoría de notificaciones.** Reconvertido en simulador
-      interactivo completo con plantillas (Confirmación de Turno, Recordatorio 24hs, Cancelación,
-      Receta Médica, Bienvenida, Personalizado), selector de paciente, buscador/filtro en bandeja,
-      eliminación de registros, disparos automáticos desde Prescripciones/Turnos y 6 pruebas unitarias específicas.
+- [ ] **[Módulo] Simulador de correos → registro de notificaciones.** Decidido con Tito:
+      reconvertirlo en auditoría real de mails enviados (destinatario, evento que lo
+      disparó, fecha, resultado) y evaluar envío real con un servicio gratuito. Confirmar
+      los límites del plan gratuito al momento de implementarlo, no de memoria.
 - [ ] **[Estética] Sala de espera: revisar el color** (marcado por Tito). La pantalla le
       gusta funcionalmente pero no el color; ya migró a los tokens nuevos, falta que la
       mire con la paleta teal y decida.
