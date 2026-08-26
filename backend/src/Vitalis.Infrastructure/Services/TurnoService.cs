@@ -190,6 +190,7 @@ public class TurnoService : ITurnoService
 
         var fechaAnterior = turno.FechaHora;
         var estadoAnterior = turno.Estado;
+        var confirmadoAnterior = turno.Confirmado;
 
         turno.PacienteId = dto.PacienteId;
         turno.ProfesionalId = dto.ProfesionalId;
@@ -234,6 +235,24 @@ public class TurnoService : ITurnoService
                 <p>Le informamos que su turno para el día <strong>{fechaStr}</strong> con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido cancelado.</p>
                 <br/>
                 <p>Atentamente,<br/><strong>Equipo Vitalis</strong></p>
+            </div>";
+            await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
+        }
+
+        // Notificar Confirmación
+        if (turno.Confirmado && !confirmadoAnterior && pac != null && prof != null)
+        {
+            string fechaStr = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
+            string asunto = "Turno Confirmado Oficialmente - Vitalis";
+            string cuerpo = $@"<div style='font-family: Arial, sans-serif; padding: 20px; color: #1e293b; background: #f8fafc; border-radius: 8px;'>
+                <div style='background: #0f766e; color: #fff; padding: 15px 20px; border-radius: 6px; text-align: center;'>
+                    <h2 style='margin:0;'>¡Su turno ha sido confirmado!</h2>
+                </div>
+                <div style='padding: 20px; background: #fff; margin-top: 15px; border-radius: 6px; border: 1px solid #e2e8f0;'>
+                    <p>Estimado/a <strong>{pac.Nombre} {pac.Apellido}</strong>,</p>
+                    <p>Le informamos que su turno para el día <strong>{fechaStr}</strong> con el profesional <strong>Dr/Dra. {prof.Nombre} {prof.Apellido}</strong> ha sido confirmado en la agenda.</p>
+                </div>
+                <p style='font-size: 12px; color: #64748b; text-align: center; margin-top: 15px;'>Equipo Vitalis - Consultorios Médicos</p>
             </div>";
             await _emailService.SendEmailAsync(pac.Email ?? "paciente@vitalis.local", asunto, cuerpo);
         }

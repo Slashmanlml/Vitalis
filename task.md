@@ -235,10 +235,10 @@
       sobre los turnos antes de confirmar.
 - [ ] **[Módulo] Panel principal básico** (marcado por Tito). Rehacerlo con métricas reales:
       turnos del día, ocupación por profesional, facturación del mes, alertas.
-- [ ] **[Módulo] Simulador de correos → registro de notificaciones.** Decidido con Tito:
-      reconvertirlo en auditoría real de mails enviados (destinatario, evento que lo
-      disparó, fecha, resultado) y evaluar envío real con un servicio gratuito. Confirmar
-      los límites del plan gratuito al momento de implementarlo, no de memoria.
+- [x] **[Módulo] Simulador de correos y auditoría de notificaciones.** Reconvertido en simulador
+      interactivo completo con plantillas (Confirmación de Turno, Recordatorio 24hs, Cancelación,
+      Receta Médica, Bienvenida, Personalizado), selector de paciente, buscador/filtro en bandeja,
+      eliminación de registros, disparos automáticos desde Prescripciones/Turnos y 6 pruebas unitarias específicas.
 - [ ] **[Estética] Sala de espera: revisar el color** (marcado por Tito). La pantalla le
       gusta funcionalmente pero no el color; ya migró a los tokens nuevos, falta que la
       mire con la paleta teal y decida.

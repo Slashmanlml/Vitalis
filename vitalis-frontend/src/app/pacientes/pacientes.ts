@@ -8,6 +8,7 @@ import { UploadService } from '../services/upload.service';
 import { Paciente, CrearPaciente, EditarPaciente } from '../models/paciente.model';
 import { ObraSocial } from '../models/obra-social.model';
 import { ToastService } from '../services/toast.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-pacientes',
@@ -17,6 +18,7 @@ import { ToastService } from '../services/toast.service';
   styleUrls: ['./pacientes.css']
 })
 export class PacientesComponent implements OnInit {
+  serverUrl = environment.serverUrl;
   pacientes: Paciente[] = [];
   filteredPacientes: Paciente[] = [];
   obrasSociales: ObraSocial[] = [];

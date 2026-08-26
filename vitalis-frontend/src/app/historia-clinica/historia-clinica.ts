@@ -12,6 +12,7 @@ import { ConsultaMedica, CrearConsulta, Antecedente, CrearAntecedente, Alergia, 
 import { PrintService } from '../services/print.service';
 import { ToastService } from '../services/toast.service';
 import { UploadService } from '../services/upload.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-historia-clinica',
@@ -21,6 +22,7 @@ import { UploadService } from '../services/upload.service';
   styleUrls: ['./historia-clinica.css']
 })
 export class HistoriaClinicaComponent implements OnInit, OnDestroy {
+  serverUrl = environment.serverUrl;
   pacientes: Paciente[] = [];
   selectedPacienteId: number = 0;
   selectedPaciente: Paciente | null = null;

@@ -7,6 +7,7 @@ import { UploadService } from '../services/upload.service';
 import { Profesional, CrearProfesional, EditarProfesional } from '../models/profesional.model';
 import { Especialidad } from '../models/especialidad.model';
 import { ToastService } from '../services/toast.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-profesionales',
@@ -16,6 +17,7 @@ import { ToastService } from '../services/toast.service';
   styleUrls: ['./profesionales.css']
 })
 export class ProfesionalesComponent implements OnInit {
+  serverUrl = environment.serverUrl;
   profesionales: Profesional[] = [];
   especialidades: Especialidad[] = [];
   showModal: boolean = false;

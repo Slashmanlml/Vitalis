@@ -18,6 +18,10 @@ public class NoOpEmailService : IEmailService
 {
     public Task SendEmailAsync(string to, string subject, string body) => Task.CompletedTask;
     public Task<IEnumerable<EmailLog>> GetEmailLogsAsync() => Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
+    public Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion, string? asuntoPersonalizado = null, string? cuerpoPersonalizado = null) =>
+        Task.FromResult(new EmailLog { Destinatario = to, Asunto = asuntoPersonalizado ?? tipoNotificacion, Cuerpo = cuerpoPersonalizado ?? "" });
+    public Task<bool> EliminarLogAsync(int id) => Task.FromResult(true);
+    public Task<bool> LimpiarLogsAsync() => Task.FromResult(true);
 }
 
 public class TurnoServiceTests

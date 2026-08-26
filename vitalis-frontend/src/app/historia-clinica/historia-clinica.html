@@ -60,8 +60,8 @@
                 <div class="tl-field" *ngIf="c.estudioAdjuntoUrl">
                   <label>Estudio Clínico Adjunto</label>
                   <div class="clinical-attachment-view">
-                    <a [href]="'http://localhost:5004' + c.estudioAdjuntoUrl" target="_blank" class="attachment-link">
-                      <img [src]="'http://localhost:5004' + c.estudioAdjuntoUrl" class="attachment-thumbnail" />
+                    <a [href]="serverUrl + c.estudioAdjuntoUrl" target="_blank" class="attachment-link">
+                      <img [src]="serverUrl + c.estudioAdjuntoUrl" class="attachment-thumbnail" />
                       <span class="attachment-link-label">Ver Estudio Ampliado</span>
                     </a>
                   </div>
@@ -165,7 +165,7 @@
           </label>
           <span class="attachment-name" *ngIf="consultaForm.estudioAdjuntoUrl">
             ✓ Archivo cargado correctamente: 
-            <a [href]="'http://localhost:5004' + consultaForm.estudioAdjuntoUrl" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Ver Archivo</a>
+            <a [href]="serverUrl + consultaForm.estudioAdjuntoUrl" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Ver Archivo</a>
           </span>
         </div>
       </div>

@@ -30,6 +30,16 @@ public class RecordingEmailService : IEmailService
     }
 
     public Task<IEnumerable<EmailLog>> GetEmailLogsAsync() => Task.FromResult<IEnumerable<EmailLog>>(new List<EmailLog>());
+
+    public Task<EmailLog> SimularEnvioAsync(string to, string tipoNotificacion, string? asuntoPersonalizado = null, string? cuerpoPersonalizado = null)
+    {
+        var subject = asuntoPersonalizado ?? tipoNotificacion;
+        Enviados.Add((to, subject));
+        return Task.FromResult(new EmailLog { Destinatario = to, Asunto = subject, Cuerpo = cuerpoPersonalizado ?? "" });
+    }
+
+    public Task<bool> EliminarLogAsync(int id) => Task.FromResult(true);
+    public Task<bool> LimpiarLogsAsync() => Task.FromResult(true);
 }
 
 public class BloqueoAgendaServiceTests
