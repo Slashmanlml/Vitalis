@@ -326,77 +326,81 @@
       etiqueta escrita es lo que comunica el estado, nunca el color solo.
 
 ## Pendiente
-- [ ] **[Tito] Nombre del director** para la portada. Es lo único que bloquea el cierre
-      del documento. Pospuesto: todavía no se sabe quién integra la mesa.
-- [ ] **[Gemini] Rediseño de la Sala de Espera** — ver `docs/13`.
-- [ ] **[DeepSeek] Datos de demostración clínicos en `DbSeeder.cs`** — ver `docs/13`.
-      Hallazgo: el seeder no siembra consultas, antecedentes, alergias ni prescripciones,
-      así que en la demo Historia Clínica y Prescripciones aparecen **vacías**.
-- [ ] **Actualizar el índice en Word**: abrir el documento y hacer Referencias →
-      Actualizar tabla → Actualizar todo. Ahora sí funciona (los estilos de título ya
-      tienen nivel de esquema).
-- [ ] **Borrar `_verif.tgz` y `_build-check.tgz`** de la raíz (temporales de compilación
-      míos; perdí el permiso de borrado al reconectarse el puente).
-- [ ] **Ensayar la demo** con `docs/09-guion-demo-y-defensa.md` y el sistema corriendo, y
-      grabar el video de respaldo. Es lo que separa "documento terminado" de "listo para
-      defender": la mayoría de los tropiezos en una defensa son operativos, no
-      conceptuales.
-- [ ] **Revisión final de coherencia** del documento, cuando el texto ya no cambie más.
-- [ ] **Confirmar visualmente la paleta teal** corriendo `ng serve` y recorriendo las
-      pantallas. Agenda y Reportes ya se validaron con capturas, pero el resto cambió de
-      base cromática y conviene mirarlas.
-- [ ] **[Gemini] Módulo de notificaciones por correo** — ver docs/10. Envío real por SMTP
-      (Brevo), aviso de turno, recordatorio automático 24 h antes, resumen de consulta, y
-      `EmailLog` enriquecido para que un correo del sistema no sea indistinguible de uno
-      fabricado a mano.
-- [ ] **[DeepSeek] Pantalla de gestión de usuarios** — ver docs/11 sección 5. El backend
-      ya expone los 5 endpoints y ningún componente los consume.
-- [ ] **[Claude] Panel principal.** Rehacerlo con métricas reales aprovechando los
-      endpoints de reportes ya conectados.
-- [ ] **[Claude] Documento de la tesina.** Es lo único que efectivamente se entrega y
-      sigue con el nombre del director en blanco, sin revisión final de ortografía y
-      referencias, sin índice actualizado, y **sin documentar nada de lo construido en
-      estas rondas** (agenda, reportes, prescripciones, bloqueos, notificaciones).
-- [ ] ~~Pantalla de Prescripciones~~ — hecha por Gemini, ver arriba. Detalle original: el backend
-      tiene `PrescripcionesController` completo con 9 tests, y el frontend tenía
-      `prescripcion.service.ts` y su modelo con **0 usos** — faltaba la pantalla: emitir
-      receta desde una consulta, elegir medicamentos del catálogo, historial por paciente
-      e impresión.
-- [ ] **[Reportes] Ampliar a facturación y liquidaciones.** Los reportes actuales cubren
-      la agenda (turnos). El backend no expone todavía indicadores de facturación,
-      cobranzas ni liquidaciones a profesionales, que es el otro sector con peso propio.
-- [ ] **[Módulo] Bloqueo de agenda incompleto** (marcado por Tito). Falta al menos vista de
-      bloqueos vigentes, recurrencia (vacaciones/días fijos) y previsualización del impacto
-      sobre los turnos antes de confirmar.
-- [ ] **[Módulo] Panel principal básico** (marcado por Tito). Rehacerlo con métricas reales:
-      turnos del día, ocupación por profesional, facturación del mes, alertas.
-- [ ] **[Módulo] Simulador de correos → registro de notificaciones.** Decidido con Tito:
-      reconvertirlo en auditoría real de mails enviados (destinatario, evento que lo
-      disparó, fecha, resultado) y evaluar envío real con un servicio gratuito. Confirmar
-      los límites del plan gratuito al momento de implementarlo, no de memoria.
-- [ ] **[Estética] Sala de espera: revisar el color** (marcado por Tito). La pantalla le
-      gusta funcionalmente pero no el color; ya migró a los tokens nuevos, falta que la
-      mire con la paleta teal y decida.
-- [ ] Recomendación de tooling para acelerar el resto de la tesis (ver detalle en el chat):
-      (1) subir a GitHub los cambios de esta sesión (hoy están sin commitear/pushear en tu
-      máquina) para que el historial sea real y Claude pueda trabajar directo con git;
-      (2) considerar habilitar "Computer use" para que Claude pueda manejar la terminal de
-      PowerShell directamente en vez de que copies/pegues resultados; (3) si no, seguir con
-      el flujo actual de revisión manual + vos confirmás con `dotnet test`, que ya viene
-      funcionando bien.
-- [ ] Completar el nombre del director en la portada de Vitalis_Tesina.docx
-- [ ] Revisión final de la tesina: actualizar índice en Word, ortografía, referencias
-      cruzadas a tablas/figuras (ver plan de desarrollo, sección 6)
-- [ ] Ensayar el guion de demo (docs/09) y grabar el video de respaldo
-- [ ] Evaluar si conviene agregar accesos de menú para Historia Clínica, Prescripciones,
-      Facturación, Liquidaciones, Auditorías, Medicamentos y Prestaciones: hoy esas
-      pantallas existen y tienen ruta, pero no tienen entrada en el menú lateral (se
-      revisó al ajustar el menú por rol; no se tocó porque excede el alcance de "ocultar
-      secciones", pero conviene decidirlo antes de la defensa)
-- [ ] Evaluar si conviene una pantalla de gestión de usuarios en el frontend: el backend
-      ya tiene UsuariosController (solo Administrador), pero no hay ninguna ruta ni
-      componente Angular que lo consuma
-- [ ] Revisar backend/frontend/js/app.js: parece un frontend previo/prototipo (no Angular)
-      que sigue en el repo con ~10.7k tokens de código. Confirmar si es código muerto que
-      se puede borrar o si todavía se usa para algo.
-- [ ] (Opcional / trabajo futuro) Control de concurrencia optimista en turnos y facturas
+
+> Depurado el 27/08/2026. Todo lo que estaba acá y ya se hizo se movió a "Hecho"
+> o se eliminó: una lista de pendientes con cosas terminadas adentro deja de
+> leerse a los pocos días.
+
+### Bloquea la entrega
+
+- [ ] **[Tito] Nombre del director** para la portada. Pospuesto: todavía no se
+      sabe quién integra la mesa.
+- [ ] **[Claude] Volcar al documento de la tesina** el material de
+      `docs/18-material-para-la-tesina.md`: los tres defectos detectados al
+      ejecutar, el hallazgo de autorización, la auditoría de lecturas, la
+      integridad de facturación, Docker y el salto de 65 a 116 pruebas.
+- [ ] **Actualizar el índice en Word**: Referencias → Actualizar tabla →
+      Actualizar todo.
+- [ ] **Revisión final de coherencia y ortografía** del documento, cuando el
+      texto ya no cambie más.
+- [ ] **Ensayar la demo** con `docs/09-guion-demo-y-defensa.md` sobre Docker, y
+      grabar el video de respaldo. La mayoría de los tropiezos en una defensa son
+      operativos, no conceptuales.
+- [ ] **Probar el plan de demostración** (`docs/17`): confirmar qué entradas
+      tiene el proyector, probar el acceso desde otra máquina de la red y con el
+      celular como punto de acceso.
+
+### Verificación pendiente
+
+- [ ] **Terminar el recorrido de prueba** (`docs/14`): bloque 3 (doce pantallas
+      sin recorrer), bloque 4 (circuito completo por rol) y bloque 5 (modo
+      oscuro, sesión, URL prohibida, pantalla angosta).
+- [ ] **[DeepSeek] Auditoría de seguridad, tandas 2 a 5** — ver `docs/15`. La
+      tanda 1 está en `docs/16`: sin hallazgos reales en facturación y
+      liquidaciones. Faltan `PacienteService` y `SearchService`,
+      `ReporteService` y `ReporteFacturacionService`, `BloqueoAgendaService` y
+      controladores, y el barrido de `.filter(` en el frontend.
+- [ ] **[DeepSeek] Pruebas de los servicios del frontend** — ver `docs/15`. Cinco
+      archivos nuevos: consulta-médica, prescripción, email, usuario y factura.
+- [ ] **Pantalla angosta / responsive** (bloque 5 de `docs/14`). Se probó desde
+      el celular y no se ve bien. No es prioritario —el jurado usa una
+      notebook—, pero achicar la ventana a la mitad es algo que a veces hacen.
+
+### Despliegue y producción (trabajo futuro de la tesina)
+
+> Vitalis corre hoy en contenedores **localmente**. Estar contenedorizado no es
+> estar hosteado: falta configuración de producción. Estos puntos van al
+> capítulo de trabajo futuro, y son la respuesta si alguien pregunta "¿está
+> desplegado?".
+
+- [ ] **Secretos fuera del repositorio.** La clave del JWT y la contraseña de
+      PostgreSQL son valores por defecto escritos en `docker-compose.yml`. En
+      producción van como secretos del proveedor. Hoy están en el historial de
+      git, así que además habría que rotarlas.
+- [ ] **HTTPS con certificado.** Sin esto las contraseñas viajan en texto plano.
+      Con Let's Encrypt es gratuito.
+- [ ] **Base de datos administrada en lugar de un contenedor.** La razón es una
+      sola y alcanza: **respaldos**. Un contenedor de PostgreSQL sin copias de
+      seguridad es una historia clínica que se pierde entera.
+- [ ] **Publicar las imágenes en un registro** (Docker Hub o GitHub Container
+      Registry) para que el despliegue sea `pull` y no reconstruir.
+- [ ] **Elegir dónde correrlo:** un servidor alquilado con Docker instalado
+      (mismo `docker-compose.yml`), o un servicio administrado de contenedores
+      que se ocupe de HTTPS y escalado.
+- [ ] **Dominio propio.**
+
+### Mejoras identificadas, sin decidir
+
+- [ ] **Bloqueo de agenda: recurrencia.** Hoy se crea un bloqueo por rango de
+      fechas. Falta el caso "todos los martes" o "vacaciones anuales". La vista
+      previa de impacto ya está hecha.
+- [ ] **Doble pago sobre una factura.** Se corrigió el caso de factura saldada y
+      el importe negativo. Queda revisar si un pago parcial que excede el saldo
+      restante debería recortarse o aceptarse.
+- [ ] **Paginación en facturación y liquidaciones.** Hoy se devuelven todos los
+      registros en una sola respuesta. Aceptable para el volumen de un
+      consultorio; sería un problema con varias sucursales. Ver `docs/16`,
+      hallazgo 5.
+- [ ] **Sala de espera: revisar el color** (marcado por Tito). Ya migró a los
+      tokens nuevos; falta que la mire con la paleta teal y decida.
+- [ ] (Opcional) Control de concurrencia optimista en turnos y facturas.
