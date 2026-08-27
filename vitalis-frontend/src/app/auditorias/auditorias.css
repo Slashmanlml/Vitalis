@@ -68,12 +68,17 @@
   font-weight: 600;
   text-transform: uppercase;
 }
-.badge-insert { background: hsl(var(--hue-success), 55%, 92%); color: hsl(var(--hue-success), 72%, 22%); }
-.badge-update { background: #dbeafe; color: #1d4ed8; }
-.badge-delete { background: hsl(var(--hue-danger), 75%, 94%); color: hsl(var(--hue-danger), 72%, 36%); }
+/* Los nombres siguen a los que guarda el backend (VitalisDbContext), en
+   castellano. Antes eran INSERT/UPDATE/DELETE y no coincidian con ningun
+   registro: el filtro por accion devolvia siempre lista vacia y las insignias
+   nunca tomaban color. */
+.badge-crear      { background: hsl(var(--hue-success), 55%, 92%); color: hsl(var(--hue-success), 72%, 22%); }
+.badge-modificar  { background: hsl(var(--hue-warning), 80%, 93%); color: hsl(var(--hue-warning), 85%, 26%); }
+.badge-eliminar   { background: hsl(var(--hue-danger), 75%, 94%); color: hsl(var(--hue-danger), 72%, 36%); }
+.badge-consultar  { background: var(--color-primary-bg); color: var(--color-primary); }
 
 .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
-.btn-primary { background: var(--color-primary); color: #fff; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: background .15s; }
+.btn-primary { background: var(--color-primary); color: var(--text-on-color); border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: background .15s; }
 .btn-primary:hover { background: var(--color-primary-hover); }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -109,10 +114,10 @@
   margin: 0 0 10px 0;
 }
 .json-viewer {
-  background: #0f172a;
+  background: var(--code-bg);
   border-radius: 8px;
   padding: 16px;
-  color: #94a3b8;
+  color: var(--code-text);
   font-family: monospace;
   font-size: 12px;
   max-height: 350px;
@@ -122,19 +127,19 @@
   margin-bottom: 4px;
 }
 .json-key {
-  color: #38bdf8;
+  color: var(--code-key);
   margin-right: 6px;
 }
 .json-val {
-  color: #e2e8f0;
+  color: var(--code-value);
 }
 .modified-key {
-  color: #fb923c;
+  color: var(--code-highlight);
   font-weight: 600;
 }
 .modified-val {
-  color: #fb923c;
-  background: rgba(251, 146, 60, 0.1);
+  color: var(--code-highlight);
+  background: var(--code-highlight-bg);
   padding: 1px 4px;
   border-radius: 4px;
   font-weight: 600;

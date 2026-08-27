@@ -16,9 +16,10 @@
       <label>Acción:</label>
       <select [(ngModel)]="selectedAccion" (change)="filtrar()">
         <option value="">Todas</option>
-        <option value="INSERT">Crear (INSERT)</option>
-        <option value="UPDATE">Modificar (UPDATE)</option>
-        <option value="DELETE">Eliminar (DELETE)</option>
+        <option value="CREAR">Alta de registro</option>
+        <option value="MODIFICAR">Modificacion</option>
+        <option value="ELIMINAR">Baja de registro</option>
+        <option value="CONSULTAR">Consulta de historia clinica</option>
       </select>
     </div>
 
@@ -51,9 +52,10 @@
           </td>
           <td>
             <span class="action-badge" [ngClass]="{
-              'badge-insert': log.accion === 'INSERT',
-              'badge-update': log.accion === 'UPDATE',
-              'badge-delete': log.accion === 'DELETE'
+              'badge-crear': log.accion === 'CREAR',
+              'badge-modificar': log.accion === 'MODIFICAR',
+              'badge-eliminar': log.accion === 'ELIMINAR',
+              'badge-consultar': log.accion === 'CONSULTAR'
             }">
               {{ log.accion }}
             </span>

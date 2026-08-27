@@ -42,14 +42,14 @@ public class SearchService : ISearchService
         var turnos = await _context.Turnos
             .Include(t => t.Paciente)
             .Include(t => t.Profesional)
-            .Where(t => t.Paciente.Nombre.ToLower().Contains(lower) || t.Paciente.Apellido.ToLower().Contains(lower)
-                || t.Profesional.Nombre.ToLower().Contains(lower) || t.Profesional.Apellido.ToLower().Contains(lower))
+            .Where(t => t.Paciente!.Nombre.ToLower().Contains(lower) || t.Paciente!.Apellido.ToLower().Contains(lower)
+                || t.Profesional!.Nombre.ToLower().Contains(lower) || t.Profesional!.Apellido.ToLower().Contains(lower))
             .Take(5)
             .Select(t => new SearchItemDto
             {
                 Id = t.Id, Tipo = "Turno",
-                Titulo = t.Paciente.Nombre + " " + t.Paciente.Apellido,
-                Subtitulo = t.Profesional.Nombre + " " + t.Profesional.Apellido + " - " + t.FechaHora.ToString("dd/MM/yyyy HH:mm"),
+                Titulo = t.Paciente!.Nombre + " " + t.Paciente!.Apellido,
+                Subtitulo = t.Profesional!.Nombre + " " + t.Profesional!.Apellido + " - " + t.FechaHora.ToString("dd/MM/yyyy HH:mm"),
                 Ruta = "/dashboard/turnos"
             })
             .ToListAsync();

@@ -415,6 +415,43 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
         await base.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Registra un acceso de LECTURA en la auditoria.
+    ///
+    /// El mecanismo automatico de auditoria se engancha a SaveChanges, de modo que
+    /// solo ve escrituras. Una lectura no modifica nada, asi que pasa sin dejar
+    /// rastro. En una historia clinica eso es un hueco: la contracara de permitir
+    /// que cualquier medico consulte a cualquier paciente (necesario para la
+    /// continuidad de la atencion, y mas todavia en una urgencia) es dejar
+    /// constancia de quien miro que.
+    ///
+    /// Falla cerrado a proposito: si no se puede registrar el acceso, la consulta
+    /// falla. No cuesta disponibilidad, porque la auditoria escribe en la misma
+    /// base de la que se acaba de leer: si esa escritura no anda, la lectura
+    /// tampoco hubiera andado.
+    /// </summary>
+    public async Task RegistrarAccesoAsync(
+        string tabla,
+        string clavePrimaria,
+        string? detalle = null,
+        CancellationToken cancellationToken = default)
+    {
+        Auditorias.Add(new Auditoria
+        {
+            Tabla = tabla,
+            Accion = "CONSULTAR",
+            ClavePrimaria = clavePrimaria,
+            Fecha = DateTime.UtcNow,
+            UsuarioEmail = ObtenerUsuarioActual(),
+            ValoresNuevos = detalle
+        });
+
+        // base.SaveChangesAsync y no el propio: el interceptor de auditoria ya
+        // ignora las entidades Auditoria, pero llamar a la base deja explicito
+        // que este registro no se audita a si mismo.
+        await base.SaveChangesAsync(cancellationToken);
+    }
+
     private string ObtenerUsuarioActual()
     {
         var user = httpContextAccessor.HttpContext?.User;

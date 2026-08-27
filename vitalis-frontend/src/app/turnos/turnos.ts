@@ -11,6 +11,7 @@ import { Profesional } from '../models/profesional.model';
 import { ObraSocial } from '../models/obra-social.model';
 import { ToastService } from '../services/toast.service';
 import { AgendaSemanalComponent, SlotLibre } from '../agenda/agenda-semanal';
+import { decodeToken, obtenerRolUsuario, obtenerEmailUsuario } from '../utils/jwt.util';
 
 @Component({
   selector: 'app-turnos',
@@ -71,23 +72,30 @@ export class TurnosComponent implements OnInit {
     });
   }
 
+  /**
+   * Antes este componente decodificaba el JWT a mano con atob(), igual que hacía
+   * bloqueos.ts. Esa copia arrastraba dos errores propios: no traducía base64url
+   * y rompía los acentos (los nombres con tilde se mostraban como "MartÃ­nez").
+   * Ahora usa jwt.util.ts, que es la única pieza que sabe leer el token.
+   *
+   * El filtrado por profesional que sigue acá abajo es sólo comodidad de la
+   * interfaz: desde esta versión el backend ya no envía los turnos ajenos.
+   */
   detectUserRole() {
     const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.userRol = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.Rol || 'Administrador';
-        this.userEmail = payload.email || '';
-        
-        if (this.userRol === 'Medico') {
-          const doc = this.profesionales.find(d => d.email.toLowerCase() === this.userEmail.toLowerCase());
-          if (doc) {
-            this.userProfId = doc.id;
-            this.aplicarFiltros();
-          }
-        }
-      } catch (e) {
-        console.error('Error al decodificar token en turnos:', e);
+    if (!token) return;
+
+    const claims = decodeToken(token);
+    if (!claims) return;
+
+    this.userRol = obtenerRolUsuario(claims);
+    this.userEmail = obtenerEmailUsuario(claims);
+
+    if (this.userRol === 'Medico') {
+      const doc = this.profesionales.find(d => (d.email || '').toLowerCase() === this.userEmail.toLowerCase());
+      if (doc) {
+        this.userProfId = doc.id;
+        this.aplicarFiltros();
       }
     }
   }

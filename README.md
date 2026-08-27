@@ -4,6 +4,59 @@ Sistema de gestion para consultorio medico virtual.
 
 Vitalis es un proyecto de tesis para la carrera Analista de Sistemas. El objetivo es construir una plataforma web que permita administrar pacientes, turnos, historia clinica electronica, prescripciones, facturacion, sala de espera virtual, reportes y usuarios internos de un consultorio medico.
 
+## Como levantarlo
+
+### Con Docker (recomendado)
+
+Es la forma mas rapida y la unica que no depende de que la maquina tenga
+PostgreSQL, .NET y Node instalados. Requiere Docker Desktop.
+
+```bash
+docker compose up --build
+```
+
+Y despues abrir **http://localhost:8080**.
+
+Se levantan tres contenedores: la base de datos, la API y el frontend. La API
+aplica sus migraciones y siembra los datos de demostracion sola al arrancar. La
+primera vez tarda varios minutos porque tiene que compilar todo; las siguientes
+son cuestion de segundos.
+
+Para apagarlo: `Ctrl+C`, o `docker compose down`. Para empezar de cero borrando
+la base: `docker compose down -v`.
+
+### Usuarios de demostracion
+
+| Rol | Usuario | Contrasenia |
+|---|---|---|
+| Administrador | `admin@vitalis.local` | `Admin123!` |
+| Medico (Laura Martinez, Pediatria) | `lmartinez@vitalis.local` | `Medico123!` |
+| Recepcionista | `recepcion@vitalis.local` | `Recepcion123!` |
+
+### Sin Docker
+
+Hacen falta .NET 8, Node 22 y PostgreSQL corriendo en local. En dos terminales:
+
+```bash
+# Terminal 1 - API en el puerto 5004
+cd backend/src/Vitalis.Api
+dotnet run
+
+# Terminal 2 - frontend en el puerto 4200
+cd vitalis-frontend
+npm install
+npx ng serve
+```
+
+La cadena de conexion se configura en `backend/src/Vitalis.Api/appsettings.json`.
+
+### Pruebas
+
+```bash
+cd backend && dotnet test tests/Vitalis.Tests
+cd vitalis-frontend && npx ng test --no-watch
+```
+
 ## Stack tecnologico
 
 - Frontend: Angular

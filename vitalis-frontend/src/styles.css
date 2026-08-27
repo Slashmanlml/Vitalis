@@ -50,6 +50,17 @@
   --color-info: hsl(var(--hue-primary), 60%, 38%);           /* informativo, dentro de la familia teal */
   --text-on-color: hsl(0, 0%, 100%);                         /* texto sobre fondos saturados (toasts, insignias) */
 
+  /* Visor de codigo/JSON. Se mantiene oscuro en los dos temas a proposito: es
+     la convencion de un editor de codigo y ayuda a leer datos estructurados.
+     Vive aca, y no pegado a mano en cada pantalla, para que sea una decision
+     unica y no seis valores sueltos. */
+  --code-bg: hsl(222, 47%, 11%);
+  --code-text: hsl(215, 20%, 65%);
+  --code-key: hsl(199, 89%, 60%);
+  --code-value: hsl(213, 27%, 88%);
+  --code-highlight: hsl(27, 96%, 61%);
+  --code-highlight-bg: hsla(27, 96%, 61%, 0.1);
+
   --border-color: hsl(var(--hue-neutral), 15%, 89%);
   --border-light: hsl(var(--hue-neutral), 15%, 94%);
   --shadow-sm: 0 2px 8px rgba(41, 37, 33, 0.04);

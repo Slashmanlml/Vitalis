@@ -51,6 +51,13 @@ public class ConsultaMedicaService : IConsultaMedicaService
 
     public async Task<List<ConsultaMedicaDto>> ObtenerPorPacienteAsync(int pacienteId)
     {
+        // Abrir la historia clinica de un paciente es un acceso a datos sensibles
+        // de salud y queda registrado, aunque no se modifique nada.
+        await _context.RegistrarAccesoAsync(
+            tabla: "consultas_medicas",
+            clavePrimaria: pacienteId.ToString(),
+            detalle: $"Consulta de la historia clinica del paciente {pacienteId}");
+
         return await _context.ConsultasMedicas
             .Include(c => c.Paciente)
             .Include(c => c.Profesional)

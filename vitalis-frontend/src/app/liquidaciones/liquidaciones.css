@@ -19,7 +19,7 @@
 .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
 .btn-icon-success:hover { background: hsl(var(--hue-success), 55%, 92%); color: hsl(var(--hue-success), 70%, 26%); border-color: hsl(var(--hue-success), 55%, 86%); }
 .empty-state { text-align: center; padding: 40px; color: var(--text-muted); font-style: italic; }
-.btn-primary { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--color-primary); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.btn-primary { display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--color-primary); color: var(--text-on-color); border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
 .btn-primary:hover { background: var(--color-primary-hover); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-secondary { padding: 10px 20px; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 10px; font-size: 14px; cursor: pointer; }

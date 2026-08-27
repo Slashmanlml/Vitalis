@@ -88,6 +88,17 @@ a un dominio inexistente. Si el dato no está, no se opera.
 **5. Componentes standalone**, con `imports: [CommonModule, FormsModule]`, igual
 que el resto del proyecto.
 
+**6. La identidad del que opera sale del token, nunca del cuerpo del pedido.** Un
+médico podía registrar consultas sobre turnos ajenos porque el servicio guardaba
+el `ProfesionalId` que mandaba el navegador. La regla que salió de ahí: si un
+dato identifica a quién opera o sobre qué opera, se toma de la entidad que está
+en la base (el turno, la consulta) o de `IUsuarioActual`, y el campo equivalente
+del DTO se ignora. Validar el dato del cliente no alcanza: hay que no usarlo.
+
+**7. Filtrar por rol en el navegador no es filtrar.** `turnos.ts` pedía la agenda
+completa de la clínica y escondía lo ajeno con un `.filter()`. Los datos igual
+viajaban y se veían con F12. Lo que un rol no puede ver, no sale del servidor.
+
 ---
 
 ## Verificación antes de decir "terminé"
@@ -114,16 +125,16 @@ prueba existente, el problema es tu cambio, no la prueba.
 
 | Asistente | Tarea | Dónde está la especificación |
 |---|---|---|
-| **Gemini** | Rediseño de la Sala de Espera | **`docs/13-tareas-tercera-ronda.md`** |
-| **OpenCode / DeepSeek** | Datos de demostración clínicos en `DbSeeder.cs` | **`docs/13-tareas-tercera-ronda.md`** |
-| **Claude** | Panel principal, documento de la tesina, revisión | — |
+| **Gemini** | Barrido de los 60 colores pegados a mano que quedan en el CSS | **`docs/15-tareas-cuarta-ronda.md`** |
+| **OpenCode / DeepSeek** | Auditoría de seguridad (sin corregir) + pruebas de servicios del frontend | **`docs/15-tareas-cuarta-ronda.md`** |
+| **Claude** | Docker, recorrido de prueba, documento de la tesina | — |
 
-**Abrí `docs/13-tareas-tercera-ronda.md`** y buscá la sección con tu nombre. Está
+**Abrí `docs/15-tareas-cuarta-ronda.md`** y buscá la sección con tu nombre. Está
 todo el detalle ahí.
 
 Rondas anteriores, ya terminadas y verificadas: `docs/10` (notificaciones por
 correo), `docs/11` (pantalla de usuarios y reportes de facturación), `docs/12`
-(pruebas unitarias del frontend).
+(pruebas unitarias del frontend), `docs/13` (sala de espera y datos clínicos).
 
 ---
 

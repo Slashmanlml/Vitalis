@@ -1,0 +1,72 @@
+# ---------------------------------------------------------------------------
+# Vitalis completo con un solo comando:
+#
+#   docker compose up --build
+#
+# y despues abrir http://localhost:8080
+#
+# Levanta tres contenedores: la base PostgreSQL, la API y el frontend. La API
+# aplica las migraciones y siembra los datos de demostracion sola al arrancar.
+#
+# Para volver a empezar de cero (borra la base):
+#   docker compose down -v
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vitalis-db
+    environment:
+      POSTGRES_DB: vitalis
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vitalis_local}
+    volumes:
+      # Los datos sobreviven a "docker compose down". Para borrarlos hace falta
+      # el -v, que es a proposito: no se pierde una base por accidente.
+      - datos-postgres:/var/lib/postgresql/data
+    healthcheck:
+      # Sin esto la API arranca antes de que Postgres acepte conexiones, falla al
+      # migrar y se reinicia en bucle. El healthcheck es lo que hace que
+      # depends_on signifique "cuando este listo" y no "cuando exista".
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vitalis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    container_name: vitalis-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # En .NET, el doble guion bajo separa niveles del appsettings.json:
+      # ConnectionStrings__DefaultConnection reemplaza a
+      # { "ConnectionStrings": { "DefaultConnection": ... } }
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=vitalis;Username=postgres;Password=${POSTGRES_PASSWORD:-vitalis_local}"
+      Jwt__Key: ${JWT_KEY:-Vitalis-Clave-Solo-Para-Desarrollo-Local-32+!!}
+      Jwt__Issuer: Vitalis
+      Jwt__Audience: Vitalis.Web
+      # El frontend sirve la API bajo su mismo origen (nginx hace de puente), asi
+      # que el navegador no cruza origenes y CORS no interviene.
+      Notificaciones__ModoPrueba: "true"
+    volumes:
+      # Las fotos y estudios subidos no se pierden al reconstruir la imagen.
+      - archivos-subidos:/app/wwwroot/uploads
+    expose:
+      - "8080"
+
+  frontend:
+    build:
+      context: ./vitalis-frontend
+    container_name: vitalis-frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  datos-postgres:
+  archivos-subidos:

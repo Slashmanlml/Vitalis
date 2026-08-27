@@ -28,11 +28,11 @@ public class ReporteService : IReporteService
     {
         Id = t.Id,
         PacienteId = t.PacienteId,
-        PacienteNombre = t.Paciente.Nombre + " " + t.Paciente.Apellido,
+        PacienteNombre = t.Paciente!.Nombre + " " + t.Paciente!.Apellido,
         ProfesionalId = t.ProfesionalId,
-        ProfesionalNombre = t.Profesional.Nombre + " " + t.Profesional.Apellido,
+        ProfesionalNombre = t.Profesional!.Nombre + " " + t.Profesional!.Apellido,
         ObraSocialId = t.ObraSocialId,
-        ObraSocialNombre = t.ObraSocial.Nombre,
+        ObraSocialNombre = t.ObraSocial!.Nombre,
         FechaHora = t.FechaHora,
         Confirmado = t.Confirmado,
         Estado = t.Estado
@@ -81,17 +81,17 @@ public class ReporteService : IReporteService
         // su especialidad, de modo que dos cardiólogos generaban dos filas
         // "Cardiología" en lugar de sumarse en una sola.
         var porEspecialidad = await _context.Turnos
-            .GroupBy(t => t.Profesional.Especialidad!.Nombre)
+            .GroupBy(t => t.Profesional!.Especialidad!.Nombre)
             .Select(g => new ConteoPorCategoriaDto { Etiqueta = g.Key, Cantidad = g.Count() })
             .ToListAsync();
 
         var porObraSocial = await _context.Turnos
-            .GroupBy(t => t.ObraSocial.Nombre)
+            .GroupBy(t => t.ObraSocial!.Nombre)
             .Select(g => new ConteoPorCategoriaDto { Etiqueta = g.Key, Cantidad = g.Count() })
             .ToListAsync();
 
         var porProfesional = await _context.Turnos
-            .GroupBy(t => t.Profesional.Nombre + " " + t.Profesional.Apellido)
+            .GroupBy(t => t.Profesional!.Nombre + " " + t.Profesional!.Apellido)
             .Select(g => new ConteoPorCategoriaDto { Etiqueta = g.Key, Cantidad = g.Count() })
             .ToListAsync();
 

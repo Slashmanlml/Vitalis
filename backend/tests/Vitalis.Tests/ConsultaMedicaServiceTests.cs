@@ -78,6 +78,53 @@ public class ConsultaMedicaServiceTests
         _context.SaveChanges();
     }
 
+    // ---------------------------------------------------------------------
+    // Auditoria de LECTURAS.
+    //
+    // El mecanismo automatico se engancha a SaveChanges, asi que solo veia
+    // escrituras: se podia abrir la historia clinica de cualquier paciente sin
+    // dejar rastro. Leerla esta permitido (continuidad de la atencion), pero la
+    // contracara de permitirlo es registrar quien miro que.
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task ObtenerPorPacienteAsync_RegistraElAccesoEnLaAuditoria()
+    {
+        // Act
+        await _service.ObtenerPorPacienteAsync(1);
+
+        // Assert
+        var registro = await _context.Auditorias.SingleAsync(a => a.Accion == "CONSULTAR");
+        registro.Tabla.Should().Be("consultas_medicas");
+        registro.ClavePrimaria.Should().Be("1");
+        registro.Fecha.Kind.Should().Be(DateTimeKind.Utc);
+    }
+
+    [Fact]
+    public async Task ObtenerPorPacienteAsync_RegistraUnAccesoPorCadaApertura()
+    {
+        // Dos aperturas son dos accesos: un registro de auditoria no deduplica,
+        // porque lo que interesa es cuantas veces se miro, no cuantos pacientes
+        // distintos.
+        await _service.ObtenerPorPacienteAsync(1);
+        await _service.ObtenerPorPacienteAsync(2);
+        await _service.ObtenerPorPacienteAsync(1);
+
+        var accesos = await _context.Auditorias.CountAsync(a => a.Accion == "CONSULTAR");
+        accesos.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task ObtenerPorPacienteAsync_SinConsultas_IgualRegistraElAcceso()
+    {
+        // Que la historia este vacia no cambia nada: lo que se audita es el
+        // intento de acceso, no que haya habido algo para ver.
+        await _service.ObtenerPorPacienteAsync(2);
+
+        (await _context.Auditorias.AnyAsync(a => a.Accion == "CONSULTAR" && a.ClavePrimaria == "2"))
+            .Should().BeTrue();
+    }
+
     private static Turno NuevoTurno(int id, int pacienteId, int profesionalId, string estado)
     {
         return new Turno

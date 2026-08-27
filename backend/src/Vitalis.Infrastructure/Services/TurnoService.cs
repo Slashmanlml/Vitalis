@@ -38,19 +38,19 @@ public class TurnoService : ITurnoService
             consulta = consulta.Where(t => miProfesionalId != null && t.ProfesionalId == miProfesionalId);
         }
 
+        // Sin Include: al proyectar con Select, EF resuelve las navegaciones en el
+        // propio JOIN y el Include queda ignorado (lo avisa por consola en cada
+        // peticion).
         return await consulta
-            .Include(t => t.Paciente)
-            .Include(t => t.Profesional)
-            .Include(t => t.ObraSocial)
             .Select(t => new TurnoDto
             {
                 Id = t.Id,
                 PacienteId = t.PacienteId,
-                PacienteNombre = t.Paciente.Nombre + " " + t.Paciente.Apellido,
+                PacienteNombre = t.Paciente!.Nombre + " " + t.Paciente!.Apellido,
                 ProfesionalId = t.ProfesionalId,
-                ProfesionalNombre = t.Profesional.Nombre + " " + t.Profesional.Apellido,
+                ProfesionalNombre = t.Profesional!.Nombre + " " + t.Profesional!.Apellido,
                 ObraSocialId = t.ObraSocialId,
-                ObraSocialNombre = t.ObraSocial.Nombre,
+                ObraSocialNombre = t.ObraSocial!.Nombre,
                 FechaHora = t.FechaHora,
                 Confirmado = t.Confirmado,
                 Estado = t.Estado
@@ -61,27 +61,29 @@ public class TurnoService : ITurnoService
 
     public async Task<TurnoDto?> ObtenerPorIdAsync(int id)
     {
-        var turno = await _context.Turnos
-            .Include(t => t.Paciente)
-            .Include(t => t.Profesional)
-            .Include(t => t.ObraSocial)
-            .FirstOrDefaultAsync(t => t.Id == id);
-
-        if (turno == null) return null;
-
-        return new TurnoDto
-        {
-            Id = turno.Id,
-            PacienteId = turno.PacienteId,
-            PacienteNombre = turno.Paciente.Nombre + " " + turno.Paciente.Apellido,
-            ProfesionalId = turno.ProfesionalId,
-            ProfesionalNombre = turno.Profesional.Nombre + " " + turno.Profesional.Apellido,
-            ObraSocialId = turno.ObraSocialId,
-            ObraSocialNombre = turno.ObraSocial.Nombre,
-            FechaHora = turno.FechaHora,
-            Confirmado = turno.Confirmado,
-            Estado = turno.Estado
-        };
+        // Se proyecta en la consulta en vez de traer el turno entero y mapearlo
+        // despues. Dos motivos: EF pide a la base solo las columnas que se usan,
+        // y sobre todo, dentro de un Select el acceso a las navegaciones se
+        // traduce a JOIN y nunca se ejecuta como C#, de modo que no puede haber
+        // una desreferencia nula en tiempo de ejecucion. Antes esto materializaba
+        // el turno y hacia turno.Paciente.Nombre: si alguien quitaba un Include,
+        // reventaba recien en produccion.
+        return await _context.Turnos
+            .Where(t => t.Id == id)
+            .Select(t => new TurnoDto
+            {
+                Id = t.Id,
+                PacienteId = t.PacienteId,
+                PacienteNombre = t.Paciente!.Nombre + " " + t.Paciente!.Apellido,
+                ProfesionalId = t.ProfesionalId,
+                ProfesionalNombre = t.Profesional!.Nombre + " " + t.Profesional!.Apellido,
+                ObraSocialId = t.ObraSocialId,
+                ObraSocialNombre = t.ObraSocial!.Nombre,
+                FechaHora = t.FechaHora,
+                Confirmado = t.Confirmado,
+                Estado = t.Estado
+            })
+            .FirstOrDefaultAsync();
     }
 
     private async Task ValidarLógicaComplejaTurnoAsync(int pacienteId, int profesionalId, DateTime fechaHora, int? idExcluido = null)
