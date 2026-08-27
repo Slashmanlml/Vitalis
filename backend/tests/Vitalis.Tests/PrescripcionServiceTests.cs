@@ -18,6 +18,7 @@ public class PrescripcionServiceTests
 {
     private readonly IPrescripcionService _service;
     private readonly VitalisDbContext _context;
+    private readonly UsuarioActualDePrueba _usuarioActual = new();
 
     public PrescripcionServiceTests()
     {
@@ -25,7 +26,7 @@ public class PrescripcionServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new PrescripcionService(_context, new NoOpEmailService());
+        _service = new PrescripcionService(_context, new NoOpEmailService(), _usuarioActual);
 
         SeedRelatedEntities();
     }
@@ -56,10 +57,10 @@ public class PrescripcionServiceTests
             new Medicamento { Id = 2, Nombre = "Amoxicilina", Presentacion = "500mg comprimidos", Activo = true }
         );
 
-        // Turno + ConsultaMedica de referencia: CrearAsync ahora valida que la consulta de
-        // origen (ConsultaMedicaId), el paciente y el profesional existan antes de crear la
-        // prescripción (mismo hallazgo/fix que ConsultaMedicaService, ver task.md), así que
-        // los tests que llaman a CrearAsync necesitan una ConsultaMedica real.
+        // Turno + ConsultaMedica de referencia: CrearAsync exige que la consulta de origen
+        // exista, y de ella toma el paciente y el profesional de la receta (el pedido del
+        // cliente ya no decide esos campos). Por eso los tests que llaman a CrearAsync
+        // necesitan una ConsultaMedica real.
         _context.Turnos.Add(new Turno
         {
             Id = 1,
@@ -188,8 +189,13 @@ public class PrescripcionServiceTests
             .WithMessage("Consulta médica no encontrada.");
     }
 
+    // Mismo razonamiento que en ConsultaMedicaServiceTests: el paciente y el
+    // profesional de una receta ya no se leen del pedido sino de la consulta que
+    // le da origen. Una receta no puede quedar firmada por un medico que no
+    // atendio, ni emitida a nombre de otro paciente, aunque el cliente lo pida.
+
     [Fact]
-    public async Task CrearAsync_Should_Throw_NotFoundException_Cuando_El_Paciente_No_Existe()
+    public async Task CrearAsync_PacienteInexistenteEnElPedido_UsaElDeLaConsulta()
     {
         var dto = new CrearPrescripcionDto
         {
@@ -199,14 +205,15 @@ public class PrescripcionServiceTests
             Detalles = { new CrearPrescripcionDetalleDto { MedicamentoId = 1, Dosis = "1 comprimido", Frecuencia = "cada 8hs", Duracion = "5 dias" } }
         };
 
-        var act = async () => await _service.CrearAsync(dto);
+        var resultado = await _service.CrearAsync(dto);
 
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("Paciente no encontrado.");
+        var consulta = await _context.ConsultasMedicas.AsNoTracking().SingleAsync(c => c.Id == 1);
+        resultado.PacienteId.Should().Be(consulta.PacienteId);
+        (await _context.Pacientes.AnyAsync(p => p.Id == resultado.PacienteId)).Should().BeTrue();
     }
 
     [Fact]
-    public async Task CrearAsync_Should_Throw_NotFoundException_Cuando_El_Profesional_No_Existe()
+    public async Task CrearAsync_ProfesionalInexistenteEnElPedido_UsaElDeLaConsulta()
     {
         var dto = new CrearPrescripcionDto
         {
@@ -216,10 +223,12 @@ public class PrescripcionServiceTests
             Detalles = { new CrearPrescripcionDetalleDto { MedicamentoId = 1, Dosis = "1 comprimido", Frecuencia = "cada 8hs", Duracion = "5 dias" } }
         };
 
-        var act = async () => await _service.CrearAsync(dto);
+        var resultado = await _service.CrearAsync(dto);
 
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("Profesional no encontrado.");
+        var consulta = await _context.ConsultasMedicas.AsNoTracking().SingleAsync(c => c.Id == 1);
+        resultado.ProfesionalId.Should().Be(consulta.ProfesionalId,
+            "una receta la firma el medico que atendio, no el que declare el cliente");
+        (await _context.Profesionales.AnyAsync(p => p.Id == resultado.ProfesionalId)).Should().BeTrue();
     }
 
     [Fact]

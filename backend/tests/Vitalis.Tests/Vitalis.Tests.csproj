@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- "annotations" habilita la sintaxis de tipos anulables (string?, int?) sin
+         activar el analisis de flujo. Silencia los avisos CS8632 sin llenar la
+         compilacion de advertencias nuevas en el codigo de pruebas existente. -->
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IFacturaService, FacturaService>();
         services.AddScoped<ILiquidacionService, LiquidacionService>();
         services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<IUsuarioActual, UsuarioActualService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBloqueoAgendaService, BloqueoAgendaService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();

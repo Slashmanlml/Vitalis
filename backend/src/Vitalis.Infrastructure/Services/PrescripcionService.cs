@@ -11,11 +11,42 @@ public class PrescripcionService : IPrescripcionService
 {
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IUsuarioActual _usuarioActual;
 
-    public PrescripcionService(VitalisDbContext context, IEmailService emailService)
+    public PrescripcionService(
+        VitalisDbContext context,
+        IEmailService emailService,
+        IUsuarioActual usuarioActual)
     {
         _context = context;
         _emailService = emailService;
+        _usuarioActual = usuarioActual;
+    }
+
+    /// <summary>
+    /// Una receta la firma el medico que atendio. Un medico no puede emitir
+    /// recetas sobre consultas de otro profesional.
+    /// </summary>
+    private async Task VerificarQuePuedeOperarSobreAsync(int profesionalDeLaConsultaId)
+    {
+        if (!_usuarioActual.EsMedico)
+        {
+            return;
+        }
+
+        var miProfesionalId = await _usuarioActual.ObtenerProfesionalIdAsync();
+
+        if (miProfesionalId is null)
+        {
+            throw new ForbiddenException(
+                "Su usuario no esta vinculado a una ficha profesional, por lo que no puede emitir recetas.");
+        }
+
+        if (miProfesionalId != profesionalDeLaConsultaId)
+        {
+            throw new ForbiddenException(
+                "La consulta pertenece a otro profesional. Solo el medico tratante puede emitir la receta.");
+        }
     }
 
     public async Task<List<PrescripcionDto>> ObtenerPorPacienteAsync(int pacienteId)
@@ -85,23 +116,13 @@ public class PrescripcionService : IPrescripcionService
     {
         // Mismo hallazgo que en ConsultaMedicaService: las FKs de Prescripcion son
         // requeridas (navegaciones no-nulas) pero antes no se validaba su existencia.
-        var consultaExiste = await _context.ConsultasMedicas.AnyAsync(c => c.Id == dto.ConsultaMedicaId);
-        if (!consultaExiste)
-        {
-            throw new NotFoundException("Consulta médica no encontrada.");
-        }
+        var consulta = await _context.ConsultasMedicas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == dto.ConsultaMedicaId)
+            ?? throw new NotFoundException("Consulta médica no encontrada.");
 
-        var pacienteExiste = await _context.Pacientes.AnyAsync(p => p.Id == dto.PacienteId);
-        if (!pacienteExiste)
-        {
-            throw new NotFoundException("Paciente no encontrado.");
-        }
-
-        var profesionalExiste = await _context.Profesionales.AnyAsync(p => p.Id == dto.ProfesionalId);
-        if (!profesionalExiste)
-        {
-            throw new NotFoundException("Profesional no encontrado.");
-        }
+        // Un medico solo receta sobre sus propias consultas.
+        await VerificarQuePuedeOperarSobreAsync(consulta.ProfesionalId);
 
         foreach (var detalle in dto.Detalles)
         {
@@ -112,11 +133,14 @@ public class PrescripcionService : IPrescripcionService
             }
         }
 
+        // Paciente y profesional salen DE LA CONSULTA, no del cuerpo del pedido:
+        // una receta no puede quedar atribuida a un medico que no atendio, ni
+        // emitida a nombre de un paciente que no fue el de la consulta.
         var presc = new Prescripcion
         {
-            ConsultaMedicaId = dto.ConsultaMedicaId,
-            PacienteId = dto.PacienteId,
-            ProfesionalId = dto.ProfesionalId,
+            ConsultaMedicaId = consulta.Id,
+            PacienteId = consulta.PacienteId,
+            ProfesionalId = consulta.ProfesionalId,
             Fecha = DateTime.UtcNow,
             Observaciones = dto.Observaciones,
             Detalles = dto.Detalles.Select(d => new PrescripcionDetalle

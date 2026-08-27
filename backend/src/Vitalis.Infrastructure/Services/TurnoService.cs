@@ -11,16 +11,34 @@ public class TurnoService : ITurnoService
 {
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IUsuarioActual _usuarioActual;
 
-    public TurnoService(VitalisDbContext context, IEmailService emailService)
+    public TurnoService(VitalisDbContext context, IEmailService emailService, IUsuarioActual usuarioActual)
     {
         _context = context;
         _emailService = emailService;
+        _usuarioActual = usuarioActual;
     }
 
     public async Task<IEnumerable<TurnoDto>> ObtenerTodosAsync()
     {
-        return await _context.Turnos
+        var consulta = _context.Turnos.AsQueryable();
+
+        // El filtrado por rol se hacia en el navegador: el backend enviaba la
+        // agenda COMPLETA de la clinica y el frontend escondia lo ajeno con un
+        // .filter(). Cualquiera que abriera las herramientas de desarrollo veia
+        // los turnos y los nombres de pacientes de todos los profesionales.
+        // Ahora los datos que no corresponden nunca salen del servidor.
+        if (_usuarioActual.EsMedico)
+        {
+            var miProfesionalId = await _usuarioActual.ObtenerProfesionalIdAsync();
+
+            // Sin ficha profesional vinculada no se devuelve nada: es preferible
+            // una agenda vacia a filtrar la de la clinica entera.
+            consulta = consulta.Where(t => miProfesionalId != null && t.ProfesionalId == miProfesionalId);
+        }
+
+        return await consulta
             .Include(t => t.Paciente)
             .Include(t => t.Profesional)
             .Include(t => t.ObraSocial)

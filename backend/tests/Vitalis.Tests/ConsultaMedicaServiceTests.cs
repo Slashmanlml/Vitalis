@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Consultas;
 using Vitalis.Application.Interfaces;
+using Vitalis.Domain.Constants;
 using Vitalis.Domain.Entities;
 using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
@@ -18,6 +19,7 @@ public class ConsultaMedicaServiceTests
 {
     private readonly IConsultaMedicaService _service;
     private readonly VitalisDbContext _context;
+    private readonly UsuarioActualDePrueba _usuarioActual = new();
 
     public ConsultaMedicaServiceTests()
     {
@@ -25,7 +27,7 @@ public class ConsultaMedicaServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new ConsultaMedicaService(_context, new NoOpEmailService());
+        _service = new ConsultaMedicaService(_context, new NoOpEmailService(), _usuarioActual);
 
         SeedRelatedEntities();
     }
@@ -90,6 +92,121 @@ public class ConsultaMedicaServiceTests
         };
     }
 
+    // ---------------------------------------------------------------------
+    // Control de acceso por profesional.
+    //
+    // Hallazgo detectado probando el sistema a mano: un medico podia registrar
+    // una consulta sobre el turno de otro profesional. El servicio validaba que
+    // el turno, el paciente y el profesional EXISTIERAN, pero nunca que el
+    // medico autenticado fuera el duenio del turno; ademas tomaba el
+    // ProfesionalId del cuerpo del pedido, que lo controla el cliente.
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task CrearAsync_MedicoSobreTurnoAjeno_Rechaza()
+    {
+        // Arrange: el turno 1 es del profesional 1; se autentica el profesional 2
+        _context.Profesionales.Add(new Profesional
+        {
+            Id = 2,
+            Nombre = "Laura",
+            Apellido = "Martinez",
+            Matricula = "MP-1002",
+            EspecialidadId = 1,
+            Activo = true
+        });
+        await _context.SaveChangesAsync();
+
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 2;
+
+        var dto = new CrearConsultaDto
+        {
+            TurnoId = 1,
+            PacienteId = 1,
+            ProfesionalId = 2,
+            MotivoConsulta = "Control",
+            Diagnostico = "Sano"
+        };
+
+        // Act
+        var act = async () => await _service.CrearAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<ForbiddenException>();
+        (await _context.ConsultasMedicas.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CrearAsync_MedicoSobreTurnoPropio_Permite()
+    {
+        // Arrange: se autentica el profesional 1, duenio del turno 1
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 1;
+
+        var dto = new CrearConsultaDto
+        {
+            TurnoId = 1,
+            PacienteId = 1,
+            ProfesionalId = 1,
+            MotivoConsulta = "Control",
+            Diagnostico = "Sano"
+        };
+
+        // Act
+        var resultado = await _service.CrearAsync(dto);
+
+        // Assert
+        resultado.Should().NotBeNull();
+        resultado.ProfesionalId.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CrearAsync_MedicoSinFichaProfesional_Rechaza()
+    {
+        // Arrange: usuario con rol Medico pero sin Profesional vinculado.
+        // No debe poder registrar nada: es preferible bloquear a adivinar.
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = null;
+
+        var dto = new CrearConsultaDto
+        {
+            TurnoId = 1,
+            PacienteId = 1,
+            ProfesionalId = 1,
+            MotivoConsulta = "Control",
+            Diagnostico = "Sano"
+        };
+
+        // Act
+        var act = async () => await _service.CrearAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<ForbiddenException>();
+    }
+
+    [Fact]
+    public async Task CrearAsync_IgnoraPacienteYProfesionalDelPedido_YUsaLosDelTurno()
+    {
+        // Arrange: el turno 1 es del paciente 1 y del profesional 1, pero el
+        // cliente miente y declara el paciente 2 y un profesional inexistente.
+        var dto = new CrearConsultaDto
+        {
+            TurnoId = 1,
+            PacienteId = 2,
+            ProfesionalId = 999,
+            MotivoConsulta = "Control",
+            Diagnostico = "Sano"
+        };
+
+        // Act
+        var resultado = await _service.CrearAsync(dto);
+
+        // Assert: manda el turno, no el pedido
+        resultado.PacienteId.Should().Be(1);
+        resultado.ProfesionalId.Should().Be(1);
+    }
+
     [Fact]
     public async Task CrearAsync_Should_Add_Consulta_Con_Nombres_De_Paciente_Y_Profesional()
     {
@@ -150,8 +267,16 @@ public class ConsultaMedicaServiceTests
             .WithMessage("Turno no encontrado.");
     }
 
+    // Estas dos pruebas antes verificaban que un id inexistente en el PEDIDO
+    // devolviera NotFound. El proposito era evitar consultas huerfanas. Ese
+    // proposito sigue vigente, pero ahora se garantiza de otra manera: el
+    // servicio ya no lee esos campos del pedido, los toma del turno, que es una
+    // fila real de la base y por lo tanto tiene claves foraneas validas por
+    // construccion. Se conserva el escenario (mandar 9999) para dejar a la vista
+    // que el caso sigue cubierto.
+
     [Fact]
-    public async Task CrearAsync_Should_Throw_NotFoundException_Cuando_El_Paciente_No_Existe()
+    public async Task CrearAsync_PacienteInexistenteEnElPedido_NoCreaConsultaHuerfana()
     {
         var dto = new CrearConsultaDto
         {
@@ -161,14 +286,16 @@ public class ConsultaMedicaServiceTests
             MotivoConsulta = "Consulta con paciente inexistente"
         };
 
-        var act = async () => await _service.CrearAsync(dto);
+        await _service.CrearAsync(dto);
 
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("Paciente no encontrado.");
+        var guardada = await _context.ConsultasMedicas.SingleAsync();
+        guardada.PacienteId.Should().Be(1, "el paciente sale del turno, no del pedido");
+        (await _context.Pacientes.AnyAsync(p => p.Id == guardada.PacienteId))
+            .Should().BeTrue("nunca puede quedar apuntando a un paciente inexistente");
     }
 
     [Fact]
-    public async Task CrearAsync_Should_Throw_NotFoundException_Cuando_El_Profesional_No_Existe()
+    public async Task CrearAsync_ProfesionalInexistenteEnElPedido_NoCreaConsultaHuerfana()
     {
         var dto = new CrearConsultaDto
         {
@@ -178,10 +305,12 @@ public class ConsultaMedicaServiceTests
             MotivoConsulta = "Consulta con profesional inexistente"
         };
 
-        var act = async () => await _service.CrearAsync(dto);
+        await _service.CrearAsync(dto);
 
-        await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("Profesional no encontrado.");
+        var guardada = await _context.ConsultasMedicas.SingleAsync();
+        guardada.ProfesionalId.Should().Be(1, "el profesional sale del turno, no del pedido");
+        (await _context.Profesionales.AnyAsync(p => p.Id == guardada.ProfesionalId))
+            .Should().BeTrue("nunca puede quedar atribuida a un profesional inexistente");
     }
 
     [Fact]

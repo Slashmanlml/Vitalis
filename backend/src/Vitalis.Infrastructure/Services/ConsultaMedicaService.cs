@@ -11,11 +11,42 @@ public class ConsultaMedicaService : IConsultaMedicaService
 {
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IUsuarioActual _usuarioActual;
 
-    public ConsultaMedicaService(VitalisDbContext context, IEmailService emailService)
+    public ConsultaMedicaService(
+        VitalisDbContext context,
+        IEmailService emailService,
+        IUsuarioActual usuarioActual)
     {
         _context = context;
         _emailService = emailService;
+        _usuarioActual = usuarioActual;
+    }
+
+    /// <summary>
+    /// Un medico solo puede operar sobre los turnos que tiene asignados. Para el
+    /// resto de los roles (administrador) no se restringe.
+    /// </summary>
+    private async Task VerificarQuePuedeOperarSobreAsync(int profesionalDelTurnoId)
+    {
+        if (!_usuarioActual.EsMedico)
+        {
+            return;
+        }
+
+        var miProfesionalId = await _usuarioActual.ObtenerProfesionalIdAsync();
+
+        if (miProfesionalId is null)
+        {
+            throw new ForbiddenException(
+                "Su usuario no esta vinculado a una ficha profesional, por lo que no puede registrar atenciones.");
+        }
+
+        if (miProfesionalId != profesionalDelTurnoId)
+        {
+            throw new ForbiddenException(
+                "El turno pertenece a otro profesional. Solo el medico asignado puede registrar la atencion.");
+        }
     }
 
     public async Task<List<ConsultaMedicaDto>> ObtenerPorPacienteAsync(int pacienteId)
@@ -78,23 +109,18 @@ public class ConsultaMedicaService : IConsultaMedicaService
         var turno = await _context.Turnos.FindAsync(dto.TurnoId)
             ?? throw new NotFoundException("Turno no encontrado.");
 
-        var pacienteExiste = await _context.Pacientes.AnyAsync(p => p.Id == dto.PacienteId);
-        if (!pacienteExiste)
-        {
-            throw new NotFoundException("Paciente no encontrado.");
-        }
+        // Un medico solo registra atenciones sobre sus propios turnos.
+        await VerificarQuePuedeOperarSobreAsync(turno.ProfesionalId);
 
-        var profesionalExiste = await _context.Profesionales.AnyAsync(p => p.Id == dto.ProfesionalId);
-        if (!profesionalExiste)
-        {
-            throw new NotFoundException("Profesional no encontrado.");
-        }
-
+        // El paciente y el profesional se toman DEL TURNO, no del cuerpo del
+        // pedido. Antes venian del navegador, de modo que un cliente podia
+        // guardar una consulta atribuida a un profesional o a un paciente que
+        // no tenian nada que ver con el turno. El turno es la fuente de verdad.
         var consulta = new ConsultaMedica
         {
-            PacienteId = dto.PacienteId,
-            ProfesionalId = dto.ProfesionalId,
-            TurnoId = dto.TurnoId,
+            PacienteId = turno.PacienteId,
+            ProfesionalId = turno.ProfesionalId,
+            TurnoId = turno.Id,
             Fecha = DateTime.UtcNow,
             MotivoConsulta = dto.MotivoConsulta,
             Diagnostico = dto.Diagnostico,
@@ -137,6 +163,9 @@ public class ConsultaMedicaService : IConsultaMedicaService
     {
         var consulta = await _context.ConsultasMedicas.FindAsync(id);
         if (consulta == null) return null;
+
+        // Editar la historia clinica de un paciente ajeno es tan grave como crearla.
+        await VerificarQuePuedeOperarSobreAsync(consulta.ProfesionalId);
 
         consulta.MotivoConsulta = dto.MotivoConsulta;
         consulta.Diagnostico = dto.Diagnostico;

@@ -42,6 +42,7 @@ public class TurnoServiceTests
 {
     private readonly ITurnoService _service;
     private readonly VitalisDbContext _context;
+    private readonly UsuarioActualDePrueba _usuarioActual = new();
     private readonly NoOpEmailService _emailService;
 
     public TurnoServiceTests()
@@ -51,7 +52,7 @@ public class TurnoServiceTests
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
         _emailService = new NoOpEmailService();
-        _service = new TurnoService(_context, _emailService);
+        _service = new TurnoService(_context, _emailService, _usuarioActual);
 
         SeedRelatedEntities();
     }
@@ -318,6 +319,91 @@ public class TurnoServiceTests
         // Assert
         _emailService.NotificacionesEnviadas
             .Should().NotContain(n => n.Evento == EventoNotificacion.TurnoReprogramado);
+    }
+
+    // ---------------------------------------------------------------------
+    // El filtrado por profesional se hacia en el navegador: el backend devolvia
+    // la agenda completa de la clinica y el frontend escondia lo ajeno con un
+    // .filter(). Los datos igual viajaban, y se veian abriendo las herramientas
+    // de desarrollo. Estas pruebas fijan que el filtrado ocurra en el servidor.
+    // ---------------------------------------------------------------------
+
+    [Fact]
+    public async Task ObtenerTodosAsync_Medico_SoloDevuelveSusPropiosTurnos()
+    {
+        // Arrange: dos profesionales con un turno cada uno
+        _context.Profesionales.Add(new Profesional
+        {
+            Id = 2,
+            Nombre = "Laura",
+            Apellido = "Martinez",
+            Matricula = "MP-1002",
+            EspecialidadId = 1,
+            Activo = true
+        });
+        _context.Turnos.AddRange(
+            new Turno { Id = 901, PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, Estado = "Confirmado", FechaHora = DateTime.SpecifyKind(new DateTime(2026, 3, 10, 10, 0, 0), DateTimeKind.Utc) },
+            new Turno { Id = 902, PacienteId = 1, ProfesionalId = 2, ObraSocialId = 1, Estado = "Confirmado", FechaHora = DateTime.SpecifyKind(new DateTime(2026, 3, 10, 11, 0, 0), DateTimeKind.Utc) }
+        );
+        await _context.SaveChangesAsync();
+
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 2;
+
+        // Act
+        var turnos = (await _service.ObtenerTodosAsync()).ToList();
+
+        // Assert
+        turnos.Should().OnlyContain(t => t.ProfesionalId == 2);
+        turnos.Should().ContainSingle(t => t.Id == 902);
+    }
+
+    [Fact]
+    public async Task ObtenerTodosAsync_Administrador_DevuelveTodaLaAgenda()
+    {
+        // Arrange
+        _context.Profesionales.Add(new Profesional
+        {
+            Id = 2,
+            Nombre = "Laura",
+            Apellido = "Martinez",
+            Matricula = "MP-1002",
+            EspecialidadId = 1,
+            Activo = true
+        });
+        _context.Turnos.AddRange(
+            new Turno { Id = 901, PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, Estado = "Confirmado", FechaHora = DateTime.SpecifyKind(new DateTime(2026, 3, 10, 10, 0, 0), DateTimeKind.Utc) },
+            new Turno { Id = 902, PacienteId = 1, ProfesionalId = 2, ObraSocialId = 1, Estado = "Confirmado", FechaHora = DateTime.SpecifyKind(new DateTime(2026, 3, 10, 11, 0, 0), DateTimeKind.Utc) }
+        );
+        await _context.SaveChangesAsync();
+
+        _usuarioActual.Rol = Roles.Administrador;
+
+        // Act
+        var turnos = (await _service.ObtenerTodosAsync()).ToList();
+
+        // Assert
+        turnos.Should().HaveCountGreaterThanOrEqualTo(2);
+        turnos.Should().Contain(t => t.ProfesionalId == 1);
+        turnos.Should().Contain(t => t.ProfesionalId == 2);
+    }
+
+    [Fact]
+    public async Task ObtenerTodosAsync_MedicoSinFichaProfesional_NoDevuelveNada()
+    {
+        // Arrange: ante una vinculacion faltante conviene una agenda vacia
+        // antes que filtrar la de toda la clinica.
+        _context.Turnos.Add(new Turno { Id = 901, PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, Estado = "Confirmado", FechaHora = DateTime.SpecifyKind(new DateTime(2026, 3, 10, 10, 0, 0), DateTimeKind.Utc) });
+        await _context.SaveChangesAsync();
+
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = null;
+
+        // Act
+        var turnos = (await _service.ObtenerTodosAsync()).ToList();
+
+        // Assert
+        turnos.Should().BeEmpty();
     }
 
     private static DateTime ProximoHorarioLaboralValido()
