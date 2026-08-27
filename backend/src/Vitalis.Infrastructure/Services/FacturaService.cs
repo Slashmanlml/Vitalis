@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Facturas;
 using Vitalis.Application.Interfaces;
 using Vitalis.Domain.Entities;
+using Vitalis.Domain.Exceptions;
 using Vitalis.Infrastructure.Data;
 
 namespace Vitalis.Infrastructure.Services;
@@ -108,7 +109,7 @@ public class FacturaService : IFacturaService
         foreach (var d in dto.Detalles)
         {
             var prestacion = await _context.Prestaciones.FindAsync(d.PrestacionId)
-                ?? throw new Exception("Prestacion no encontrada");
+                ?? throw new NotFoundException("Prestación no encontrada.");
             var subtotal = d.Cantidad * d.PrecioUnitario;
             total += subtotal;
             detalles.Add(new FacturaDetalle
@@ -133,7 +134,7 @@ public class FacturaService : IFacturaService
         _context.Facturas.Add(factura);
         await _context.SaveChangesAsync();
 
-        return await ObtenerPorIdAsync(factura.Id) ?? throw new Exception("Error al crear factura");
+        return await ObtenerPorIdAsync(factura.Id) ?? throw new NotFoundException("No se pudo recuperar la factura recién creada.");
     }
 
     public async Task<FacturaDto> RegistrarPagoAsync(RegistrarPagoDto dto)
@@ -141,7 +142,24 @@ public class FacturaService : IFacturaService
         var factura = await _context.Facturas
             .Include(f => f.Pagos)
             .FirstOrDefaultAsync(f => f.Id == dto.FacturaId)
-            ?? throw new Exception("Factura no encontrada");
+            ?? throw new NotFoundException("Factura no encontrada.");
+
+        // El importe no tenía ninguna validación. Un importe negativo se aceptaba y
+        // se sumaba tal cual, de modo que bastaba registrar un pago en negativo
+        // para hacer que una factura ya cobrada volviera al estado "Pago Parcial".
+        // En un módulo de facturación eso no es un detalle: es corromper el
+        // registro de lo cobrado.
+        if (dto.Importe <= 0)
+        {
+            throw new ValidationException("El importe del pago debe ser mayor a cero.");
+        }
+
+        // Una factura saldada no admite pagos nuevos. Antes se aceptaban y quedaba
+        // un pago colgado que no correspondía a ninguna deuda.
+        if (factura.Estado == "Pagada")
+        {
+            throw new ConflictException("La factura ya se encuentra saldada; no admite nuevos pagos.");
+        }
 
         // Se calcula ANTES de agregar el nuevo pago: EF Core hace fixup automático
         // de la relación (por FacturaId) y ya suma el pago nuevo a factura.Pagos en
@@ -167,6 +185,6 @@ public class FacturaService : IFacturaService
 
         await _context.SaveChangesAsync();
 
-        return await ObtenerPorIdAsync(factura.Id) ?? throw new Exception("Error al registrar pago");
+        return await ObtenerPorIdAsync(factura.Id) ?? throw new NotFoundException("No se pudo recuperar la factura luego de registrar el pago.");
     }
 }

@@ -19,18 +19,32 @@ export class PrintService {
         <title>${titulo}</title>
         ${estilos}
         <style>
-          body { padding: 40px; font-family: 'Segoe UI', system-ui, sans-serif; color: #1e293b; }
+          /* Esta ventana hereda las hojas de estilo de la aplicacion, incluida la
+             regla @media (prefers-color-scheme: dark) de styles.css. Por eso todo
+             lo de aca usa los tokens de PAPEL, que no tienen variante oscura: sin
+             ellos, imprimir con el tema oscuro del sistema puesto produce una hoja
+             negra con letras blancas. */
+          html { background: var(--paper-bg); }
+          body {
+            padding: 40px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--paper-bg);
+            color: var(--paper-text);
+          }
           .no-print { display: none !important; }
-          .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4f46e5; padding-bottom: 15px; }
-          .print-header h1 { margin: 0; font-size: 20px; color: #0f172a; }
-          .print-header p { margin: 4px 0 0; color: #64748b; font-size: 13px; }
+          .print-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--paper-accent); padding-bottom: 15px; }
+          .print-header h1 { margin: 0; font-size: 20px; color: var(--paper-text); }
+          .print-header p { margin: 4px 0 0; color: var(--paper-text-muted); font-size: 13px; }
           table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-          th { background: #f8fafc; padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e2e8f0; }
-          td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
-          .print-footer { margin-top: 40px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+          th { background: var(--paper-bg-soft); padding: 10px 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--paper-text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--paper-border-light); }
+          td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--paper-border-light); }
+          .print-footer { margin-top: 40px; text-align: center; color: var(--paper-text-muted); font-size: 11px; border-top: 1px solid var(--paper-border-light); padding-top: 15px; }
           @media print {
             body { padding: 0; }
             @page { margin: 20mm; }
+            /* Sin esto los navegadores omiten fondos al imprimir y las celdas
+               sombreadas de la tabla salen en blanco. */
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           }
         </style>
       </head>

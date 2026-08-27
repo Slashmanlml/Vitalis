@@ -6,53 +6,43 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 import { LoginComponent } from './login/login';
-import { DashboardComponent } from './dashboard/dashboard';
-import { PacientesComponent } from './pacientes/pacientes';
-import { ProfesionalesComponent } from './profesionales/profesionales';
-import { ObrasSocialesComponent } from './obras-sociales/obras-sociales';
-import { EspecialidadesComponent } from './especialidades/especialidades';
-import { TurnosComponent } from './turnos/turnos';
-import { HistoriaClinicaComponent } from './historia-clinica/historia-clinica';
-import { PrescripcionesComponent } from './prescripciones/prescripciones';
-import { SalaEsperaComponent } from './sala-espera/sala-espera';
-import { MedicamentosComponent } from './medicamentos/medicamentos';
-import { PrestacionesComponent } from './prestaciones/prestaciones';
-import { FacturacionComponent } from './facturacion/facturacion';
-import { ReportesComponent } from './reportes/reportes';
-import { LiquidacionesComponent } from './liquidaciones/liquidaciones';
-import { PerfilComponent } from './perfil/perfil';
-import { AuditoriasComponent } from './auditorias/auditorias';
-import { BloqueosComponent } from './bloqueos/bloqueos';
-import { EmailLogsComponent } from './email-logs/email-logs';
-import { UsuariosComponent } from './usuarios/usuarios';
 import { authGuard } from './guards/auth.guard';
 
 
+// Rutas perezosas (loadComponent): cada pantalla viaja en su propio archivo y se
+// descarga recien cuando el usuario entra. Antes las 20 se importaban de entrada,
+// de modo que el navegador bajaba Facturacion, Liquidaciones y Auditorias antes
+// de poder mostrar el formulario de login: 880 kB para ver una pantalla que pesa
+// una fraccion de eso.
+//
+// Login queda con importacion directa a proposito: es la primera pantalla, y
+// cargarla aparte agregaria un viaje al servidor justo antes de lo unico que el
+// usuario necesita ver al principio.
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
   {
     path: 'dashboard',
-    component: DashboardComponent,
+    loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent),
     canActivate: [authGuard],
     children: [
-      { path: 'pacientes', component: PacientesComponent },
-      { path: 'profesionales', component: ProfesionalesComponent },
-      { path: 'turnos', component: TurnosComponent },
-      { path: 'obras-sociales', component: ObrasSocialesComponent },
-      { path: 'especialidades', component: EspecialidadesComponent },
-      { path: 'historia-clinica', component: HistoriaClinicaComponent },
-      { path: 'prescripciones', component: PrescripcionesComponent },
-      { path: 'sala-espera', component: SalaEsperaComponent },
-      { path: 'medicamentos', component: MedicamentosComponent },
-      { path: 'prestaciones', component: PrestacionesComponent },
-      { path: 'facturacion', component: FacturacionComponent },
-      { path: 'reportes', component: ReportesComponent },
-      { path: 'liquidaciones', component: LiquidacionesComponent },
-      { path: 'perfil', component: PerfilComponent },
-      { path: 'auditorias', component: AuditoriasComponent },
-      { path: 'bloqueos', component: BloqueosComponent },
-      { path: 'usuarios', component: UsuariosComponent },
-      { path: 'notificaciones', component: EmailLogsComponent },
+      { path: 'pacientes', loadComponent: () => import('./pacientes/pacientes').then(m => m.PacientesComponent) },
+      { path: 'profesionales', loadComponent: () => import('./profesionales/profesionales').then(m => m.ProfesionalesComponent) },
+      { path: 'turnos', loadComponent: () => import('./turnos/turnos').then(m => m.TurnosComponent) },
+      { path: 'obras-sociales', loadComponent: () => import('./obras-sociales/obras-sociales').then(m => m.ObrasSocialesComponent) },
+      { path: 'especialidades', loadComponent: () => import('./especialidades/especialidades').then(m => m.EspecialidadesComponent) },
+      { path: 'historia-clinica', loadComponent: () => import('./historia-clinica/historia-clinica').then(m => m.HistoriaClinicaComponent) },
+      { path: 'prescripciones', loadComponent: () => import('./prescripciones/prescripciones').then(m => m.PrescripcionesComponent) },
+      { path: 'sala-espera', loadComponent: () => import('./sala-espera/sala-espera').then(m => m.SalaEsperaComponent) },
+      { path: 'medicamentos', loadComponent: () => import('./medicamentos/medicamentos').then(m => m.MedicamentosComponent) },
+      { path: 'prestaciones', loadComponent: () => import('./prestaciones/prestaciones').then(m => m.PrestacionesComponent) },
+      { path: 'facturacion', loadComponent: () => import('./facturacion/facturacion').then(m => m.FacturacionComponent) },
+      { path: 'reportes', loadComponent: () => import('./reportes/reportes').then(m => m.ReportesComponent) },
+      { path: 'liquidaciones', loadComponent: () => import('./liquidaciones/liquidaciones').then(m => m.LiquidacionesComponent) },
+      { path: 'perfil', loadComponent: () => import('./perfil/perfil').then(m => m.PerfilComponent) },
+      { path: 'auditorias', loadComponent: () => import('./auditorias/auditorias').then(m => m.AuditoriasComponent) },
+      { path: 'bloqueos', loadComponent: () => import('./bloqueos/bloqueos').then(m => m.BloqueosComponent) },
+      { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.UsuariosComponent) },
+      { path: 'notificaciones', loadComponent: () => import('./email-logs/email-logs').then(m => m.EmailLogsComponent) },
       { path: 'mails-simulados', redirectTo: 'notificaciones', pathMatch: 'full' }
     ]
   },

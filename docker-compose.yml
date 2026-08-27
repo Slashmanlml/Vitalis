@@ -55,6 +55,11 @@ services:
     volumes:
       # Las fotos y estudios subidos no se pierden al reconstruir la imagen.
       - archivos-subidos:/app/wwwroot/uploads
+      # ASP.NET guarda unas claves internas (Data Protection) que por omision
+      # viven dentro del contenedor y se pierden al recrearlo; eso genera dos
+      # advertencias en cada arranque. Persistirlas las calla y ademas es lo
+      # correcto: son claves, no archivos temporales.
+      - claves-dataprotection:/home/vitalis/.aspnet/DataProtection-Keys
     expose:
       - "8080"
 
@@ -70,3 +75,4 @@ services:
 volumes:
   datos-postgres:
   archivos-subidos:
+  claves-dataprotection:

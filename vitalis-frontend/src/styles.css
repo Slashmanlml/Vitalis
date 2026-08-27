@@ -61,6 +61,29 @@
   --code-highlight: hsl(27, 96%, 61%);
   --code-highlight-bg: hsla(27, 96%, 61%, 0.1);
 
+  /* ---------------------------------------------------------------------
+     PAPEL. Para lo que se imprime: recetas, comprobantes.
+
+     Estos tokens NO tienen variante oscura, y es a proposito. Una receta no
+     es una pantalla: es la representacion de una hoja de papel, y el papel
+     es blanco de noche tambien. PrintService abre la ventana de impresion
+     copiando las hojas de estilo de la aplicacion, de modo que sin estos
+     tokens la receta hereda el tema oscuro del sistema y sale una hoja negra
+     con letras blancas.
+
+     Si algun dia agregas un bloque oscuro para estos valores, estas
+     imprimiendo en negro. No lo hagas.
+     --------------------------------------------------------------------- */
+  --paper-bg: hsl(0, 0%, 100%);
+  --paper-bg-soft: hsl(210, 40%, 98%);
+  --paper-text: hsl(217, 33%, 24%);
+  --paper-text-muted: hsl(215, 16%, 47%);
+  --paper-border: hsl(213, 27%, 84%);
+  --paper-border-light: hsl(214, 32%, 91%);
+  --paper-accent: hsl(175, 77%, 26%);
+  --paper-highlight-bg: hsl(48, 90%, 92%);
+  --paper-highlight-text: hsl(28, 72%, 26%);
+
   --border-color: hsl(var(--hue-neutral), 15%, 89%);
   --border-light: hsl(var(--hue-neutral), 15%, 94%);
   --shadow-sm: 0 2px 8px rgba(41, 37, 33, 0.04);
@@ -178,7 +201,7 @@ body {
   border: none;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--color-primary), hsl(var(--hue-primary), 82%, 20%));
-  color: #fff;
+  color: var(--text-on-color);
   font-family: var(--font-primary);
   font-size: 0.95rem;
   font-weight: 600;

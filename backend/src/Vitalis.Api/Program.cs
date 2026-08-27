@@ -5,16 +5,30 @@ using Microsoft.OpenApi.Models;
 using Vitalis.Infrastructure;
 using Vitalis.Infrastructure.Data;
 using Serilog;
+using Serilog.Events;
 using Vitalis.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Vitalis.Api.Middleware;
 
-// El frontend oficial es la app Angular en vitalis-frontend/ (se ejecuta aparte con `ng serve`
-// y consume esta API vía HTTP/CORS). Esta API no sirve archivos estáticos.
+// El frontend es la app Angular en vitalis-frontend/. En desarrollo corre aparte
+// con `ng serve` y consume esta API por HTTP con CORS. En Docker lo sirve nginx,
+// que ademas hace de puente hacia /api, de modo que ambos quedan bajo el mismo
+// origen y CORS no interviene. Esta API si sirve archivos estaticos, pero solo
+// los adjuntos subidos (wwwroot/uploads).
 var builder = WebApplication.CreateBuilder(args);
+
+var esDesarrollo = builder.Environment.IsDevelopment();
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
+    // EF Core registra CADA sentencia SQL en nivel Information. Mientras se
+    // desarrolla es util para ver que consulta genero, pero en produccion
+    // arrancar el sistema imprimia cientos de lineas con toda la siembra, y un
+    // error real quedaba enterrado ahi adentro. En produccion solo se muestran
+    // los problemas de base de datos, no la actividad normal.
+    .MinimumLevel.Override(
+        "Microsoft.EntityFrameworkCore.Database.Command",
+        esDesarrollo ? LogEventLevel.Information : LogEventLevel.Warning)
     .WriteTo.Console()
     .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();

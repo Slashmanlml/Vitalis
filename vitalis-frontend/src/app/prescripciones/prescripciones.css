@@ -450,11 +450,14 @@
   color: var(--color-primary);
 }
 
-/* Print Card Template */
+/* Print Card Template
+   Usa los tokens de PAPEL, no los del tema. Una receta representa una hoja
+   impresa y tiene que verse igual con tema claro y con tema oscuro: si hereda
+   el tema del sistema, se imprime negra. Ver el bloque PAPEL en styles.css. */
 .receta-print-box {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border: 2px solid var(--color-primary);
+  background: var(--paper-bg);
+  color: var(--paper-text);
+  border: 2px solid var(--paper-accent);
   border-radius: 12px;
   padding: 24px;
   font-family: system-ui, -apple-system, sans-serif;
@@ -465,20 +468,20 @@
 
 .receta-head {
   text-align: center;
-  border-bottom: 2px dashed var(--border-color);
+  border-bottom: 2px dashed var(--paper-border);
   padding-bottom: 12px;
 }
 
 .receta-title {
   font-size: 18px;
   font-weight: 800;
-  color: var(--color-primary);
+  color: var(--paper-accent);
   letter-spacing: 0.05em;
 }
 
 .receta-folio {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   margin-top: 4px;
 }
 
@@ -486,7 +489,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  background: var(--bg-secondary);
+  background: var(--paper-bg-soft);
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 13px;
@@ -502,7 +505,7 @@
   font-size: 20px;
   font-weight: 800;
   font-style: italic;
-  color: var(--color-primary);
+  color: var(--paper-accent);
 }
 
 .receta-table {
@@ -512,22 +515,22 @@
 }
 
 .receta-table th {
-  background: var(--bg-secondary);
+  background: var(--paper-bg-soft);
   padding: 8px 10px;
   text-align: left;
   font-weight: 700;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-color);
+  color: var(--paper-text-muted);
+  border-bottom: 1px solid var(--paper-border);
 }
 
 .receta-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--paper-border-light);
 }
 
 .receta-obs {
-  background: hsl(var(--hue-warning), 80%, 92%);
-  color: hsl(var(--hue-warning), 85%, 26%);
+  background: var(--paper-highlight-bg);
+  color: var(--paper-highlight-text);
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 12px;
@@ -540,7 +543,7 @@
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--paper-text-muted);
 }
 
 .firma-linea {

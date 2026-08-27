@@ -68,9 +68,19 @@ var(--color-success)  var(--color-warning)        var(--color-danger)
 var(--radius-sm)      var(--radius-md)            var(--shadow-sm)
 ```
 
-Se barrieron 403 valores pegados a mano justamente para esto, y de paso se
+Se barrieron 463 valores pegados a mano justamente para esto, y de paso se
 arregló el modo oscuro, que sólo andaba en 4 de 19 pantallas. Verificación:
 `grep -E "#[0-9a-fA-F]{3,6}" tu-archivo.css` debe dar cero.
+
+**La excepción, y es importante:** lo que se imprime no usa los tokens del tema
+sino los de **papel** (`--paper-bg`, `--paper-text`, `--paper-accent`, y los
+demás del bloque PAPEL en `styles.css`). Una receta representa una hoja, y el
+papel es blanco también de noche. `PrintService` abre la ventana de impresión
+copiando las hojas de estilo de la aplicación, así que un `var(--bg-card)` ahí
+adentro hereda el modo oscuro del sistema e imprime una hoja negra. Pasó: un
+barrido de colores reemplazó los `#fff` de `.receta-print-box`, que estaban
+puestos a propósito, y rompió la impresión sin que ningún comando lo detectara.
+Los tokens de papel **no tienen variante oscura**. No se la agregues.
 
 **2. No pongas toasts de error en los `subscribe`.** Existe un `ErrorInterceptor`
 global que ya muestra el mensaje del backend ante cualquier error HTTP. Si
