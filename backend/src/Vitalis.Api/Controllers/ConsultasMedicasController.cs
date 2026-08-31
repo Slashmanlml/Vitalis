@@ -8,7 +8,11 @@ namespace Vitalis.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = Roles.Administrador + "," + Roles.Medico)]
+// Solo el rol Medico. El administrador es una figura tecnica y administrativa,
+// no asistencial: gestiona usuarios, agenda y facturacion, pero el contenido
+// clinico (diagnosticos, evolucion, indicaciones, recetas) es materia de secreto
+// profesional y no le corresponde. Antes tenia acceso completo.
+[Authorize(Roles = Roles.Medico)]
 public class ConsultasMedicasController : ControllerBase
 {
     private readonly IConsultaMedicaService _service;

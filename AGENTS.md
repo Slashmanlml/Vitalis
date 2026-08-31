@@ -43,6 +43,8 @@ vitalis-frontend/src/app/app.config.ts              (rutas)
 vitalis-frontend/src/app/dashboard/dashboard.html   (menú lateral)
 vitalis-frontend/src/app/dashboard/dashboard.ts     (permisos del menú)
 vitalis-frontend/src/styles.css                     (tokens de diseño)
+vitalis-frontend/src/app/utils/permisos.ts          (matriz de permisos de la UI)
+vitalis-frontend/src/app/utils/jwt.util.ts          (lectura del token)
 backend/src/Vitalis.Infrastructure/DependencyInjection.cs
 backend/src/Vitalis.Api/Program.cs
 ```
@@ -105,6 +107,14 @@ dato identifica a quién opera o sobre qué opera, se toma de la entidad que est
 en la base (el turno, la consulta) o de `IUsuarioActual`, y el campo equivalente
 del DTO se ignora. Validar el dato del cliente no alcanza: hay que no usarlo.
 
+**7bis. La interfaz no ofrece lo que el backend niega.** Cinco pantallas de
+catálogo mostraban los botones de Nuevo, Editar y Eliminar a todos los roles. El
+backend los rechazaba con 403, así que no era un problema de seguridad — era
+peor en otro sentido: el usuario completaba un formulario y recibía un error, y
+concluía que el sistema estaba roto cuando funcionaba bien. Los permisos de la
+interfaz salen de `utils/permisos.ts`, nunca de un `rolUsuario === '...'`
+repetido en cada componente. La autoridad sigue siendo el backend.
+
 **7. Filtrar por rol en el navegador no es filtrar.** `turnos.ts` pedía la agenda
 completa de la clínica y escondía lo ajeno con un `.filter()`. Los datos igual
 viajaban y se veían con F12. Lo que un rol no puede ver, no sale del servidor.
@@ -135,11 +145,11 @@ prueba existente, el problema es tu cambio, no la prueba.
 
 | Asistente | Tarea | Dónde está la especificación |
 |---|---|---|
-| **Gemini** | Barrido de los 60 colores pegados a mano que quedan en el CSS | **`docs/15-tareas-cuarta-ronda.md`** |
-| **OpenCode / DeepSeek** | Auditoría de seguridad (sin corregir) + pruebas de servicios del frontend | **`docs/15-tareas-cuarta-ronda.md`** |
-| **Claude** | Docker, recorrido de prueba, documento de la tesina | — |
+| **Gemini** | Módulo de Pacientes: ficha con pestañas por rol | **`docs/19-tareas-quinta-ronda.md`** |
+| **OpenCode / DeepSeek** | Modo lectura en las cinco pantallas de catálogo | **`docs/19-tareas-quinta-ronda.md`** |
+| **Claude** | Backend de permisos, menú, documento de la tesina | — |
 
-**Abrí `docs/15-tareas-cuarta-ronda.md`** y buscá la sección con tu nombre. Está
+**Abrí `docs/19-tareas-quinta-ronda.md`** y buscá la sección con tu nombre. Está
 todo el detalle ahí.
 
 Rondas anteriores, ya terminadas y verificadas: `docs/10` (notificaciones por

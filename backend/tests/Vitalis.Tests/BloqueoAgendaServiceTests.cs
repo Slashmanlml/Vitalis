@@ -49,6 +49,7 @@ public class BloqueoAgendaServiceTests
     private readonly IBloqueoAgendaService _service;
     private readonly VitalisDbContext _context;
     private readonly RecordingEmailService _emailService;
+    private readonly UsuarioActualDePrueba _usuarioActual = new();
 
     public BloqueoAgendaServiceTests()
     {
@@ -57,7 +58,7 @@ public class BloqueoAgendaServiceTests
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
         _emailService = new RecordingEmailService();
-        _service = new BloqueoAgendaService(_context, _emailService);
+        _service = new BloqueoAgendaService(_context, _emailService, _usuarioActual);
 
         SeedRelatedEntities();
     }
@@ -91,6 +92,111 @@ public class BloqueoAgendaServiceTests
         });
 
         _context.SaveChanges();
+    }
+
+    // -------------------------------------------------------------------------
+    // Cada médico bloquea su propia agenda y ninguna otra.
+    //
+    // Observación del profesor auditor. Bloquear una agenda ajena no es un
+    // detalle: cancela los turnos confirmados de ese profesional y dispara los
+    // avisos de cancelación a sus pacientes. El servicio tomaba el ProfesionalId
+    // del cuerpo del pedido sin cruzarlo con el token.
+    // -------------------------------------------------------------------------
+
+    private void AgregarSegundoProfesional()
+    {
+        _context.Profesionales.Add(new Profesional
+        {
+            Id = 2,
+            Nombre = "Laura",
+            Apellido = "Martinez",
+            Matricula = "MP-1002",
+            EspecialidadId = 1,
+            Activo = true
+        });
+        _context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task CrearAsync_MedicoSobreAgendaAjena_Rechaza()
+    {
+        AgregarSegundoProfesional();
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 2;   // se autentica Laura
+
+        var rango = RangoBloqueoValido();
+        var act = async () => await _service.CrearAsync(new CrearBloqueoDto
+        {
+            ProfesionalId = 1,              // pero bloquea la agenda de Gómez
+            FechaHoraInicio = rango.Inicio,
+            FechaHoraFin = rango.Fin,
+            Motivo = "Bloqueo indebido"
+        });
+
+        await act.Should().ThrowAsync<ForbiddenException>();
+        (await _context.BloqueosAgenda.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CrearAsync_MedicoSobreAgendaPropia_Permite()
+    {
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 1;
+
+        var rango = RangoBloqueoValido();
+        var resultado = await _service.CrearAsync(new CrearBloqueoDto
+        {
+            ProfesionalId = 1,
+            FechaHoraInicio = rango.Inicio,
+            FechaHoraFin = rango.Fin,
+            Motivo = "Congreso"
+        });
+
+        resultado.Should().NotBeNull();
+        resultado.ProfesionalId.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CrearAsync_Administrador_PuedeBloquearCualquierAgenda()
+    {
+        // Gestionar la agenda de la clínica es tarea de administración.
+        _usuarioActual.Rol = Roles.Administrador;
+
+        var rango = RangoBloqueoValido();
+        var resultado = await _service.CrearAsync(new CrearBloqueoDto
+        {
+            ProfesionalId = 1,
+            FechaHoraInicio = rango.Inicio,
+            FechaHoraFin = rango.Fin,
+            Motivo = "Mantenimiento del consultorio"
+        });
+
+        resultado.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task EliminarAsync_MedicoSobreBloqueoAjeno_Rechaza()
+    {
+        // Quitar el bloqueo de otro reabre una agenda que no es propia.
+        AgregarSegundoProfesional();
+        _usuarioActual.Rol = Roles.Administrador;
+
+        var rango = RangoBloqueoValido();
+        var bloqueo = await _service.CrearAsync(new CrearBloqueoDto
+        {
+            ProfesionalId = 1,
+            FechaHoraInicio = rango.Inicio,
+            FechaHoraFin = rango.Fin,
+            Motivo = "Vacaciones"
+        });
+
+        _usuarioActual.Rol = Roles.Medico;
+        _usuarioActual.ProfesionalId = 2;
+
+        var act = async () => await _service.EliminarAsync(bloqueo.Id);
+
+        await act.Should().ThrowAsync<ForbiddenException>();
+        (await _context.BloqueosAgenda.CountAsync()).Should().Be(1);
     }
 
     // Rango de bloqueo de referencia para los tests: mañana, de 10 a 12hs.

@@ -26,6 +26,10 @@ const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'pacientes', loadComponent: () => import('./pacientes/pacientes').then(m => m.PacientesComponent) },
+      // Ficha del paciente. Va DESPUÉS de la ruta del listado: el router de
+      // Angular resuelve por orden y 'pacientes/:id' con un id vacío no debe
+      // ganarle a 'pacientes'.
+      { path: 'pacientes/:id', loadComponent: () => import('./pacientes/paciente-ficha').then(m => m.PacienteFichaComponent) },
       { path: 'profesionales', loadComponent: () => import('./profesionales/profesionales').then(m => m.ProfesionalesComponent) },
       { path: 'turnos', loadComponent: () => import('./turnos/turnos').then(m => m.TurnosComponent) },
       { path: 'obras-sociales', loadComponent: () => import('./obras-sociales/obras-sociales').then(m => m.ObrasSocialesComponent) },

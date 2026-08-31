@@ -11,11 +11,50 @@ public class BloqueoAgendaService : IBloqueoAgendaService
 {
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IUsuarioActual _usuarioActual;
 
-    public BloqueoAgendaService(VitalisDbContext context, IEmailService emailService)
+    public BloqueoAgendaService(
+        VitalisDbContext context,
+        IEmailService emailService,
+        IUsuarioActual usuarioActual)
     {
         _context = context;
         _emailService = emailService;
+        _usuarioActual = usuarioActual;
+    }
+
+    /// <summary>
+    /// Un medico bloquea su propia agenda y ninguna otra.
+    ///
+    /// Bloquear una agenda ajena no es un detalle administrativo: cancela los
+    /// turnos ya confirmados de ese profesional y dispara los avisos de
+    /// cancelacion a sus pacientes. Antes el servicio tomaba el ProfesionalId del
+    /// cuerpo del pedido sin cruzarlo con el token, de modo que bastaba enviar
+    /// otro id. Es el mismo patron que se corrigio en ConsultaMedicaService.
+    ///
+    /// El administrador y la recepcion no se restringen: gestionar la agenda de
+    /// la clinica es parte de su tarea.
+    /// </summary>
+    private async Task VerificarQuePuedeBloquearAsync(int profesionalId)
+    {
+        if (!_usuarioActual.EsMedico)
+        {
+            return;
+        }
+
+        var miProfesionalId = await _usuarioActual.ObtenerProfesionalIdAsync();
+
+        if (miProfesionalId is null)
+        {
+            throw new ForbiddenException(
+                "Su usuario no esta vinculado a una ficha profesional, por lo que no puede bloquear agendas.");
+        }
+
+        if (miProfesionalId != profesionalId)
+        {
+            throw new ForbiddenException(
+                "Solo puede bloquear su propia agenda. Para bloquear la de otro profesional, solicitelo a administracion.");
+        }
     }
 
     public async Task<IEnumerable<BloqueoAgendaDto>> ObtenerTodosAsync()
@@ -145,6 +184,8 @@ public class BloqueoAgendaService : IBloqueoAgendaService
             throw new NotFoundException("Profesional no encontrado.");
         }
 
+        await VerificarQuePuedeBloquearAsync(dto.ProfesionalId);
+
         // Crear el bloqueo
         var bloqueo = new BloqueoAgenda
         {
@@ -197,6 +238,9 @@ public class BloqueoAgendaService : IBloqueoAgendaService
     {
         var b = await _context.BloqueosAgenda.FindAsync(id);
         if (b == null) return false;
+
+        // Quitar el bloqueo de otro profesional reabre una agenda ajena.
+        await VerificarQuePuedeBloquearAsync(b.ProfesionalId);
 
         _context.BloqueosAgenda.Remove(b);
         await _context.SaveChangesAsync();
