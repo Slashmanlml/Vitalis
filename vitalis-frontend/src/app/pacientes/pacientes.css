@@ -11,6 +11,7 @@
 .data-table th { background: var(--bg-secondary); padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); }
 .data-table td { padding: 14px 16px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-light); }
 .data-table tr:hover td { background: var(--bg-secondary); }
+.clickable-row { cursor: pointer; }
 .cell-primary { font-weight: 600; color: var(--text-primary); }
 .badge-dni { background: var(--color-primary-bg); color: var(--color-primary); padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; font-family: monospace; }
 .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }

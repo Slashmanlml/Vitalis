@@ -1,15 +1,20 @@
 <div class="page-container">
   <div class="page-header">
     <div><h1>Prestaciones</h1><p>Catálogo de servicios médicos y procedimientos</p></div>
-    <button class="btn-primary" (click)="abrirNuevo()">
+    <button *ngIf="puedeEditar" class="btn-primary" (click)="abrirNuevo()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Nueva Prestación
     </button>
   </div>
+
+  <div *ngIf="!puedeEditar" class="read-only-notice">
+    Solo lectura. La gestión de este catálogo corresponde a administración.
+  </div>
+
   <div class="table-container">
     <table class="data-table">
       <thead>
-        <tr><th>Nombre</th><th>Código</th><th>Importe Base</th><th>Estado</th><th>Acciones</th></tr>
+        <tr><th>Nombre</th><th>Código</th><th>Importe Base</th><th>Estado</th><th *ngIf="puedeEditar">Acciones</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let p of prestaciones">
@@ -17,12 +22,12 @@
           <td><span class="badge-code">{{ p.codigo }}</span></td>
           <td><span class="cell-price">$ {{ p.importeBase | number:'1.2-2' }}</span></td>
           <td><span class="status-badge" [ngClass]="p.activa ? 'status-success' : 'status-danger'">{{ p.activa ? 'Activa' : 'Inactiva' }}</span></td>
-          <td class="actions-cell">
+          <td *ngIf="puedeEditar" class="actions-cell">
             <button class="btn-icon" title="Editar" (click)="abrirEditar(p)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
             <button class="btn-icon btn-icon-danger" title="Eliminar" (click)="eliminar(p)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </td>
         </tr>
-        <tr *ngIf="prestaciones.length === 0"><td colspan="5" class="empty-state">Sin prestaciones registradas</td></tr>
+        <tr *ngIf="prestaciones.length === 0"><td [attr.colspan]="puedeEditar ? 5 : 4" class="empty-state">Sin prestaciones registradas</td></tr>
       </tbody>
     </table>
   </div>

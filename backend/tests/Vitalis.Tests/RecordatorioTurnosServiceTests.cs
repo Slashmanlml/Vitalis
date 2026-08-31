@@ -109,7 +109,7 @@ public class RecordatorioTurnosServiceTests
 
     private RecordatorioTurnosService CrearServicio()
     {
-        return new RecordatorioTurnosService(_scopeFactory, Options.Create(_options), NullLogger<RecordatorioTurnosService>.Instance);
+        return new RecordatorioTurnosService(_scopeFactory, Options.Create(_options), NullLogger<RecordatorioTurnosService>.Instance, new RelojDePrueba());
     }
 
     [Fact]

@@ -32,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IFacturaService, FacturaService>();
         services.AddScoped<ILiquidacionService, LiquidacionService>();
         services.AddScoped<ISearchService, SearchService>();
+        services.Configure<Configuracion.ClinicaOptions>(configuration.GetSection("Clinica"));
+        services.AddSingleton<IRelojClinica, Configuracion.RelojClinica>();
         services.AddScoped<IUsuarioActual, UsuarioActualService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IBloqueoAgendaService, BloqueoAgendaService>();

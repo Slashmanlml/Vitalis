@@ -50,6 +50,7 @@ public class BloqueoAgendaServiceTests
     private readonly VitalisDbContext _context;
     private readonly RecordingEmailService _emailService;
     private readonly UsuarioActualDePrueba _usuarioActual = new();
+    private readonly RelojDePrueba _reloj = new();
 
     public BloqueoAgendaServiceTests()
     {
@@ -58,7 +59,7 @@ public class BloqueoAgendaServiceTests
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
         _emailService = new RecordingEmailService();
-        _service = new BloqueoAgendaService(_context, _emailService, _usuarioActual);
+        _service = new BloqueoAgendaService(_context, _emailService, _usuarioActual, _reloj);
 
         SeedRelatedEntities();
     }

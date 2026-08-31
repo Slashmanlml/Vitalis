@@ -8,6 +8,7 @@ import { Profesional, CrearProfesional, EditarProfesional } from '../models/prof
 import { Especialidad } from '../models/especialidad.model';
 import { ToastService } from '../services/toast.service';
 import { environment } from '../../environments/environment';
+import { puedeEditar } from '../utils/permisos';
 
 @Component({
   selector: 'app-profesionales',
@@ -18,6 +19,7 @@ import { environment } from '../../environments/environment';
 })
 export class ProfesionalesComponent implements OnInit {
   serverUrl = environment.serverUrl;
+  puedeEditar = puedeEditar('profesionales');
   profesionales: Profesional[] = [];
   especialidades: Especialidad[] = [];
   showModal: boolean = false;

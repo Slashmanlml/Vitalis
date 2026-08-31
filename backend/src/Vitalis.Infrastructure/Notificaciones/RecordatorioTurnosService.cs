@@ -15,15 +15,18 @@ public class RecordatorioTurnosService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly NotificacionesOptions _options;
     private readonly ILogger<RecordatorioTurnosService> _logger;
+    private readonly IRelojClinica _reloj;
 
     public RecordatorioTurnosService(
         IServiceScopeFactory scopeFactory,
         IOptions<NotificacionesOptions> options,
-        ILogger<RecordatorioTurnosService> logger)
+        ILogger<RecordatorioTurnosService> logger,
+        IRelojClinica reloj)
     {
         _scopeFactory = scopeFactory;
         _options = options.Value;
         _logger = logger;
+        _reloj = reloj;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -97,7 +100,7 @@ public class RecordatorioTurnosService : BackgroundService
                 ["PacienteNombre"] = $"{turno.Paciente.Nombre} {turno.Paciente.Apellido}",
                 ["ProfesionalNombre"] = turno.Profesional != null ? $"{turno.Profesional.Nombre} {turno.Profesional.Apellido}" : "Médico Asignado",
                 ["Especialidad"] = turno.Profesional?.Especialidad?.Nombre ?? "Medicina General",
-                ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm"),
                 ["HorasRestantes"] = _options.HorasAntesDelRecordatorio.ToString()
             };
 

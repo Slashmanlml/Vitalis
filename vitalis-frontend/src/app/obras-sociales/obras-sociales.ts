@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ObraSocialService } from '../services/obra-social.service';
 import { ObraSocial, CrearObraSocial, EditarObraSocial } from '../models/obra-social.model';
+import { puedeEditar } from '../utils/permisos';
 
 @Component({
   selector: 'app-obras-sociales',
@@ -12,6 +13,7 @@ import { ObraSocial, CrearObraSocial, EditarObraSocial } from '../models/obra-so
   styleUrls: ['./obras-sociales.css']
 })
 export class ObrasSocialesComponent implements OnInit {
+  puedeEditar = puedeEditar('obras-sociales');
   obrasSociales: ObraSocial[] = [];
   showModal: boolean = false;
   editMode: boolean = false;

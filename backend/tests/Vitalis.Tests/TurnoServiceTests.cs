@@ -43,6 +43,7 @@ public class TurnoServiceTests
     private readonly ITurnoService _service;
     private readonly VitalisDbContext _context;
     private readonly UsuarioActualDePrueba _usuarioActual = new();
+    private readonly RelojDePrueba _reloj = new();
     private readonly NoOpEmailService _emailService;
 
     public TurnoServiceTests()
@@ -52,7 +53,7 @@ public class TurnoServiceTests
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
         _emailService = new NoOpEmailService();
-        _service = new TurnoService(_context, _emailService, _usuarioActual);
+        _service = new TurnoService(_context, _emailService, _usuarioActual, _reloj);
 
         SeedRelatedEntities();
     }
@@ -404,6 +405,82 @@ public class TurnoServiceTests
 
         // Assert
         turnos.Should().BeEmpty();
+    }
+
+    // -------------------------------------------------------------------------
+    // El horario de atencion es el de la CLINICA, no el del servidor.
+    //
+    // Detectado probando el sistema en Docker: no se podian cargar turnos desde
+    // las 17:30. La validacion usaba DateTime.ToLocalTime(), que convierte a la
+    // hora local de la maquina donde corre el proceso. En Windows daba hora
+    // argentina y andaba; dentro del contenedor, que corre en UTC, no convertia
+    // nada, y las 17:30 argentinas (20:30 UTC) quedaban fuera del horario.
+    //
+    // El mismo codigo con dos resultados segun donde corriera. Estas pruebas
+    // fijan el comportamiento sin depender de la zona horaria de la maquina.
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task CrearAsync_TurnoDeLaTarde_SeAceptaAunqueEnUtcSeaDeNoche()
+    {
+        // Arrange: 17:30 en la clinica = 20:30 UTC, fuera del horario si se
+        // interpretara como UTC.
+        var fechaUtc = ProximoDiaHabilUtcALas(20, 30);
+
+        // Act
+        var resultado = await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, FechaHora = fechaUtc
+        });
+
+        // Assert
+        resultado.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CrearAsync_FueraDelHorarioDeLaClinica_Rechaza()
+    {
+        // 23:00 UTC = 20:00 en la clinica... y un minuto mas ya cierra.
+        var fechaUtc = ProximoDiaHabilUtcALas(23, 30);   // 20:30 en la clinica
+
+        var act = async () => await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, FechaHora = fechaUtc
+        });
+
+        await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
+    public async Task CrearAsync_ViernesDeNocheEnUtcEsSabado_SeAceptaPorqueEnLaClinicaEsViernes()
+    {
+        // Un viernes a las 21:00 argentinas es sabado 00:00 UTC. Con la
+        // validacion anterior, dentro del contenedor esto se rechazaba por fin
+        // de semana. Es el mismo defecto, en el otro control.
+        var fecha = DateTime.UtcNow.Date.AddDays(1);
+        while (_reloj.AHoraDeLaClinica(fecha.AddHours(22)).DayOfWeek != DayOfWeek.Friday)
+        {
+            fecha = fecha.AddDays(1);
+        }
+        var fechaUtc = DateTime.SpecifyKind(fecha.AddHours(22), DateTimeKind.Utc); // 19:00 en la clinica
+
+        var resultado = await _service.CrearAsync(new CrearTurnoDto
+        {
+            PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, FechaHora = fechaUtc
+        });
+
+        resultado.Should().NotBeNull();
+    }
+
+    /// <summary>Proximo dia habil (segun la clinica) a la hora UTC indicada.</summary>
+    private DateTime ProximoDiaHabilUtcALas(int horaUtc, int minutoUtc)
+    {
+        var fecha = DateTime.UtcNow.Date.AddDays(2).AddHours(horaUtc).AddMinutes(minutoUtc);
+        while (_reloj.AHoraDeLaClinica(fecha).DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        {
+            fecha = fecha.AddDays(1);
+        }
+        return DateTime.SpecifyKind(fecha, DateTimeKind.Utc);
     }
 
     private static DateTime ProximoHorarioLaboralValido()

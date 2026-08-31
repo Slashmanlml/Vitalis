@@ -12,12 +12,18 @@ public class TurnoService : ITurnoService
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
     private readonly IUsuarioActual _usuarioActual;
+    private readonly IRelojClinica _reloj;
 
-    public TurnoService(VitalisDbContext context, IEmailService emailService, IUsuarioActual usuarioActual)
+    public TurnoService(
+        VitalisDbContext context,
+        IEmailService emailService,
+        IUsuarioActual usuarioActual,
+        IRelojClinica reloj)
     {
         _context = context;
         _emailService = emailService;
         _usuarioActual = usuarioActual;
+        _reloj = reloj;
     }
 
     public async Task<IEnumerable<TurnoDto>> ObtenerTodosAsync()
@@ -93,15 +99,22 @@ public class TurnoService : ITurnoService
             throw new ValidationException("No se pueden agendar turnos en el pasado.");
         }
 
+        // El horario de atención es el DE LA CLÍNICA, no el de la máquina donde
+        // corre el proceso. Antes esto usaba ToLocalTime(): en Windows daba hora
+        // argentina y dentro del contenedor daba UTC, así que un turno de las
+        // 17:30 se evaluaba como las 20:30 y se rechazaba por fuera de horario.
+        // El mismo código con dos resultados distintos según dónde corriera.
+        var horaClinica = _reloj.AHoraDeLaClinica(fechaHora);
+
         // 1. Días laborales (Lunes a Viernes)
-        var dayOfWeek = fechaHora.ToLocalTime().DayOfWeek;
+        var dayOfWeek = horaClinica.DayOfWeek;
         if (dayOfWeek == DayOfWeek.Saturday || dayOfWeek == DayOfWeek.Sunday)
         {
             throw new ValidationException("No se pueden agendar turnos los fines de semana.");
         }
 
         // 2. Horario laboral (8:00 AM a 8:00 PM)
-        var time = fechaHora.ToLocalTime().TimeOfDay;
+        var time = horaClinica.TimeOfDay;
         if (time < new TimeSpan(8, 0, 0) || time > new TimeSpan(20, 0, 0))
         {
             throw new ValidationException("Los turnos deben agendarse dentro del horario de atención (8:00 AM a 8:00 PM).");
@@ -184,7 +197,7 @@ public class TurnoService : ITurnoService
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
                     ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
-                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm")
                 }
             });
         }
@@ -235,8 +248,8 @@ public class TurnoService : ITurnoService
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
                     ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
-                    ["FechaAnterior"] = fechaAnterior.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    ["FechaAnterior"] = _reloj.AHoraDeLaClinica(fechaAnterior).ToString("dd/MM/yyyy HH:mm"),
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm")
                 }
             });
         }
@@ -253,7 +266,7 @@ public class TurnoService : ITurnoService
                 {
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
-                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm")
                 }
             });
         }
@@ -271,7 +284,7 @@ public class TurnoService : ITurnoService
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
                     ["Especialidad"] = prof?.Especialidad?.Nombre ?? "Medicina General",
-                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm")
                 }
             });
         }
@@ -297,7 +310,7 @@ public class TurnoService : ITurnoService
                 {
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Asignado",
-                    ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm")
                 }
             });
         }

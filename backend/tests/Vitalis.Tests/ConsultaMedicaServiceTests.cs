@@ -20,6 +20,7 @@ public class ConsultaMedicaServiceTests
     private readonly IConsultaMedicaService _service;
     private readonly VitalisDbContext _context;
     private readonly UsuarioActualDePrueba _usuarioActual = new();
+    private readonly RelojDePrueba _reloj = new();
 
     public ConsultaMedicaServiceTests()
     {
@@ -27,7 +28,7 @@ public class ConsultaMedicaServiceTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new VitalisDbContext(options, new HttpContextAccessor());
-        _service = new ConsultaMedicaService(_context, new NoOpEmailService(), _usuarioActual);
+        _service = new ConsultaMedicaService(_context, new NoOpEmailService(), _usuarioActual, _reloj);
 
         SeedRelatedEntities();
     }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EspecialidadService } from '../services/especialidad.service';
 import { Especialidad, CrearEspecialidad, EditarEspecialidad } from '../models/especialidad.model';
+import { puedeEditar } from '../utils/permisos';
 
 @Component({
   selector: 'app-especialidades',
@@ -12,6 +13,7 @@ import { Especialidad, CrearEspecialidad, EditarEspecialidad } from '../models/e
   styleUrls: ['./especialidades.css']
 })
 export class EspecialidadesComponent implements OnInit {
+  puedeEditar = puedeEditar('especialidades');
   especialidades: Especialidad[] = [];
   showModal: boolean = false;
   editMode: boolean = false;

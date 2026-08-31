@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PacienteService } from '../services/paciente.service';
 import { ObraSocialService } from '../services/obra-social.service';
@@ -35,6 +35,7 @@ export class PacientesComponent implements OnInit {
   };
 
   constructor(
+    private router: Router,
     private pacienteService: PacienteService,
     private obraSocialService: ObraSocialService,
     private uploadService: UploadService,
@@ -233,6 +234,10 @@ export class PacientesComponent implements OnInit {
         this.cargarPacientes();
       });
     }
+  }
+
+  verFicha(p: Paciente) {
+    this.router.navigate(['/dashboard/pacientes', p.id]);
   }
 
   cerrarModal() {

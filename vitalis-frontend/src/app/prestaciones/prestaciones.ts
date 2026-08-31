@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrestacionService } from '../services/prestacion.service';
 import { Prestacion } from '../models/prestacion.model';
+import { puedeEditar } from '../utils/permisos';
 
 @Component({
   selector: 'app-prestaciones',
@@ -12,6 +13,7 @@ import { Prestacion } from '../models/prestacion.model';
   styleUrls: ['./prestaciones.css']
 })
 export class PrestacionesComponent implements OnInit {
+  puedeEditar = puedeEditar('prestaciones');
   prestaciones: Prestacion[] = [];
   showModal: boolean = false;
   editMode: boolean = false;

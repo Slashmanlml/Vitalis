@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MedicamentoService } from '../services/medicamento.service';
 import { Medicamento, CrearMedicamento, EditarMedicamento } from '../models/medicamento.model';
+import { puedeEditar } from '../utils/permisos';
 
 @Component({
   selector: 'app-medicamentos',
@@ -12,6 +13,7 @@ import { Medicamento, CrearMedicamento, EditarMedicamento } from '../models/medi
   styleUrls: ['./medicamentos.css']
 })
 export class MedicamentosComponent implements OnInit {
+  puedeEditar = puedeEditar('medicamentos');
   medicamentos: Medicamento[] = [];
   searchTerm: string = '';
   showModal: boolean = false;

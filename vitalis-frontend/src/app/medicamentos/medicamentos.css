@@ -2,6 +2,7 @@
 .page-header { display: flex; justify-content: space-between; align-items: center; }
 .page-header h1 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0; }
 .page-header p { font-size: 13px; color: var(--text-secondary); margin: 4px 0 0 0; }
+.read-only-notice { font-size: 13px; color: var(--text-muted); padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); }
 .search-bar { display: flex; align-items: center; gap: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 16px; }
 .search-bar input { border: none; outline: none; flex: 1; font-size: 14px; background: transparent; }
 .search-bar input::placeholder { color: var(--text-muted); }

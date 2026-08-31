@@ -12,15 +12,18 @@ public class BloqueoAgendaService : IBloqueoAgendaService
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
     private readonly IUsuarioActual _usuarioActual;
+    private readonly IRelojClinica _reloj;
 
     public BloqueoAgendaService(
         VitalisDbContext context,
         IEmailService emailService,
-        IUsuarioActual usuarioActual)
+        IUsuarioActual usuarioActual,
+        IRelojClinica reloj)
     {
         _context = context;
         _emailService = emailService;
         _usuarioActual = usuarioActual;
+        _reloj = reloj;
     }
 
     /// <summary>
@@ -219,7 +222,7 @@ public class BloqueoAgendaService : IBloqueoAgendaService
                     {
                         ["PacienteNombre"] = $"{turno.Paciente.Nombre} {turno.Paciente.Apellido}",
                         ["ProfesionalNombre"] = $"{profesional.Nombre} {profesional.Apellido}",
-                        ["FechaHora"] = turno.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                        ["FechaHora"] = _reloj.AHoraDeLaClinica(turno.FechaHora).ToString("dd/MM/yyyy HH:mm"),
                         ["Motivo"] = $"Fuerza mayor / Bloqueo de agenda: {dto.Motivo}"
                     }
                 });

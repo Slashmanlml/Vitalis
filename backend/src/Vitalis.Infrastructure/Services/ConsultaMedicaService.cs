@@ -12,15 +12,18 @@ public class ConsultaMedicaService : IConsultaMedicaService
     private readonly VitalisDbContext _context;
     private readonly IEmailService _emailService;
     private readonly IUsuarioActual _usuarioActual;
+    private readonly IRelojClinica _reloj;
 
     public ConsultaMedicaService(
         VitalisDbContext context,
         IEmailService emailService,
-        IUsuarioActual usuarioActual)
+        IUsuarioActual usuarioActual,
+        IRelojClinica reloj)
     {
         _context = context;
         _emailService = emailService;
         _usuarioActual = usuarioActual;
+        _reloj = reloj;
     }
 
     /// <summary>
@@ -155,7 +158,7 @@ public class ConsultaMedicaService : IConsultaMedicaService
                 {
                     ["PacienteNombre"] = $"{pac.Nombre} {pac.Apellido}",
                     ["ProfesionalNombre"] = prof != null ? $"{prof.Nombre} {prof.Apellido}" : "Médico Tratante",
-                    ["FechaHora"] = consulta.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
+                    ["FechaHora"] = _reloj.AHoraDeLaClinica(consulta.Fecha).ToString("dd/MM/yyyy HH:mm"),
                     ["Indicaciones"] = string.IsNullOrWhiteSpace(consulta.Indicaciones)
                         ? "Seguir las pautas acordadas durante la consulta médica."
                         : consulta.Indicaciones
