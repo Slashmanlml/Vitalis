@@ -10,9 +10,22 @@
     </button>
   </div>
 
-  <div class="search-bar">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" placeholder="Buscar por nombre, apellido o DNI..." [(ngModel)]="searchTerm" (input)="buscar()" />
+  <div class="filter-toolbar">
+    <div class="search-bar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar por nombre, apellido o DNI..." [(ngModel)]="searchTerm" (input)="buscar()" />
+    </div>
+    <div class="estado-filters">
+      <button class="filter-btn" [class.active]="filtroEstado === 'activos'" (click)="cambiarFiltro('activos')">
+        Activos
+      </button>
+      <button class="filter-btn" [class.active]="filtroEstado === 'inactivos'" (click)="cambiarFiltro('inactivos')">
+        Inactivos
+      </button>
+      <button class="filter-btn" [class.active]="filtroEstado === 'todos'" (click)="cambiarFiltro('todos')">
+        Todos
+      </button>
+    </div>
   </div>
 
   <div class="table-container">
@@ -30,7 +43,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let p of filteredPacientes" (click)="verFicha(p)" class="clickable-row">
+        <tr *ngFor="let p of filteredPacientes" (click)="verFicha(p)" class="clickable-row" [class.row-inactivo]="!p.activo">
           <td>
             <div class="patient-name-cell">
               <img *ngIf="p.fotoUrl" [src]="serverUrl + p.fotoUrl" class="patient-avatar-table" />
@@ -57,8 +70,11 @@
             <button class="btn-icon" title="Editar" (click)="abrirEditar(p)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn-icon btn-icon-danger" title="Desactivar" (click)="desactivar(p)">
+            <button *ngIf="p.activo" class="btn-icon btn-icon-danger" title="Dar de baja" (click)="darDeBaja(p)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <button *ngIf="!p.activo" class="btn-icon btn-icon-success" title="Reactivar paciente" (click)="reactivar(p)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             </button>
           </td>
         </tr>

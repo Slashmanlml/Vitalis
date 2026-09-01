@@ -21,9 +21,11 @@ public class PacientesController : ControllerBase
     // GET: api/Pacientes
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<PacienteDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<PacienteDto>>> ObtenerTodos([FromQuery] string? buscar)
+    public async Task<ActionResult<IEnumerable<PacienteDto>>> ObtenerTodos(
+        [FromQuery] string? buscar,
+        [FromQuery] bool incluirInactivos = false)
     {
-        var pacientes = await _pacienteService.ObtenerTodosAsync(buscar);
+        var pacientes = await _pacienteService.ObtenerTodosAsync(buscar, incluirInactivos);
         return Ok(pacientes);
     }
 
@@ -69,6 +71,17 @@ public class PacientesController : ControllerBase
     {
         var resultado = await _pacienteService.DesactivarAsync(id);
         if (!resultado) return NotFound(new { mensaje = "Paciente no encontrado." });
-        return Ok(new { mensaje = "Paciente desactivado correctamente." });
+        return Ok(new { mensaje = "Paciente dado de baja correctamente." });
+    }
+
+    // PATCH: api/Pacientes/{id}/reactivar
+    [HttpPatch("{id}/reactivar")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Reactivar(int id)
+    {
+        var resultado = await _pacienteService.ReactivarAsync(id);
+        if (!resultado) return NotFound(new { mensaje = "Paciente no encontrado." });
+        return Ok(new { mensaje = "Paciente reactivado correctamente." });
     }
 }

@@ -95,7 +95,7 @@
         <div class="comparison-column">
           <h3>Estado Anterior</h3>
           <div class="json-viewer" *ngIf="parsedValoresAnteriores">
-            <div *ngFor="let key of getObjectKeys(parsedValoresAnteriores)" class="json-row">
+            <div *ngFor="let key of clavesAnteriores" class="json-row">
               <span class="json-key">{{ key }}:</span>
               <span class="json-val">{{ parsedValoresAnteriores[key] !== null ? parsedValoresAnteriores[key] : 'null' }}</span>
             </div>
@@ -108,7 +108,7 @@
         <div class="comparison-column">
           <h3>Estado Nuevo</h3>
           <div class="json-viewer" *ngIf="parsedValoresNuevos">
-            <div *ngFor="let key of getObjectKeys(parsedValoresNuevos)" class="json-row">
+            <div *ngFor="let key of clavesNuevas" class="json-row">
               <span class="json-key" [ngClass]="{'modified-key': parsedValoresAnteriores && parsedValoresAnteriores[key] !== parsedValoresNuevos[key]}">
                 {{ key }}:
               </span>

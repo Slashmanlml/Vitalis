@@ -1,8 +1,8 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { forkJoin, filter } from 'rxjs';
 import { TurnoService } from '../services/turno.service';
 import { ProfesionalService } from '../services/profesional.service';
 import { SearchService, SearchResults, SearchItem } from '../services/search.service';
@@ -84,12 +84,28 @@ export class DashboardComponent implements OnInit {
         this.emailUsuario = obtenerEmailUsuario(claims);
       }
     }
-    this.router.events.subscribe(() => {
-      this.esRutaRaiz = this.router.url === '/dashboard';
-    });
+    // El estado se fija PRIMERO con la URL actual y despues se mantiene con cada
+    // navegacion terminada.
+    //
+    // Antes solo estaba la suscripcion. Al entrar directo a una URL —recargando
+    // la pagina o pegando la direccion— el componente se crea, se suscribe a las
+    // navegaciones futuras, y la navegacion en curso ya termino: nunca llegaba
+    // ningun evento y esRutaRaiz se quedaba en su valor inicial (true). El
+    // resumen del panel principal aparecia encima de todas las pantallas.
+    //
+    // Ademas se filtra por NavigationEnd: router.events emite varios eventos por
+    // navegacion, y en los primeros router.url todavia es la direccion anterior.
+    this.actualizarRutaRaiz();
+    this.router.events
+      .pipe(filter(evento => evento instanceof NavigationEnd))
+      .subscribe(() => this.actualizarRutaRaiz());
     this.cargarEstadisticas();
   }
 
+
+  private actualizarRutaRaiz(): void {
+    this.esRutaRaiz = this.router.url === '/dashboard';
+  }
 
   cargarEstadisticas() {
     this.cargando = true;

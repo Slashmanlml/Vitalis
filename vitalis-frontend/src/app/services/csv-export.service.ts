@@ -29,7 +29,10 @@ export class CsvExportService {
     const rows = data.map(item =>
       cols.map(col => {
         const value = item[col];
-        return this.escapeCSV(String(value || ''));
+        // No se usa (value || '') porque el número 0 es falsy: una fila con cero
+        // turnos se exportaba como celda vacía en lugar de 0, y en un reporte
+        // eso significa otra cosa (no hay dato vs. el dato es cero).
+        return this.escapeCSV(value === null || value === undefined ? '' : String(value));
       }).join(',')
     );
     
@@ -63,7 +66,10 @@ export class CsvExportService {
     
     // Create CSV rows
     const rows = formattedData.map(item =>
-      cols.map(col => this.escapeCSV(String(item[col] || ''))).join(',')
+      cols.map(col => {
+        const valor = item[col];
+        return this.escapeCSV(valor === null || valor === undefined ? '' : String(valor));
+      }).join(',')
     );
     
     // Combine header and rows
@@ -88,7 +94,15 @@ export class CsvExportService {
    * Triggers CSV file download
    */
   private downloadCSV(csv: string, filename: string): void {
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // Dos detalles que deciden si el archivo se abre bien o se abre roto en Excel:
+    //
+    // 1. El BOM (\uFEFF): sin él, Excel en Windows no reconoce el archivo como
+    //    UTF-8 y muestra "MartÃ­nez" en lugar de "Martínez".
+    // 2. La línea "sep=,": Excel usa el separador de listas de la configuración
+    //    regional, que en Argentina es el punto y coma. Sin esta línea, todas
+    //    las columnas caen dentro de la primera celda.
+    const contenido = '\uFEFF' + 'sep=,\n' + csv;
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     

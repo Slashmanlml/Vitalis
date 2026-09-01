@@ -50,6 +50,18 @@ export class ReportesComponent implements OnInit {
 
   // --- Reporte Agenda (existente) ---
   estadisticas: EstadisticasGenerales | null = null;
+
+  // Las barras se calculan UNA VEZ, al llegar los datos, y la plantilla itera
+  // estas propiedades.
+  //
+  // Antes el HTML hacía *ngFor="let b of barras(...)". Angular ejecuta las
+  // funciones de la plantilla en cada ciclo de detección de cambios, y esa
+  // función devuelve un array NUEVO cada vez: Angular veía una lista distinta,
+  // destruía el DOM de las barras y lo reconstruía; reconstruirlo disparaba otro
+  // ciclo, que volvía a llamar la función. La pantalla de reportes se trababa.
+  barrasEspecialidad: Barra[] = [];
+  barrasObraSocial: Barra[] = [];
+  barrasProfesional: Barra[] = [];
   cargando = true;
 
   profesionales: Profesional[] = [];
@@ -78,6 +90,8 @@ export class ReportesComponent implements OnInit {
 
   // --- Reporte Financiero (nuevo) ---
   resumenFinanciero: ResumenFinanciero | null = null;
+  barrasTopObrasSociales: BarraMonto[] = [];
+  barrasTopMediosPago: BarraMonto[] = [];
   cargandoFinanciero = false;
   desdeFinanciero = '';
   hastaFinanciero = '';
@@ -125,6 +139,9 @@ export class ReportesComponent implements OnInit {
     this.reporteService.estadisticas().subscribe({
       next: data => {
         this.estadisticas = data;
+        this.barrasEspecialidad = this.barras(data.porEspecialidad);
+        this.barrasObraSocial = this.barras(data.porObraSocial);
+        this.barrasProfesional = this.barras(data.porProfesional);
         this.construirSerieMensual(data.porMes);
         this.cargando = false;
         this.cdr.detectChanges();
@@ -306,6 +323,8 @@ export class ReportesComponent implements OnInit {
     ).subscribe({
       next: (data) => {
         this.resumenFinanciero = data;
+        this.barrasTopObrasSociales = this.barrasObrasSociales(data.topObrasSociales);
+        this.barrasTopMediosPago = this.barrasMediosPago(data.mediosPago);
         this.cargandoFinanciero = false;
         this.cdr.detectChanges();
       },

@@ -26,6 +26,14 @@ export class AuditoriasComponent implements OnInit {
   parsedValoresAnteriores: any = null;
   parsedValoresNuevos: any = null;
 
+  // Las claves se calculan al abrir el detalle, no en la plantilla. Object.keys()
+  // devuelve un array nuevo en cada llamada, y una función dentro de un *ngFor se
+  // ejecuta en cada ciclo de detección de cambios: Angular reconstruía el bloque
+  // completo una y otra vez. Es el mismo defecto que trababa la pantalla de
+  // reportes.
+  clavesAnteriores: string[] = [];
+  clavesNuevas: string[] = [];
+
   constructor(
     private auditoriaService: AuditoriaService,
     private toastService: ToastService,
@@ -72,6 +80,8 @@ export class AuditoriasComponent implements OnInit {
     this.selectedLog = log;
     this.parsedValoresAnteriores = log.valoresAnteriores ? this.parseJson(log.valoresAnteriores) : null;
     this.parsedValoresNuevos = log.valoresNuevos ? this.parseJson(log.valoresNuevos) : null;
+    this.clavesAnteriores = this.getObjectKeys(this.parsedValoresAnteriores);
+    this.clavesNuevas = this.getObjectKeys(this.parsedValoresNuevos);
     this.showModal = true;
   }
 
@@ -80,6 +90,8 @@ export class AuditoriasComponent implements OnInit {
     this.selectedLog = null;
     this.parsedValoresAnteriores = null;
     this.parsedValoresNuevos = null;
+    this.clavesAnteriores = [];
+    this.clavesNuevas = [];
   }
 
   private parseJson(jsonStr: string): any {

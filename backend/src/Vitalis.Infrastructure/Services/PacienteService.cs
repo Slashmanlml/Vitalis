@@ -16,11 +16,20 @@ public class PacienteService : IPacienteService
         _context = context;
     }
 
-    public async Task<List<PacienteDto>> ObtenerTodosAsync(string? buscar = null)
+    public async Task<List<PacienteDto>> ObtenerTodosAsync(string? buscar = null, bool incluirInactivos = false)
     {
         var query = _context.Pacientes
             .Include(p => p.ObraSocial)
-            .Where(p => p.Activo);
+            .AsQueryable();
+
+        // El listado muestra solo los activos salvo que se pidan todos. La baja es
+        // lógica porque la historia clínica del paciente debe conservarse, pero eso
+        // exige una manera de volver a verlo: de otro modo, un paciente dado de baja
+        // por error desaparece para siempre de la interfaz.
+        if (!incluirInactivos)
+        {
+            query = query.Where(p => p.Activo);
+        }
 
         if (!string.IsNullOrWhiteSpace(buscar))
         {
@@ -124,6 +133,16 @@ public class PacienteService : IPacienteService
         await _context.SaveChangesAsync();
 
         return await ObtenerPorIdAsync(id);
+    }
+
+    public async Task<bool> ReactivarAsync(int id)
+    {
+        var paciente = await _context.Pacientes.FindAsync(id);
+        if (paciente == null) return false;
+
+        paciente.Activo = true;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<bool> DesactivarAsync(int id)

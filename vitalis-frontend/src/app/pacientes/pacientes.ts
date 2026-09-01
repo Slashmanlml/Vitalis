@@ -23,6 +23,7 @@ export class PacientesComponent implements OnInit {
   filteredPacientes: Paciente[] = [];
   obrasSociales: ObraSocial[] = [];
   searchTerm: string = '';
+  filtroEstado: 'activos' | 'inactivos' | 'todos' = 'activos';
   showModal: boolean = false;
   editMode: boolean = false;
   selectedPaciente: Paciente | null = null;
@@ -49,26 +50,44 @@ export class PacientesComponent implements OnInit {
   }
 
   cargarPacientes() {
-    this.pacienteService.obtenerTodos().subscribe(data => {
-      this.pacientes = data;
-      this.filteredPacientes = data;
-      this.cdr.detectChanges();
+    const incluirInactivos = this.filtroEstado !== 'activos';
+    this.pacienteService.obtenerTodos(this.searchTerm, incluirInactivos).subscribe({
+      next: (data) => {
+        this.pacientes = data;
+        this.aplicarFiltro();
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error al cargar pacientes', err)
     });
   }
 
+  cambiarFiltro(filtro: 'activos' | 'inactivos' | 'todos') {
+    this.filtroEstado = filtro;
+    this.cargarPacientes();
+  }
+
+  aplicarFiltro() {
+    if (this.filtroEstado === 'activos') {
+      this.filteredPacientes = this.pacientes.filter(p => p.activo);
+    } else if (this.filtroEstado === 'inactivos') {
+      this.filteredPacientes = this.pacientes.filter(p => !p.activo);
+    } else {
+      this.filteredPacientes = this.pacientes;
+    }
+  }
+
   cargarObrasSociales() {
-    this.obraSocialService.obtenerTodas().subscribe(data => {
-      this.obrasSociales = data;
-      this.cdr.detectChanges();
+    this.obraSocialService.obtenerTodas().subscribe({
+      next: (data) => {
+        this.obrasSociales = data;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error al cargar obras sociales', err)
     });
   }
 
   buscar() {
-    this.pacienteService.obtenerTodos(this.searchTerm).subscribe(data => {
-      this.pacientes = data;
-      this.filteredPacientes = data;
-      this.cdr.detectChanges();
-    });
+    this.cargarPacientes();
   }
 
   abrirNuevo() {
@@ -221,19 +240,33 @@ export class PacientesComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (err) => {
-          this.toastService.error('Error al subir la imagen');
+          console.error('Error al subir la imagen', err);
         }
       });
     }
   }
 
-  desactivar(p: Paciente) {
-    if (confirm(`¿Desactivar paciente ${p.nombre} ${p.apellido}?`)) {
-      this.pacienteService.desactivar(p.id).subscribe(() => {
-        this.toastService.success('Paciente desactivado correctamente');
-        this.cargarPacientes();
+  darDeBaja(p: Paciente) {
+    const mensaje = `¿Dar de baja al paciente ${p.nombre} ${p.apellido}?\n\nEl paciente dejará de aparecer en el listado activo, pero se conservará toda su historia clínica y turnos. Podrá reactivarlo en cualquier momento desde el filtro de inactivos.`;
+    if (confirm(mensaje)) {
+      this.pacienteService.desactivar(p.id).subscribe({
+        next: () => {
+          this.toastService.success('Paciente dado de baja correctamente');
+          this.cargarPacientes();
+        },
+        error: (err) => console.error('Error al dar de baja al paciente', err)
       });
     }
+  }
+
+  reactivar(p: Paciente) {
+    this.pacienteService.reactivar(p.id).subscribe({
+      next: () => {
+        this.toastService.success('Paciente reactivado correctamente');
+        this.cargarPacientes();
+      },
+      error: (err) => console.error('Error al reactivar paciente', err)
+    });
   }
 
   verFicha(p: Paciente) {

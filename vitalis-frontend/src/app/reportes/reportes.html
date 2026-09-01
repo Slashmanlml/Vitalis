@@ -128,7 +128,7 @@
         <section class="panel">
           <header class="panel-header"><h2>Turnos por especialidad</h2></header>
           <div class="barras" *ngIf="barras(e.porEspecialidad).length; else sinEsp">
-            <div class="barra-fila" *ngFor="let b of barras(e.porEspecialidad)">
+            <div class="barra-fila" *ngFor="let b of barrasEspecialidad">
               <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
               <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
               <span class="barra-valor">{{ b.cantidad }}</span>
@@ -143,7 +143,7 @@
         <section class="panel">
           <header class="panel-header"><h2>Turnos por obra social</h2></header>
           <div class="barras" *ngIf="barras(e.porObraSocial).length; else sinOs">
-            <div class="barra-fila" *ngFor="let b of barras(e.porObraSocial)">
+            <div class="barra-fila" *ngFor="let b of barrasObraSocial">
               <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
               <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
               <span class="barra-valor">{{ b.cantidad }}</span>
@@ -158,7 +158,7 @@
         <section class="panel panel-ancho">
           <header class="panel-header"><h2>Turnos por profesional</h2></header>
           <div class="barras" *ngIf="barras(e.porProfesional).length; else sinProf">
-            <div class="barra-fila" *ngFor="let b of barras(e.porProfesional)">
+            <div class="barra-fila" *ngFor="let b of barrasProfesional">
               <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
               <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
               <span class="barra-valor">{{ b.cantidad }}</span>
@@ -328,7 +328,7 @@
           </header>
 
           <div class="barras" *ngIf="barrasObrasSociales(rf.topObrasSociales).length; else sinOsFin">
-            <div class="barra-fila" *ngFor="let b of barrasObrasSociales(rf.topObrasSociales)">
+            <div class="barra-fila" *ngFor="let b of barrasTopObrasSociales">
               <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
               <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
               <span class="barra-valor">{{ b.monto | currency:'ARS':'symbol':'1.0-0' }}</span>
@@ -345,7 +345,7 @@
           </header>
 
           <div class="barras" *ngIf="barrasMediosPago(rf.mediosPago).length; else sinMedios">
-            <div class="barra-fila" *ngFor="let b of barrasMediosPago(rf.mediosPago)">
+            <div class="barra-fila" *ngFor="let b of barrasTopMediosPago">
               <span class="barra-etiqueta" [title]="b.etiqueta">{{ b.etiqueta }}</span>
               <span class="barra-pista"><span class="barra-relleno" [style.width.%]="b.porcentaje"></span></span>
               <span class="barra-valor">{{ b.monto | currency:'ARS':'symbol':'1.0-0' }}</span>

@@ -88,4 +88,19 @@ describe('PacienteService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
+
+  it('obtenerTodos con incluirInactivos arma el query param incluirInactivos', () => {
+    servicio.obtenerTodos(undefined, true).subscribe();
+    const req = http.expectOne(r => r.url.endsWith('/pacientes'));
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('incluirInactivos')).toBe('true');
+    req.flush([]);
+  });
+
+  it('reactivar pega a /pacientes/{id}/reactivar con PATCH', () => {
+    servicio.reactivar(1).subscribe();
+    const req = http.expectOne(r => r.url.endsWith('/pacientes/1/reactivar'));
+    expect(req.request.method).toBe('PATCH');
+    req.flush(null);
+  });
 });

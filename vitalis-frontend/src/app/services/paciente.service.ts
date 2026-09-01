@@ -10,9 +10,10 @@ export class PacienteService {
 
   constructor(private http: HttpClient) {}
 
-  obtenerTodos(buscar?: string): Observable<Paciente[]> {
+  obtenerTodos(buscar?: string, incluirInactivos: boolean = false): Observable<Paciente[]> {
     let params = new HttpParams();
     if (buscar) params = params.set('buscar', buscar);
+    if (incluirInactivos) params = params.set('incluirInactivos', 'true');
     return this.http.get<Paciente[]>(this.apiUrl, { params });
   }
 
@@ -30,5 +31,9 @@ export class PacienteService {
 
   desactivar(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  reactivar(id: number): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/reactivar`, {});
   }
 }
