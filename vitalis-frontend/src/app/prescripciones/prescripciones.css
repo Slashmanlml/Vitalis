@@ -188,7 +188,7 @@
 /* Prescriptions Grid */
 .prescripciones-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
@@ -578,7 +578,23 @@
   margin: 0;
 }
 
+.receta-print-box {
+  background: var(--paper-bg);
+  color: var(--paper-text);
+  border: 2px solid var(--paper-accent);
+  border-radius: 12px;
+  padding: 24px;
+  font-family: system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-x: auto;
+}
+
 @media (max-width: 768px) {
+  .page-container { padding: 16px; gap: 16px; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .page-header .btn-primary { width: 100%; justify-content: center; }
   .form-row-2, .form-row-4 {
     grid-template-columns: 1fr;
   }
@@ -586,4 +602,21 @@
     flex-direction: column;
     align-items: stretch;
   }
+  .patient-info-summary {
+    width: 100%;
+  }
+  .info-badge {
+    flex: 1;
+  }
+  .receta-paciente-box {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay { padding: 10px; }
+  .modal-header, .modal-body, .modal-footer { padding: 16px; }
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer button { width: 100%; justify-content: center; }
+  .receta-print-box { padding: 16px; }
 }

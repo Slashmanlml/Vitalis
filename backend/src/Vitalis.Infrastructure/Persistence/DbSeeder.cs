@@ -34,6 +34,8 @@ public static class DbSeeder
             .FirstAsync(r => r.Nombre == Roles.Medico, cancellationToken);
         var recepRol = await context.Roles
             .FirstAsync(r => r.Nombre == Roles.Recepcionista, cancellationToken);
+        var facturacionRol = await context.Roles
+            .FirstAsync(r => r.Nombre == Roles.Facturacion, cancellationToken);
 
         bool cambioUsuarios = false;
 
@@ -76,6 +78,25 @@ public static class DbSeeder
                 Email = "recepcion@vitalis.local",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Recepcion123!"),
                 RolId = recepRol.Id,
+                Activo = true,
+                FechaCreacion = DateTime.UtcNow
+            });
+            cambioUsuarios = true;
+        }
+
+        // El rol Facturacion existe en el modelo de seguridad y gobierna tres
+        // pantallas —Facturacion, Liquidaciones y Prestaciones— pero no habia
+        // ninguna cuenta con ese rol: solo podia recorrerse como administrador,
+        // de modo que la matriz de autorizacion no era demostrable por completo.
+        if (!await context.Usuarios.AnyAsync(u => u.Email == "facturacion@vitalis.local", cancellationToken))
+        {
+            context.Usuarios.Add(new Usuario
+            {
+                Nombre = "Facturación",
+                Apellido = "Vitalis",
+                Email = "facturacion@vitalis.local",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Facturacion123!"),
+                RolId = facturacionRol.Id,
                 Activo = true,
                 FechaCreacion = DateTime.UtcNow
             });

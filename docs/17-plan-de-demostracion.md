@@ -172,6 +172,7 @@ impresas, como último respaldo:
 | Administrador | `admin@vitalis.local` | `Admin123!` |
 | Médica (Laura Martínez, Pediatría) | `lmartinez@vitalis.local` | `Medico123!` |
 | Recepcionista | `recepcion@vitalis.local` | `Recepcion123!` |
+| Facturación | `facturacion@vitalis.local` | `Facturacion123!` |
 
 **Direcciones**
 

@@ -278,7 +278,7 @@
 
 .waiting-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
@@ -775,5 +775,56 @@
 
   .call-instruction-badge {
     font-size: .95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .call-overlay {
+    padding: 12px;
+  }
+
+  .call-modal-card {
+    padding: 24px 16px;
+    border-radius: 20px;
+    gap: 14px;
+  }
+
+  .call-bell-container {
+    width: 72px;
+    height: 72px;
+  }
+
+  .call-patient-title {
+    font-size: 1.35rem;
+  }
+
+  .call-info-box {
+    padding: 14px;
+  }
+
+  .call-info-row {
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+  }
+
+  .card-top-bar, .card-body, .card-actions {
+    padding: 12px 14px;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+  }
+
+  .header-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-tabs-wrapper {
+    gap: 6px;
+  }
+
+  .filter-tab {
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
 }

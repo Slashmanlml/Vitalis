@@ -24,6 +24,7 @@ apagan.
 | Administrador | `admin@vitalis.local` | `Admin123!` |
 | Médico (Laura Martínez, Pediatría) | `lmartinez@vitalis.local` | `Medico123!` |
 | Recepcionista | `recepcion@vitalis.local` | `Recepcion123!` |
+| Facturación | `facturacion@vitalis.local` | `Facturacion123!` |
 
 ---
 

@@ -32,6 +32,7 @@ la base: `docker compose down -v`.
 | Administrador | `admin@vitalis.local` | `Admin123!` |
 | Medico (Laura Martinez, Pediatria) | `lmartinez@vitalis.local` | `Medico123!` |
 | Recepcionista | `recepcion@vitalis.local` | `Recepcion123!` |
+| Facturación | `facturacion@vitalis.local` | `Facturacion123!` |
 
 ### Sin Docker
 
