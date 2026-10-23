@@ -1,0 +1,88 @@
+<div class="portal">
+  <header class="barra">
+    <div class="barra-interior">
+      <span class="marca">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h4.78"/></svg>
+        </span>
+        Vitalis
+      </span>
+      <button type="button" class="salir" (click)="salir()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <main class="contenido">
+    <section class="saludo">
+      <h1>{{ saludo }}{{ perfil ? ', ' + perfil.nombre : '' }}.</h1>
+      <p *ngIf="!cargando">
+        {{ proximos.length === 0 ? 'No tenés turnos próximos.' : proximos.length === 1 ? 'Tenés un turno próximo.' : 'Tenés ' + proximos.length + ' turnos próximos.' }}
+      </p>
+    </section>
+
+    <div class="aviso-error" *ngIf="error" role="alert">{{ error }}</div>
+
+    <div class="grilla">
+      <div class="principal">
+        <p *ngIf="cargando" class="nota">Cargando tus turnos.</p>
+
+        <!-- Próximo turno, destacado -->
+        <article class="siguiente" *ngIf="!cargando && siguiente as t">
+          <div class="siguiente-cuando">
+            <span class="siguiente-falta">{{ cuandoFalta(t.fechaHora) }}</span>
+            <span class="siguiente-dia">{{ t.fechaHora | date:'d' }}</span>
+            <span class="siguiente-mes">{{ t.fechaHora | date:'MMMM' }}</span>
+          </div>
+          <div class="siguiente-datos">
+            <span class="siguiente-hora">{{ t.fechaHora | date:'EEEE' }}, {{ t.fechaHora | date:'HH:mm' }} h</span>
+            <h2>{{ t.profesionalNombre }}</h2>
+            <p>{{ t.especialidad }}</p>
+            <span class="estado" [ngClass]="claseEstado(t.estado)">{{ t.estado }}</span>
+          </div>
+        </article>
+
+        <section class="vacio" *ngIf="!cargando && !siguiente">
+          <h2>Sin turnos por delante</h2>
+          <p>Para pedir un turno, comunicate con la recepción del consultorio. Cuando lo agenden, lo vas a ver acá.</p>
+        </section>
+
+        <section class="bloque" *ngIf="restoProximos.length > 0">
+          <h3>También tenés</h3>
+          <ul class="turnos">
+            <li *ngFor="let t of restoProximos">
+              <span class="fecha">{{ t.fechaHora | date:'dd/MM/yyyy' }}<small>{{ t.fechaHora | date:'HH:mm' }} h</small></span>
+              <span class="detalle">{{ t.profesionalNombre }}<small>{{ t.especialidad }}</small></span>
+              <span class="estado" [ngClass]="claseEstado(t.estado)">{{ t.estado }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="bloque" *ngIf="anteriores.length > 0">
+          <h3>Historial</h3>
+          <ul class="turnos">
+            <li *ngFor="let t of anteriores">
+              <span class="fecha">{{ t.fechaHora | date:'dd/MM/yyyy' }}<small>{{ t.fechaHora | date:'HH:mm' }} h</small></span>
+              <span class="detalle">{{ t.profesionalNombre }}<small>{{ t.especialidad }}</small></span>
+              <span class="estado" [ngClass]="claseEstado(t.estado)">{{ t.estado }}</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="datos" *ngIf="perfil">
+        <h3>Mis datos</h3>
+        <dl>
+          <div><dt>Nombre</dt><dd>{{ perfil.nombre }} {{ perfil.apellido }}</dd></div>
+          <div><dt>DNI</dt><dd class="num">{{ perfil.dni }}</dd></div>
+          <div><dt>Nacimiento</dt><dd>{{ perfil.fechaNacimiento | date:'dd/MM/yyyy':'UTC' }}</dd></div>
+          <div><dt>Correo</dt><dd>{{ perfil.email || 'Sin cargar' }}</dd></div>
+          <div><dt>Teléfono</dt><dd>{{ perfil.telefono || 'Sin cargar' }}</dd></div>
+          <div><dt>Cobertura</dt><dd>{{ perfil.obraSocialNombre || 'Particular' }}<span *ngIf="perfil.numeroAfiliado" class="afiliado">Afiliado {{ perfil.numeroAfiliado }}</span></dd></div>
+        </dl>
+        <p class="nota">Si algún dato está mal, avisale a recepción en tu próxima visita.</p>
+      </aside>
+    </div>
+  </main>
+</div>

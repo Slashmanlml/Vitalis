@@ -46,12 +46,24 @@ services:
       # ConnectionStrings__DefaultConnection reemplaza a
       # { "ConnectionStrings": { "DefaultConnection": ... } }
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=vitalis;Username=postgres;Password=${POSTGRES_PASSWORD:-vitalis_local}"
-      Jwt__Key: ${JWT_KEY:-Vitalis-Clave-Solo-Para-Desarrollo-Local-32+!!}
+      # Sin valor por defecto: si falta JWT_KEY en el archivo .env, Docker se
+      # niega a arrancar (antes había una clave fija escrita acá, igual para
+      # todas las instalaciones). Ver .env.example.
+      Jwt__Key: ${JWT_KEY:?Falta JWT_KEY. Copia .env.example a .env y completalo}
       Jwt__Issuer: Vitalis
       Jwt__Audience: Vitalis.Web
       # El frontend sirve la API bajo su mismo origen (nginx hace de puente), asi
       # que el navegador no cruza origenes y CORS no interviene.
       Notificaciones__ModoPrueba: "true"
+      # Usuarios y datos de demostración para la defensa. En una instalación
+      # real va en "false" y se define Semilla__AdminEmail / Semilla__AdminPassword.
+      Semilla__DatosDemo: ${DATOS_DEMO:-true}
+      Semilla__AdminEmail: ${ADMIN_EMAIL:-}
+      Semilla__AdminPassword: ${ADMIN_PASSWORD:-}
+      # La API solo es alcanzable a través de nginx (no publica puertos), así
+      # que es seguro tomar la IP real del encabezado X-Forwarded-For.
+      Proxy__ConfiarEnEncabezados: "true"
+      Seguridad__UrlFrontend: ${URL_FRONTEND:-http://localhost:8080}
     volumes:
       # Las fotos y estudios subidos no se pierden al reconstruir la imagen.
       - archivos-subidos:/app/wwwroot/uploads

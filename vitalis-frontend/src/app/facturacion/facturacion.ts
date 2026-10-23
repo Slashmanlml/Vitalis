@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FacturaService } from '../services/factura.service';
@@ -11,6 +11,10 @@ import { Paciente } from '../models/paciente.model';
 import { PrintService } from '../services/print.service';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-facturacion',
   standalone: true,
   imports: [CommonModule, FormsModule],

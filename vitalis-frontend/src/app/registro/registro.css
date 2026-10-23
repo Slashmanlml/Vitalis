@@ -1,0 +1,132 @@
+.bloque {
+  border: none;
+  padding: 0;
+  margin: 0 0 30px;
+}
+
+.bloque legend {
+  width: 100%;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border-color);
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.coincide {
+  font-size: .8rem;
+  color: var(--color-success);
+}
+
+.terminos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+  transition: border-color .15s ease, background-color .15s ease;
+  scroll-margin: 120px;
+}
+
+.terminos.invalido {
+  border-color: var(--color-danger);
+  background: var(--danger-bg);
+}
+
+.check {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: .84rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* Pantalla de "revisá tu correo" */
+.hecho h1 {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-top: 22px;
+}
+
+.hecho-icono {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.hecho-texto {
+  margin-top: 12px;
+  color: var(--text-secondary);
+}
+
+.pasos {
+  margin: 26px 0 28px;
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pasos li {
+  counter-increment: paso;
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  font-size: .92rem;
+  color: var(--text-secondary);
+}
+
+.pasos li::before {
+  content: counter(paso);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pasos strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.nota-final {
+  margin-top: 14px;
+}
+
+[data-campo] {
+  scroll-margin: 120px;
+}

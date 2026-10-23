@@ -12,7 +12,7 @@
       </button>
       <button class="btn-secondary" (click)="exportarResumenFinanciero()" *ngIf="pestanaActiva === 'financiero'" [disabled]="!resumenFinanciero">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar CSV Financiero
+        Exportar CSV financiero
       </button>
     </div>
   </div>
@@ -24,14 +24,14 @@
       [class.activa]="pestanaActiva === 'agenda'" 
       (click)="cambiarPestana('agenda')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-      Actividad de Agenda
+      Actividad de agenda
     </button>
     <button 
       class="tab-btn" 
       [class.activa]="pestanaActiva === 'financiero'" 
       (click)="cambiarPestana('financiero')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Facturación y Liquidaciones
+      Facturación y liquidaciones
     </button>
   </div>
 
@@ -194,7 +194,7 @@
           <span>{{ dimension === 'profesional' ? 'Profesional' : dimension === 'paciente' ? 'Paciente' : 'Obra social' }}</span>
           <select [(ngModel)]="entidadId">
             <option [ngValue]="0" disabled>Seleccione una opción</option>
-            <option *ngFor="let e of entidades" [ngValue]="e.id">{{ e.nombre }}</option>
+            <option *ngFor="let e of entidades; trackBy: porId" [ngValue]="e.id">{{ e.nombre }}</option>
           </select>
         </label>
 
@@ -268,7 +268,7 @@
           <button class="btn-primary" (click)="cargarReporteFinanciero()" [disabled]="cargandoFinanciero">
             {{ cargandoFinanciero ? 'Actualizando...' : 'Filtrar Período' }}
           </button>
-          <button class="btn-secondary" (click)="establecerMesActual()">Mes Actual</button>
+          <button class="btn-secondary" (click)="establecerMesActual()">Mes actual</button>
           <button class="btn-secondary" (click)="establecerUltimos30Dias()">Últimos 30 días</button>
         </div>
       </div>
@@ -281,39 +281,39 @@
       <!-- Fichas KPI Financieras -->
       <div class="kpis">
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-confirmado"></i> Total Facturado</span>
+          <span class="kpi-label"><i class="punto p-confirmado"></i> Total facturado</span>
           <span class="kpi-valor">{{ rf.totalFacturado | currency:'ARS':'symbol':'1.0-0' }}</span>
           <span class="kpi-sub">Monto total emitido</span>
         </div>
 
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-atendido"></i> Total Cobrado</span>
+          <span class="kpi-label"><i class="punto p-atendido"></i> Total cobrado</span>
           <span class="kpi-valor">{{ rf.totalCobrado | currency:'ARS':'symbol':'1.0-0' }}</span>
           <span class="kpi-sub">{{ rf.tasaCobranzaPorcentaje | number:'1.1-1' }}% efectividad de cobro</span>
         </div>
 
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-pendiente"></i> Saldo Pendiente</span>
+          <span class="kpi-label"><i class="punto p-pendiente"></i> Saldo pendiente</span>
           <span class="kpi-valor">{{ rf.saldoPendiente | currency:'ARS':'symbol':'1.0-0' }}</span>
           <span class="kpi-sub">Por cobrar en el período</span>
         </div>
 
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-cancelado"></i> Total Liquidado</span>
+          <span class="kpi-label"><i class="punto p-cancelado"></i> Total liquidado</span>
           <span class="kpi-valor">{{ rf.totalLiquidado | currency:'ARS':'symbol':'1.0-0' }}</span>
           <span class="kpi-sub">Honorarios a profesionales</span>
         </div>
 
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-confirmado"></i> Margen Bruto</span>
+          <span class="kpi-label"><i class="punto p-confirmado"></i> Margen bruto</span>
           <span class="kpi-valor">{{ rf.margenBruto | currency:'ARS':'symbol':'1.0-0' }}</span>
-          <span class="kpi-sub">Facturado - Liquidado</span>
+          <span class="kpi-sub">Facturado - liquidado</span>
         </div>
 
         <div class="kpi">
-          <span class="kpi-label"><i class="punto p-atendido"></i> Tasa de Cobro</span>
+          <span class="kpi-label"><i class="punto p-atendido"></i> Tasa de cobro</span>
           <span class="kpi-valor">{{ rf.tasaCobranzaPorcentaje | number:'1.1-1' }}%</span>
-          <span class="kpi-sub">Cobrado / Facturado</span>
+          <span class="kpi-sub">Cobrado / facturado</span>
         </div>
       </div>
 
@@ -323,7 +323,7 @@
         <!-- Panel 1: Facturación por Obra Social -->
         <section class="panel">
           <header class="panel-header">
-            <h2>Facturación por Obra Social</h2>
+            <h2>Facturación por obra social</h2>
             <span class="panel-sub">Participación sobre el total facturado</span>
           </header>
 
@@ -340,7 +340,7 @@
         <!-- Panel 2: Cobranzas por Medio de Pago -->
         <section class="panel">
           <header class="panel-header">
-            <h2>Cobranzas por Medio de Pago</h2>
+            <h2>Cobranzas por medio de pago</h2>
             <span class="panel-sub">Distribución del dinero recaudado</span>
           </header>
 
@@ -357,7 +357,7 @@
         <!-- Panel 3: Liquidaciones por Profesional -->
         <section class="panel panel-ancho">
           <header class="panel-header">
-            <h2>Liquidaciones por Profesional</h2>
+            <h2>Liquidaciones por profesional</h2>
             <span class="panel-sub">Honorarios liquidados a médicos en el período</span>
           </header>
 
@@ -369,7 +369,7 @@
                   <th>Especialidad</th>
                   <th>Liquidaciones</th>
                   <th>Estado</th>
-                  <th style="text-align: right;">Total Liquidado</th>
+                  <th style="text-align: right;">Total liquidado</th>
                 </tr>
               </thead>
               <tbody>

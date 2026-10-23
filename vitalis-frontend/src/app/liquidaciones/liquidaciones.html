@@ -3,7 +3,7 @@
     <div><h1>Liquidaciones</h1><p>Gestión de cierres de caja por profesional</p></div>
     <button class="btn-primary" (click)="abrirModal()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva Liquidación
+      Nueva liquidación
     </button>
   </div>
 
@@ -18,7 +18,7 @@
   <div class="table-container">
     <table class="data-table">
       <thead>
-        <tr><th>Profesional</th><th>Período</th><th>Total</th><th>Estado</th><th>Fecha Creación</th><th>Acciones</th></tr>
+        <tr><th>Profesional</th><th>Período</th><th>Total</th><th>Estado</th><th>Fecha creación</th><th>Acciones</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let l of filtered">
@@ -42,7 +42,7 @@
 <!-- Modal Nueva Liquidacion -->
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h2>Nueva Liquidación</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
+    <div class="modal-header"><h2>Nueva liquidación</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
     <div class="modal-body">
       <div class="form-group">
         <label>Profesional *</label>
@@ -52,13 +52,13 @@
         </select>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Período Desde</label><input type="date" [(ngModel)]="form.periodoDesde" /></div>
-        <div class="form-group"><label>Período Hasta</label><input type="date" [(ngModel)]="form.periodoHasta" /></div>
+        <div class="form-group"><label>Período desde</label><input type="date" [(ngModel)]="form.periodoDesde" /></div>
+        <div class="form-group"><label>Período hasta</label><input type="date" [(ngModel)]="form.periodoHasta" /></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" (click)="guardar()" [disabled]="!form.profesionalId || !form.periodoDesde || !form.periodoHasta">Crear Liquidación</button>
+      <button class="btn-primary" (click)="guardar()" [disabled]="!form.profesionalId || !form.periodoDesde || !form.periodoHasta">Crear liquidación</button>
     </div>
   </div>
 </div>

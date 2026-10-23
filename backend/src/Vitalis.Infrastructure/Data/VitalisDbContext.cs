@@ -10,6 +10,7 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
 {
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<TokenVerificacion> TokensVerificacion => Set<TokenVerificacion>();
     public DbSet<Paciente> Pacientes => Set<Paciente>();
     public DbSet<ObraSocial> ObrasSociales => Set<ObraSocial>();
     public DbSet<Especialidad> Especialidades => Set<Especialidad>();
@@ -51,6 +52,12 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
             entity.Property(u => u.Email).HasMaxLength(150).IsRequired();
             entity.Property(u => u.PasswordHash).HasMaxLength(200).IsRequired();
             entity.HasIndex(u => u.Email).IsUnique();
+            // Sin HasDefaultValue a propósito: con un bool, EF no manda el
+            // "false" al insertar si la columna tiene default, y la base
+            // pondría "true" — un paciente recién registrado quedaría
+            // confirmado sin haber abierto el correo. El "true" para los
+            // usuarios que ya existían lo pone la migración, una sola vez.
+            entity.Property(u => u.EmailConfirmado).IsRequired();
             entity.HasOne(u => u.Rol)
                 .WithMany(r => r.Usuarios)
                 .HasForeignKey(u => u.RolId)
@@ -94,6 +101,20 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<TokenVerificacion>(entity =>
+        {
+            entity.ToTable("tokens_verificacion");
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.TokenHash).HasMaxLength(64).IsRequired();
+            entity.Property(t => t.Proposito).HasMaxLength(50).IsRequired();
+            entity.HasIndex(t => t.TokenHash).IsUnique();
+            entity.HasIndex(t => new { t.UsuarioId, t.Proposito });
+            entity.HasOne(t => t.Usuario)
+                .WithMany()
+                .HasForeignKey(t => t.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Paciente>(entity =>
         {
             entity.ToTable("pacientes");
@@ -106,6 +127,12 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
             entity.Property(p => p.Direccion).HasMaxLength(200);
             entity.Property(p => p.NumeroAfiliado).HasMaxLength(50);
             entity.HasIndex(p => p.Dni).IsUnique();
+            // Una cuenta del portal corresponde a una sola ficha, y viceversa.
+            entity.HasIndex(p => p.UsuarioId).IsUnique();
+            entity.HasOne(p => p.Usuario)
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(p => p.ObraSocial)
                 .WithMany()
                 .HasForeignKey(p => p.ObraSocialId)
@@ -342,6 +369,25 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
         return result;
     }
 
+    /// <summary>
+    /// Columnas que nunca se copian a la auditoría. La auditoría la lee el
+    /// administrador desde la pantalla, y antes guardaba el PasswordHash
+    /// completo de cada usuario creado o editado: un hash bcrypt no es la
+    /// contraseña, pero se puede atacar por fuerza bruta fuera de línea, y no
+    /// tiene por qué salir de la tabla de usuarios. Se registra que el campo
+    /// cambió, pero no su valor.
+    /// </summary>
+    public static readonly HashSet<string> CamposSensibles = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(Usuario.PasswordHash),
+        nameof(TokenVerificacion.TokenHash)
+    };
+
+    public const string ValorOculto = "***";
+
+    private static object? Ocultar(string campo, object? valor) =>
+        CamposSensibles.Contains(campo) && valor is not null ? ValorOculto : valor;
+
     private List<AuditEntry> OnBeforeSaveChanges()
     {
         ChangeTracker.DetectChanges();
@@ -359,21 +405,21 @@ public class VitalisDbContext(DbContextOptions<VitalisDbContext> options, IHttpC
             {
                 auditEntry.Accion = "CREAR";
                 auditEntry.ValoresNuevos = System.Text.Json.JsonSerializer.Serialize(
-                    entry.Properties.ToDictionary(p => p.Metadata.Name, p => p.CurrentValue));
+                    entry.Properties.ToDictionary(p => p.Metadata.Name, p => Ocultar(p.Metadata.Name, p.CurrentValue)));
             }
             else if (entry.State == EntityState.Deleted)
             {
                 auditEntry.Accion = "ELIMINAR";
                 auditEntry.ValoresAnteriores = System.Text.Json.JsonSerializer.Serialize(
-                    entry.Properties.ToDictionary(p => p.Metadata.Name, p => p.OriginalValue));
+                    entry.Properties.ToDictionary(p => p.Metadata.Name, p => Ocultar(p.Metadata.Name, p.OriginalValue)));
             }
             else if (entry.State == EntityState.Modified)
             {
                 auditEntry.Accion = "MODIFICAR";
                 auditEntry.ValoresAnteriores = System.Text.Json.JsonSerializer.Serialize(
-                    entry.Properties.Where(p => p.IsModified).ToDictionary(p => p.Metadata.Name, p => p.OriginalValue));
+                    entry.Properties.Where(p => p.IsModified).ToDictionary(p => p.Metadata.Name, p => Ocultar(p.Metadata.Name, p.OriginalValue)));
                 auditEntry.ValoresNuevos = System.Text.Json.JsonSerializer.Serialize(
-                    entry.Properties.Where(p => p.IsModified).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue));
+                    entry.Properties.Where(p => p.IsModified).ToDictionary(p => p.Metadata.Name, p => Ocultar(p.Metadata.Name, p.CurrentValue)));
             }
         }
 

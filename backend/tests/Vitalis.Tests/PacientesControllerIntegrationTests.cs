@@ -20,8 +20,26 @@ namespace Vitalis.Tests;
 
 public class TestFactory : WebApplicationFactory<Program>
 {
+    /// <summary>
+    /// Clave solo para pruebas. La API ya no trae una clave escrita en
+    /// appsettings.json y se niega a arrancar sin una, así que las pruebas
+    /// tienen que aportarla (igual que un desarrollador en su máquina).
+    /// </summary>
+    public const string ClaveJwtDePrueba = "clave-de-pruebas-automaticas-solamente-0123456789";
+
+    public TestFactory()
+    {
+        // Variable de entorno además de UseSetting: Program.cs lee la clave
+        // antes de construir la app, y así se garantiza que la vea.
+        Environment.SetEnvironmentVariable("Jwt__Key", ClaveJwtDePrueba);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("Jwt:Key", ClaveJwtDePrueba);
+        // Los correos de las pruebas nunca salen.
+        builder.UseSetting("Notificaciones:ModoPrueba", "true");
+
         builder.ConfigureServices(services =>
         {
             var descriptor = services.SingleOrDefault(

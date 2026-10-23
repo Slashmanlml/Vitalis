@@ -75,6 +75,10 @@ public class PacientesController : ControllerBase
     }
 
     // PATCH: api/Pacientes/{id}/reactivar
+    // Antes heredaba el permiso de la clase, que incluye a Medico y
+    // Facturacion: podían reactivar una ficha que recepción dio de baja.
+    // Reactivar es la operación inversa de dar de baja y lleva su mismo permiso.
+    [Authorize(Roles = Roles.Administrador + "," + Roles.Recepcionista)]
     [HttpPatch("{id}/reactivar")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

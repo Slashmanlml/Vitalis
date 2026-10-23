@@ -1,4 +1,6 @@
-import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeEsAr from '@angular/common/locales/es-AR';
 import { provideRouter, Routes } from '@angular/router';
 import { provideHttpClient, withInterceptors, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +8,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 import { LoginComponent } from './login/login';
-import { authGuard } from './guards/auth.guard';
+import { authGuard, pacienteGuard } from './guards/auth.guard';
 
 
 // Rutas perezosas (loadComponent): cada pantalla viaja en su propio archivo y se
@@ -20,6 +22,14 @@ import { authGuard } from './guards/auth.guard';
 // usuario necesita ver al principio.
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
+  // Páginas públicas del portal de pacientes.
+  { path: 'registro', loadComponent: () => import('./registro/registro').then(m => m.RegistroComponent) },
+  { path: 'confirmar-email', loadComponent: () => import('./confirmar-email/confirmar-email').then(m => m.ConfirmarEmailComponent) },
+  {
+    path: 'portal',
+    loadComponent: () => import('./portal/portal').then(m => m.PortalComponent),
+    canActivate: [pacienteGuard]
+  },
   {
     path: 'dashboard',
     loadComponent: () => import('./dashboard/dashboard').then(m => m.DashboardComponent),
@@ -54,9 +64,13 @@ const routes: Routes = [
   { path: '**', redirectTo: '/login' }
 ];
 
+// Fechas, días y meses en español de Argentina en todo el sistema.
+registerLocaleData(localeEsAr);
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
+    { provide: LOCALE_ID, useValue: 'es-AR' },
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

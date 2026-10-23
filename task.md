@@ -7,6 +7,35 @@
 
 ## Hecho
 
+- [x] **Registro de pacientes con confirmación por correo** (rama
+      `feature/registro-confirmacion-auditoria`, octubre 2026). Página pública
+      `/registro`, enlace de un solo uso que vence a las 24 h (`/confirmar-email`),
+      reenvío desde el login, portal del paciente `/portal` (mis datos y mis
+      turnos). Migración `RegistroPacientesYSeguridad`. Ver
+      `docs/22-registro-y-auditoria-de-seguridad.md`.
+- [x] **Auditoría de seguridad (OWASP Top 10 2021)**: 16 hallazgos corregidos
+      (1 crítico, 4 altos, 7 medios, 4 bajos) y 7 riesgos residuales
+      documentados. Informe completo en el documento "Vitalis — Informe de
+      Auditoría de Seguridad" (exportable a Word). Tests: backend 128 → 167,
+      frontend 44 → 59, todo en verde.
+- [x] **Rediseño visual de todo el sistema** ("clínico editorial"): tokens nuevos en
+      `styles.css` (porcelana fría, tinta, laguna), tipografías Newsreader + Geist
+      servidas localmente con @fontsource (sin Google Fonts: anda sin internet en la
+      defensa), componentes comunes centralizados (se borraron 525 reglas duplicadas
+      en 20 pantallas), menú agrupado por área con versión móvil, login/registro con
+      panel de marca, portal del paciente con el próximo turno destacado, fechas en
+      español (es-AR), títulos y botones en mayúscula inicial.
+- [x] **Registro: errores visibles**. Antes el error aparecía arriba mientras la persona
+      estaba abajo y parecía que la página se colgaba. Ahora cada error va debajo de su
+      campo, se lleva la pantalla al primer error, se lo enfoca y el formulario se sacude.
+- [x] **Contraseñas**: botón para mostrar/ocultar en todos los campos, medidor de fuerza
+      con requisitos (símbolo recomendado) y botón para sugerir una contraseña segura.
+- [x] **Reportes: error NG0103** (detección de cambios infinita) en el desplegable de
+      entidades. Se corrigió con trackBy.
+- [x] **Corrección Angular 22 (OnPush por defecto)**: las pantallas no
+      dibujaban los datos que llegaban del servidor hasta otra interacción. Se
+      marcaron los 25 componentes con `ChangeDetectionStrategy.Eager`.
+
 - [x] Add Serilog packages (AspNetCore, Console, File)
 - [x] Configure Serilog in Program.cs
 - [x] Add .editorconfig
@@ -327,11 +356,26 @@
 
 ## Pendiente
 
+### Seguridad: riesgos residuales del informe de auditoría
+
+- [ ] R-02: servir `/uploads` con autorización (hoy basta conocer la URL).
+- [ ] R-03: desplegar con HTTPS y activar HSTS en nginx.
+- [ ] R-01: token en cookie `HttpOnly` en lugar de `localStorage` (trabajo futuro).
+- [ ] R-04: revocar sesiones al cambiar la contraseña (trabajo futuro).
+
 > Depurado el 27/08/2026. Todo lo que estaba acá y ya se hizo se movió a "Hecho"
 > o se eliminó: una lista de pendientes con cosas terminadas adentro deja de
 > leerse a los pocos días.
 
 ### Bloquea la entrega
+
+- [ ] **[Tito] Revisar y subir la rama** `feature/registro-confirmacion-auditoria`
+      (commit + push + merge a `main`).
+- [ ] **[Claude] Sumar a la tesina** el registro con confirmación por correo y
+      la auditoría de seguridad (capítulo + informe como anexo), y actualizar
+      el modelo de datos (tabla `tokens_verificacion`, `pacientes.UsuarioId`).
+- [ ] **Agregar el registro al guion de la demo** (docs/09): registrarse,
+      abrir el enlace desde Notificaciones, entrar al portal.
 
 - [ ] **[Tito] Nombre del director** para la portada. Pospuesto: todavía no se
       sabe quién integra la mesa.

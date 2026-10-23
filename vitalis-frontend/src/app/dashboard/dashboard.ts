@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
@@ -10,6 +10,10 @@ import { ToastService } from '../services/toast.service';
 import { decodeToken, obtenerNombreUsuario, obtenerRolUsuario, obtenerEmailUsuario } from '../utils/jwt.util';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
@@ -37,6 +41,8 @@ export class DashboardComponent implements OnInit {
   private profesionalIdUsuario: number | null = null;
 
   cargando = true;
+  /** Menú desplegado en pantallas chicas. */
+  menuAbierto = false;
   searchQuery = '';
   searchResults: SearchResults | null = null;
   showSearch = false;
@@ -103,7 +109,49 @@ export class DashboardComponent implements OnInit {
   }
 
 
+  /** Iniciales para el avatar del pie del menú. */
+  get iniciales(): string {
+    return this.nombreUsuario
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(p => p.charAt(0).toUpperCase())
+      .join('');
+  }
+
+  /** El rol tal como lo dice una persona, no como viaja en el token. */
+  get rolLegible(): string {
+    const nombres: Record<string, string> = {
+      Administrador: 'Administración',
+      Medico: 'Médico',
+      Recepcionista: 'Recepción',
+      Facturacion: 'Facturación'
+    };
+    return nombres[this.rolUsuario] ?? this.rolUsuario;
+  }
+
+  get primerNombre(): string {
+    return this.nombreUsuario.split(' ')[0] || this.nombreUsuario;
+  }
+
+  get saludo(): string {
+    const hora = new Date().getHours();
+    if (hora < 13) return 'Buen día';
+    if (hora < 20) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  /** Una sola frase con lo importante del día, en vez de un "bienvenido". */
+  get bajada(): string {
+    if (this.cargando) return 'Cargando la actividad del día.';
+    if (this.turnosHoyTotal === 0) return 'Hoy no hay turnos agendados.';
+    const turnos = `${this.turnosHoyTotal} turno${this.turnosHoyTotal === 1 ? '' : 's'} hoy`;
+    if (this.pendientesHoy === 0) return `${turnos}, todos confirmados.`;
+    return `${turnos}, ${this.pendientesHoy} sin confirmar.`;
+  }
+
   private actualizarRutaRaiz(): void {
+    this.menuAbierto = false;
     this.esRutaRaiz = this.router.url === '/dashboard';
   }
 

@@ -28,6 +28,8 @@
               }
             ],
             "styles": [
+              "node_modules/@fontsource-variable/geist/index.css",
+              "node_modules/@fontsource-variable/newsreader/opsz.css",
               "src/styles.css"
             ]
           },

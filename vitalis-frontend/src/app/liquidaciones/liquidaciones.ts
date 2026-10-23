@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LiquidacionService } from '../services/liquidacion.service';
@@ -7,6 +7,10 @@ import { Liquidacion, CrearLiquidacion } from '../models/liquidacion.model';
 import { Profesional } from '../models/profesional.model';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-liquidaciones',
   standalone: true,
   imports: [CommonModule, FormsModule],

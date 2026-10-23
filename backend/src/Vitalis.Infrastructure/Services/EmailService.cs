@@ -89,6 +89,7 @@ public class EmailService : IEmailService
             );
 
             log.Estado = EstadoNotificacion.Enviado;
+            log.Cuerpo = OcultarDatosSensibles(cuerpo, request);
         }
         catch (Exception ex)
         {
@@ -101,6 +102,29 @@ public class EmailService : IEmailService
         await _context.SaveChangesAsync();
 
         return log.Estado == EstadoNotificacion.Enviado;
+    }
+
+    /// <summary>
+    /// Saca del cuerpo que se GUARDA en el historial los valores marcados como
+    /// sensibles (ej.: el enlace de confirmación, que lleva un token). El
+    /// correo que recibe la persona no se modifica.
+    ///
+    /// Solo se aplica a los correos enviados de verdad. En modo prueba el
+    /// correo no sale a ningún lado y el historial es la única forma de ver el
+    /// enlace durante una demostración; ahí se deja tal cual.
+    /// </summary>
+    public static string OcultarDatosSensibles(string cuerpo, NotificacionRequest request)
+    {
+        foreach (var clave in request.DatosSensibles)
+        {
+            if (request.Datos.TryGetValue(clave, out var valor) && !string.IsNullOrEmpty(valor))
+            {
+                cuerpo = cuerpo
+                    .Replace(System.Net.WebUtility.HtmlEncode(valor), "[enlace oculto por seguridad]")
+                    .Replace(valor, "[enlace oculto por seguridad]");
+            }
+        }
+        return cuerpo;
     }
 
     public async Task<IEnumerable<EmailLog>> GetEmailLogsAsync(string? origen = null, string? evento = null, string? estado = null)

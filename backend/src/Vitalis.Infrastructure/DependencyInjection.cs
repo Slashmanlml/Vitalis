@@ -17,6 +17,10 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRegistroPacienteService, RegistroPacienteService>();
+        services.AddScoped<IPortalPacienteService, PortalPacienteService>();
+        services.Configure<Configuracion.SeguridadOptions>(
+            configuration.GetSection(Configuracion.SeguridadOptions.SectionName));
         services.AddScoped<IPacienteService, PacienteService>();
         services.AddScoped<IObraSocialService, ObraSocialService>();
         services.AddScoped<IEspecialidadService, EspecialidadService>();

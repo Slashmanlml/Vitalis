@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vitalis.Application.Validation;
 // CrearUsuarioDto.cs
 
 namespace Vitalis.Application.DTOs.Usuarios;
@@ -14,7 +15,7 @@ public class CrearUsuarioDto
     [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required, PasswordSegura]
     public string Password { get; set; } = string.Empty;
 
     [Required]

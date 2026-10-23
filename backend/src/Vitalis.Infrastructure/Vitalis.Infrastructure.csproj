@@ -15,6 +15,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <!-- Dependencia transitiva de MimeKit. Se fija la 8.0.2 porque la 8.0.1 tiene
+         CVE-2026-84008 (GHSA-846f-f764-76mx, DoS, severidad alta). -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
   </ItemGroup>
 
   <PropertyGroup>

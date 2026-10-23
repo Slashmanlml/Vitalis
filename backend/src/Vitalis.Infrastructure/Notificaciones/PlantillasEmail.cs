@@ -165,6 +165,29 @@ public static class PlantillasEmail
                 return (asunto, cuerpo);
             }
 
+            case EventoNotificacion.ConfirmacionEmail:
+            {
+                string url = ObtenerDato(datos, "UrlConfirmacion", "");
+                string horas = ObtenerDato(datos, "HorasValidez", "24");
+                string urlHtml = WebUtility.HtmlEncode(url);
+                string asunto = "Confirmá tu correo para activar tu cuenta - Vitalis";
+                string cuerpo = FormatearContenedor(
+                    "Confirmá tu correo electrónico",
+                    "#0284c7",
+                    $@"<p>Hola <strong>{WebUtility.HtmlEncode(pacNombre)}</strong>,</p>
+                    <p>Recibimos un pedido para crear una cuenta en el portal de pacientes de Vitalis con este correo.</p>
+                    <p>Para activarla, hacé clic en el botón:</p>
+                    <p style='text-align:center; margin: 24px 0;'>
+                        <a href='{urlHtml}' style='background:#0284c7; color:#ffffff; padding:12px 22px; border-radius:6px; text-decoration:none; font-weight:700; display:inline-block;'>Confirmar mi correo</a>
+                    </p>
+                    <p style='font-size: 13px; color: #475569;'>Si el botón no funciona, copiá y pegá este enlace en el navegador:<br/><span style='word-break:break-all;'>{urlHtml}</span></p>
+                    <hr style='border:0; border-top:1px solid #e2e8f0; margin: 15px 0;'/>
+                    <p style='font-size: 13px; color: #475569;'>El enlace vence en {WebUtility.HtmlEncode(horas)} horas y sirve una sola vez.</p>
+                    <p style='font-size: 13px; color: #475569;'><strong>¿No fuiste vos?</strong> Ignorá este mensaje: sin confirmar, la cuenta no se activa y se descarta sola.</p>"
+                );
+                return (asunto, cuerpo);
+            }
+
             default:
             {
                 string asunto = ObtenerDato(datos, "Asunto", "Notificación Informativa - Vitalis");

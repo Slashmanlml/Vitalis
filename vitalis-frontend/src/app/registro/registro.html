@@ -1,0 +1,141 @@
+<div class="auth">
+  <app-panel-marca
+    titulo="Tus turnos y tus datos, en un solo lugar."
+    bajada="Creá tu cuenta del portal de pacientes para ver tus próximos turnos y tu información de contacto, desde el celular o la computadora.">
+  </app-panel-marca>
+
+  <main class="auth-lado">
+    <div class="auth-form ancho" #tarjeta [class.sacudir]="sacudir">
+
+      <!-- Cuenta creada -->
+      <ng-container *ngIf="enviado; else formulario">
+        <div class="hecho">
+          <span class="hecho-icono" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+          </span>
+          <h1>Revisá tu correo</h1>
+          <p class="hecho-texto">{{ enviado }}</p>
+          <ol class="pasos">
+            <li><span>Abrí el correo de Vitalis que llega a <strong>{{ datos.email }}</strong>.</span></li>
+            <li><span>Tocá <strong>Confirmar mi correo</strong>. El enlace vence en 24 horas.</span></li>
+            <li><span>Volvé acá e iniciá sesión con tu correo y tu contraseña.</span></li>
+          </ol>
+          <a routerLink="/login" class="boton-principal">Ir a iniciar sesión</a>
+          <p class="ayuda nota-final">¿No te llegó? Desde el inicio de sesión podés pedir que te lo enviemos de nuevo.</p>
+        </div>
+      </ng-container>
+
+      <!-- Formulario -->
+      <ng-template #formulario>
+        <header class="auth-encabezado">
+          <h1>Crear tu cuenta</h1>
+          <p>Si ya te atendiste en el consultorio, usá el mismo correo que diste en recepción y tu cuenta queda vinculada a tu ficha.</p>
+        </header>
+
+        <div class="aviso aviso-error" id="aviso-registro" *ngIf="errorServidor" role="alert">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>No pudimos crear la cuenta</strong>
+            <p>{{ errorServidor }}</p>
+          </div>
+        </div>
+
+        <div class="aviso aviso-error" *ngIf="cantidadErrores > 0" role="status">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <strong>{{ cantidadErrores === 1 ? 'Falta corregir 1 dato' : 'Faltan corregir ' + cantidadErrores + ' datos' }}</strong>
+            <p>Están marcados en rojo, debajo de cada campo.</p>
+          </div>
+        </div>
+
+        <form (ngSubmit)="registrar()" novalidate>
+          <fieldset class="bloque">
+            <legend>Tus datos</legend>
+            <div class="campos">
+              <div class="fila">
+                <div class="campo-grupo" data-campo="nombre">
+                  <label for="nombre">Nombre</label>
+                  <input id="nombre" name="nombre" class="entrada" [class.invalido]="ver('nombre')" [(ngModel)]="datos.nombre" (blur)="tocar('nombre')" maxlength="100" autocomplete="given-name" [disabled]="enviando" [attr.aria-invalid]="ver('nombre')" aria-describedby="err-nombre">
+                  <span class="error-campo" id="err-nombre" *ngIf="ver('nombre')">{{ errorDe('nombre') }}</span>
+                </div>
+                <div class="campo-grupo" data-campo="apellido">
+                  <label for="apellido">Apellido</label>
+                  <input id="apellido" name="apellido" class="entrada" [class.invalido]="ver('apellido')" [(ngModel)]="datos.apellido" (blur)="tocar('apellido')" maxlength="100" autocomplete="family-name" [disabled]="enviando" [attr.aria-invalid]="ver('apellido')" aria-describedby="err-apellido">
+                  <span class="error-campo" id="err-apellido" *ngIf="ver('apellido')">{{ errorDe('apellido') }}</span>
+                </div>
+              </div>
+
+              <div class="fila">
+                <div class="campo-grupo" data-campo="dni">
+                  <label for="dni">DNI <span class="etiqueta-extra">sin puntos</span></label>
+                  <input id="dni" name="dni" class="entrada num" [class.invalido]="ver('dni')" [(ngModel)]="datos.dni" (blur)="tocar('dni')" inputmode="numeric" maxlength="10" placeholder="30111222" [disabled]="enviando" [attr.aria-invalid]="ver('dni')" aria-describedby="err-dni">
+                  <span class="error-campo" id="err-dni" *ngIf="ver('dni')">{{ errorDe('dni') }}</span>
+                </div>
+                <div class="campo-grupo" data-campo="fechaNacimiento">
+                  <label for="fechaNacimiento">Fecha de nacimiento</label>
+                  <input id="fechaNacimiento" name="fechaNacimiento" type="date" class="entrada" [class.invalido]="ver('fechaNacimiento')" [(ngModel)]="datos.fechaNacimiento" (blur)="tocar('fechaNacimiento')" [max]="hoy" min="1900-01-01" autocomplete="bday" [disabled]="enviando" [attr.aria-invalid]="ver('fechaNacimiento')" aria-describedby="err-fecha">
+                  <span class="error-campo" id="err-fecha" *ngIf="ver('fechaNacimiento')">{{ errorDe('fechaNacimiento') }}</span>
+                </div>
+              </div>
+
+              <div class="campo-grupo" data-campo="email">
+                <label for="email">Correo electrónico</label>
+                <input id="email" name="email" type="email" class="entrada" [class.invalido]="ver('email')" [(ngModel)]="datos.email" (blur)="tocar('email')" maxlength="150" autocomplete="email" placeholder="nombre@gmail.com" [disabled]="enviando" [attr.aria-invalid]="ver('email')" aria-describedby="err-email">
+                <span class="error-campo" id="err-email" *ngIf="ver('email')">{{ errorDe('email') }}</span>
+              </div>
+
+              <div class="campo-grupo">
+                <label for="telefono">Teléfono <span class="etiqueta-extra">opcional</span></label>
+                <input id="telefono" name="telefono" type="tel" class="entrada" [(ngModel)]="datos.telefono" maxlength="50" autocomplete="tel" placeholder="3764 555555" [disabled]="enviando">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="bloque">
+            <legend>Tu acceso</legend>
+            <div class="campos">
+              <div class="campo-grupo" data-campo="password">
+                <label for="password">Contraseña</label>
+                <app-campo-password #passwordCampo
+                  inputId="password" name="password" autocomplete="new-password"
+                  [(valor)]="datos.password" (salir)="tocar('password')"
+                  [visible]="mostrarPassword" [invalido]="ver('password')" [disabled]="enviando"
+                  describedBy="err-password">
+                </app-campo-password>
+                <span class="error-campo" id="err-password" *ngIf="ver('password')">{{ errorDe('password') }}</span>
+                <app-fuerza-password [password]="datos.password" (sugerida)="usarSugerida($event)"></app-fuerza-password>
+              </div>
+
+              <div class="campo-grupo" data-campo="confirmarPassword">
+                <label for="confirmarPassword">Repetí la contraseña</label>
+                <app-campo-password
+                  inputId="confirmarPassword" name="confirmarPassword" autocomplete="new-password"
+                  [(valor)]="datos.confirmarPassword" (salir)="tocar('confirmarPassword')"
+                  [visible]="mostrarPassword" [invalido]="ver('confirmarPassword')" [disabled]="enviando"
+                  describedBy="err-confirmar">
+                </app-campo-password>
+                <span class="error-campo" id="err-confirmar" *ngIf="ver('confirmarPassword')">{{ errorDe('confirmarPassword') }}</span>
+                <span class="coincide" *ngIf="datos.confirmarPassword && datos.confirmarPassword === datos.password">Las contraseñas coinciden.</span>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="terminos" data-campo="aceptaTerminos" [class.invalido]="ver('aceptaTerminos')">
+            <label class="check">
+              <input type="checkbox" name="aceptaTerminos" [(ngModel)]="datos.aceptaTerminos" (change)="tocar('aceptaTerminos')" [disabled]="enviando" aria-describedby="err-terminos">
+              <span>Acepto que el consultorio trate mis datos personales y de salud para gestionar mi atención, según la Ley 25.326 de Protección de los Datos Personales.</span>
+            </label>
+            <span class="error-campo" id="err-terminos" *ngIf="ver('aceptaTerminos')">{{ errorDe('aceptaTerminos') }}</span>
+          </div>
+
+          <button type="submit" class="boton-principal" [disabled]="enviando">
+            <span class="cargando-punto" *ngIf="enviando" aria-hidden="true"></span>
+            {{ enviando ? 'Creando tu cuenta' : 'Crear mi cuenta' }}
+          </button>
+        </form>
+
+        <p class="enlaces">¿Ya tenés cuenta? <a routerLink="/login">Iniciá sesión</a></p>
+      </ng-template>
+    </div>
+  </main>
+</div>

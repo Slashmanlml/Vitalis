@@ -1,12 +1,12 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Prescripciones y Recetas Médicas</h1>
+      <h1>Prescripciones</h1>
       <p>Emisión, seguimiento e impresión de órdenes farmacológicas</p>
     </div>
     <button class="btn-primary" (click)="abrirNuevaPrescripcion()" [disabled]="!selectedPacienteId">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva Receta
+      Nueva receta
     </button>
   </div>
 
@@ -14,7 +14,7 @@
   <div class="patient-selector-card glass-panel">
     <div class="selector-row">
       <div class="selector-field">
-        <label for="pacienteSelect">Seleccionar Paciente:</label>
+        <label for="pacienteSelect">Seleccionar paciente:</label>
         <select id="pacienteSelect" class="form-control" [ngModel]="selectedPacienteId" (ngModelChange)="seleccionarPaciente($event)">
           <option [value]="0">-- Seleccione un paciente --</option>
           <option *ngFor="let p of pacientes" [value]="p.id">
@@ -24,7 +24,7 @@
       </div>
       <div class="patient-info-summary" *ngIf="selectedPaciente">
         <div class="info-badge">
-          <span class="info-label">Obra Social</span>
+          <span class="info-label">Obra social</span>
           <span class="info-value">{{ selectedPaciente.obraSocialNombre || 'Particular' }}</span>
         </div>
         <div class="info-badge">
@@ -32,7 +32,7 @@
           <span class="info-value">{{ selectedPaciente.telefono || 'Sin teléfono' }}</span>
         </div>
         <div class="info-badge">
-          <span class="info-label">Total Recetas</span>
+          <span class="info-label">Total recetas</span>
           <span class="info-value">{{ prescripciones.length }}</span>
         </div>
       </div>
@@ -81,7 +81,7 @@
         <div class="card-actions">
           <button class="btn-outline-sm" (click)="verDetalle(p)">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Ver Detalle
+            Ver detalle
           </button>
           <button class="btn-primary-sm" (click)="imprimir(p)">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -97,13 +97,13 @@
 <div class="modal-overlay" *ngIf="showModal">
   <div class="modal-card modal-lg">
     <div class="modal-header">
-      <h2>Emitir Nueva Receta Médica</h2>
+      <h2>Emitir nueva receta médica</h2>
       <button class="btn-close" (click)="cerrarModales()">×</button>
     </div>
     <div class="modal-body">
       <div class="form-row-2">
         <div class="form-group">
-          <label>Consulta Médica Vinculada *</label>
+          <label>Consulta médica vinculada *</label>
           <select class="form-control" [(ngModel)]="form.consultaMedicaId" (change)="onConsultaChange()">
             <option [value]="0">-- Seleccione la consulta médica --</option>
             <option *ngFor="let c of consultasPaciente" [value]="c.id">
@@ -113,7 +113,7 @@
         </div>
 
         <div class="form-group">
-          <label>Profesional Emisor *</label>
+          <label>Profesional emisor *</label>
           <select class="form-control" [(ngModel)]="form.profesionalId">
             <option [value]="0">-- Seleccione el profesional --</option>
             <option *ngFor="let pr of profesionales" [value]="pr.id">
@@ -124,15 +124,15 @@
       </div>
 
       <div class="form-group">
-        <label>Observaciones / Indicaciones Generales</label>
+        <label>Observaciones / indicaciones generales</label>
         <textarea class="form-control" rows="2" [(ngModel)]="form.observaciones" placeholder="Indicaciones dietarias, precauciones, advertencias..."></textarea>
       </div>
 
       <div class="meds-section">
         <div class="meds-section-header">
-          <h3>Medicamentos Prescriptos</h3>
+          <h3>Medicamentos prescriptos</h3>
           <button type="button" class="btn-secondary-sm" (click)="agregarDetalle()">
-            + Agregar Fármaco
+            + Agregar fármaco
           </button>
         </div>
 
@@ -159,7 +159,7 @@
             </div>
             <div class="form-group">
               <label>Frecuencia *</label>
-              <input type="text" class="form-control" [(ngModel)]="det.frecuencia" placeholder="Ej: Cada 8 hs" />
+              <input type="text" class="form-control" [(ngModel)]="det.frecuencia" placeholder="Ej: cada 8 hs" />
             </div>
             <div class="form-group">
               <label>Duración *</label>
@@ -168,7 +168,7 @@
           </div>
           <div class="form-group">
             <label>Indicaciones específicas</label>
-            <input type="text" class="form-control" [(ngModel)]="det.indicaciones" placeholder="Ej: Tomar alejado de las comidas" />
+            <input type="text" class="form-control" [(ngModel)]="det.indicaciones" placeholder="Ej: tomar alejado de las comidas" />
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@
 <div class="modal-overlay" *ngIf="showDetailModal && selectedPrescripcion">
   <div class="modal-card modal-md">
     <div class="modal-header">
-      <h2>Detalle de Receta Médica</h2>
+      <h2>Detalle de receta médica</h2>
       <button class="btn-close" (click)="cerrarModales()">×</button>
     </div>
 
@@ -233,7 +233,7 @@
 
         <div class="receta-firma">
           <div class="firma-linea"></div>
-          <div>Firma y Sello del Profesional</div>
+          <div>Firma y sello del profesional</div>
           <div>Dr/a. {{ selectedPrescripcion.profesionalNombre }}</div>
         </div>
       </div>

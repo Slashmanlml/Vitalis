@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService } from '../services/usuario.service';
@@ -6,6 +6,10 @@ import { ToastService } from '../services/toast.service';
 import { Usuario, CrearUsuario, EditarUsuario, ROLES_USUARIO } from '../models/usuario.model';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-usuarios',
   standalone: true,
   imports: [CommonModule, FormsModule],

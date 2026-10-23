@@ -16,4 +16,13 @@ public class Paciente
     public string? FotoUrl { get; set; }
     public bool Activo { get; set; } = true;
     public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Cuenta del portal de pacientes vinculada a esta ficha, si el paciente se
+    /// registró desde la web. Es el mismo patrón que Profesional.UsuarioId: la
+    /// identidad sale del token y se traduce a "qué ficha es la mía" en el
+    /// servidor, nunca a partir de un id que mande el navegador.
+    /// </summary>
+    public int? UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
 }

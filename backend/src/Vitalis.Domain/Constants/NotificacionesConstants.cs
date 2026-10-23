@@ -16,6 +16,7 @@ public static class EventoNotificacion
     public const string ResumenConsulta = "ResumenConsulta";
     public const string NuevaPrescripcion = "NuevaPrescripcion";
     public const string BienvenidaPaciente = "BienvenidaPaciente";
+    public const string ConfirmacionEmail = "ConfirmacionEmail";
     public const string Personalizado = "Personalizado";
 }
 
@@ -24,4 +25,9 @@ public static class EstadoNotificacion
     public const string Enviado = "Enviado";
     public const string Fallido = "Fallido";
     public const string Simulado = "Simulado";
+}
+
+public static class PropositoToken
+{
+    public const string ConfirmacionEmail = "ConfirmacionEmail";
 }

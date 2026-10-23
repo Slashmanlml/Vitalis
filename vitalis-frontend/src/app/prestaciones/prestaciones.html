@@ -3,7 +3,7 @@
     <div><h1>Prestaciones</h1><p>Catálogo de servicios médicos y procedimientos</p></div>
     <button *ngIf="puedeEditar" class="btn-primary" (click)="abrirNuevo()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva Prestación
+      Nueva prestación
     </button>
   </div>
 
@@ -14,7 +14,7 @@
   <div class="table-container">
     <table class="data-table">
       <thead>
-        <tr><th>Nombre</th><th>Código</th><th>Importe Base</th><th>Estado</th><th *ngIf="puedeEditar">Acciones</th></tr>
+        <tr><th>Nombre</th><th>Código</th><th>Importe base</th><th>Estado</th><th *ngIf="puedeEditar">Acciones</th></tr>
       </thead>
       <tbody>
         <tr *ngFor="let p of prestaciones">
@@ -35,13 +35,13 @@
 
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h2>{{ editMode ? 'Editar Prestación' : 'Nueva Prestación' }}</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
+    <div class="modal-header"><h2>{{ editMode ? 'Editar prestación' : 'Nueva prestación' }}</h2><button class="btn-close" (click)="cerrarModal()">&times;</button></div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label>Nombre *</label><input type="text" [(ngModel)]="form.nombre" required /></div>
         <div class="form-group"><label>Código *</label><input type="text" [(ngModel)]="form.codigo" required /></div>
       </div>
-      <div class="form-group"><label>Importe Base ($)</label><input type="number" step="0.01" [(ngModel)]="form.importeBase" /></div>
+      <div class="form-group"><label>Importe base ($)</label><input type="number" step="0.01" [(ngModel)]="form.importeBase" /></div>
       <div class="form-group" *ngIf="editMode"><label><input type="checkbox" [(ngModel)]="form.activa" /> Activa</label></div>
     </div>
     <div class="modal-footer"><button class="btn-secondary" (click)="cerrarModal()">Cancelar</button><button class="btn-primary" (click)="guardar()">{{ editMode ? 'Guardar' : 'Crear' }}</button></div>

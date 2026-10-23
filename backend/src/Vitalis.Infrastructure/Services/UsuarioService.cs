@@ -3,6 +3,7 @@ using Vitalis.Application.DTOs.Usuarios;
 using Vitalis.Application.Interfaces;
 using Vitalis.Infrastructure.Data;
 using Vitalis.Domain.Entities;
+using Vitalis.Domain.Exceptions;
 
 namespace Vitalis.Infrastructure.Services;
 
@@ -61,16 +62,24 @@ public class UsuarioService : IUsuarioService
     public async Task<UsuarioDto> CrearAsync(CrearUsuarioDto dto)
     {
         var rol = await _context.Roles.FirstOrDefaultAsync(r => r.Nombre == dto.Rol);
-        if (rol == null) throw new Exception("Rol no válido");
+        if (rol == null) throw new ValidationException("Rol no válido.");
+
+        var email = TokenSeguro.NormalizarEmail(dto.Email);
+        if (await _context.Usuarios.AnyAsync(u => u.Email == email))
+            throw new ConflictException("Ya existe un usuario con ese correo.");
 
         var usuario = new Usuario
         {
             Nombre = dto.Nombre,
             Apellido = dto.Apellido,
-            Email = dto.Email,
+            Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Rol = rol,
-            Activo = true
+            Activo = true,
+            // Las cuentas del personal las crea el administrador: no pasan por
+            // la confirmación de correo del registro público.
+            EmailConfirmado = true,
+            FechaCreacion = DateTime.UtcNow
         };
 
         _context.Usuarios.Add(usuario);
@@ -94,12 +103,19 @@ public class UsuarioService : IUsuarioService
 
         usuario.Nombre = dto.Nombre ?? usuario.Nombre;
         usuario.Apellido = dto.Apellido ?? usuario.Apellido;
-        usuario.Email = dto.Email ?? usuario.Email;
+        if (dto.Email != null)
+        {
+            var email = TokenSeguro.NormalizarEmail(dto.Email);
+            if (email != usuario.Email && await _context.Usuarios.AnyAsync(u => u.Email == email && u.Id != id))
+                throw new ConflictException("Ya existe un usuario con ese correo.");
+            usuario.Email = email;
+        }
 
         if (dto.Rol != null)
         {
             var rol = await _context.Roles.FirstOrDefaultAsync(r => r.Nombre == dto.Rol);
-            if (rol != null) usuario.Rol = rol;
+            if (rol == null) throw new ValidationException("Rol no válido.");
+            usuario.Rol = rol;
         }
 
         await _context.SaveChangesAsync();

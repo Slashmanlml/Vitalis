@@ -1,18 +1,15 @@
 <div class="inbox-container">
   <!-- Header -->
-  <div class="view-header">
+  <div class="view-header page-header">
     <div class="header-title">
-      <h1>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Notificaciones y Auditoría de Correo
-      </h1>
-      <p>Registro histórico, monitoreo de envíos SMTP y simulación interactiva de comunicaciones con pacientes</p>
+      <h1>Notificaciones</h1>
+      <p>Los correos que el sistema envió o simuló a los pacientes, con su estado de entrega.</p>
     </div>
 
     <div class="header-actions">
       <button class="btn-primary" (click)="abrirModalSimulacion()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Simular Notificación
+        Simular notificación
       </button>
       <button class="btn-refresh" (click)="cargarEmails()" [disabled]="cargando">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spinning]="cargando"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
@@ -30,20 +27,20 @@
 
     <div class="filters-group">
       <select class="filter-select" [(ngModel)]="filtroOrigen" (change)="aplicarFiltro()">
-        <option value="">Origen: Todos</option>
-        <option value="Sistema">Origen: Sistema</option>
-        <option value="Simulado">Origen: Simulado</option>
+        <option value="">Origen: todos</option>
+        <option value="Sistema">Origen: sistema</option>
+        <option value="Simulado">Origen: simulado</option>
       </select>
 
       <select class="filter-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltro()">
-        <option value="">Estado: Todos</option>
-        <option value="Enviado">Estado: Enviado</option>
-        <option value="Fallido">Estado: Fallido</option>
-        <option value="Simulado">Estado: Simulado</option>
+        <option value="">Estado: todos</option>
+        <option value="Enviado">Estado: enviado</option>
+        <option value="Fallido">Estado: fallido</option>
+        <option value="Simulado">Estado: simulado</option>
       </select>
 
       <select class="filter-select" [(ngModel)]="filtroEvento" (change)="aplicarFiltro()">
-        <option value="">Evento: Todos</option>
+        <option value="">Evento: todos</option>
         <option *ngFor="let t of tiposNotificacion" [value]="t.valor">{{ t.label }}</option>
       </select>
     </div>
@@ -69,7 +66,7 @@
     <p *ngIf="emails.length > 0">No hay registros que coincidan con los filtros seleccionados.</p>
     <button class="btn-primary" style="margin: 16px auto 0;" (click)="abrirModalSimulacion()" *ngIf="emails.length === 0">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      Emitir Notificación de Prueba
+      Emitir notificación de prueba
     </button>
   </div>
 
@@ -79,7 +76,7 @@
     <!-- Left sidebar: email list -->
     <div class="inbox-sidebar">
       <div class="sidebar-header">
-        <span class="sidebar-title">Historial de Notificaciones</span>
+        <span class="sidebar-title">Historial de notificaciones</span>
         <span class="count-badge">{{ filteredEmails.length }}</span>
       </div>
       <div class="email-list">
@@ -145,7 +142,7 @@
                 <span class="field-value to-email">{{ selectedEmail.destinatario }}</span>
               </div>
               <div class="header-field">
-                <span class="field-label">Fecha y Hora:</span>
+                <span class="field-label">Fecha y hora:</span>
                 <span class="field-value">{{ selectedEmail.fechaEnvio | date:'dd MMMM yyyy, HH:mm:ss' }}</span>
               </div>
             </div>
@@ -188,19 +185,19 @@
 <div class="modal-overlay" *ngIf="showSimularModal">
   <div class="modal-card modal-md">
     <div class="modal-header">
-      <h2>Simular Envío de Notificación</h2>
+      <h2>Simular envío de notificación</h2>
       <button class="btn-close" (click)="cerrarModal()">×</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Plantilla / Tipo de Evento *</label>
+        <label>Plantilla / tipo de evento *</label>
         <select class="form-control" [(ngModel)]="simulacionForm.tipoNotificacion">
           <option *ngFor="let t of tiposNotificacion" [value]="t.valor">{{ t.label }}</option>
         </select>
       </div>
 
       <div class="form-group" *ngIf="pacientes.length > 0">
-        <label>Cargar Email desde Paciente Registrado:</label>
+        <label>Cargar email desde paciente registrado:</label>
         <select class="form-control" (change)="onPacienteSelect($event)">
           <option [value]="0">-- Seleccionar paciente --</option>
           <option *ngFor="let p of pacientes" [value]="p.id">
@@ -210,23 +207,23 @@
       </div>
 
       <div class="form-group">
-        <label>Email Destinatario *</label>
+        <label>Email destinatario *</label>
         <input type="email" class="form-control" [(ngModel)]="simulacionForm.destinatario" placeholder="ejemplo@paciente.com" />
       </div>
 
       <div class="form-group" *ngIf="simulacionForm.tipoNotificacion === 'Personalizado'">
-        <label>Asunto Personalizado</label>
+        <label>Asunto personalizado</label>
         <input type="text" class="form-control" [(ngModel)]="simulacionForm.asunto" placeholder="Escriba el asunto del correo..." />
       </div>
 
       <div class="form-group" *ngIf="simulacionForm.tipoNotificacion === 'Personalizado'">
-        <label>Cuerpo / Mensaje (HTML básico)</label>
+        <label>Cuerpo / mensaje (HTML básico)</label>
         <textarea class="form-control" rows="4" [(ngModel)]="simulacionForm.cuerpo" placeholder="Estimado paciente, le informamos..."></textarea>
       </div>
 
       <div class="simulation-note">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>La notificación se guardará con Origen <strong>"Simulado"</strong> en la auditoría sin invocar el servidor SMTP externo.</span>
+        <span>La notificación se guardará con origen <strong>"Simulado"</strong> en la auditoría sin invocar el servidor SMTP externo.</span>
       </div>
     </div>
 

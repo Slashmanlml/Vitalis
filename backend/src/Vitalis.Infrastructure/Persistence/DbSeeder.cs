@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Vitalis.Domain.Constants;
 using Vitalis.Domain.Entities;
@@ -8,7 +9,19 @@ namespace Vitalis.Infrastructure.Persistence;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(VitalisDbContext context, ILogger logger, CancellationToken cancellationToken = default)
+    /// <param name="datosDemo">
+    /// true: carga los usuarios de prueba con contraseñas conocidas y los datos
+    /// de demostración (turnos, consultas, facturas). Solo para desarrollo y
+    /// para la demo de la defensa.
+    /// false: carga únicamente los roles y, si se configuró, un administrador
+    /// inicial con la contraseña que se indique en Semilla:AdminPassword.
+    /// </param>
+    public static async Task SeedAsync(
+        VitalisDbContext context,
+        ILogger logger,
+        bool datosDemo = true,
+        IConfiguration? configuracion = null,
+        CancellationToken cancellationToken = default)
     {
         if (context.Database.IsRelational())
         {
@@ -27,6 +40,25 @@ public static class DbSeeder
             await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Roles iniciales creados.");
         }
+
+        // Roles que se agregaron después de la primera siembra (ej.: Paciente,
+        // si la base se creó cuando todavía no se usaba).
+        var rolesExistentes = await context.Roles.Select(r => r.Nombre).ToListAsync(cancellationToken);
+        var faltantes = Roles.Todos.Except(rolesExistentes).ToList();
+        if (faltantes.Count > 0)
+        {
+            context.Roles.AddRange(faltantes.Select(n => new Rol { Nombre = n, Descripcion = $"Rol {n}" }));
+            await context.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Roles agregados: {Roles}.", string.Join(", ", faltantes));
+        }
+
+        if (!datosDemo)
+        {
+            await SembrarAdministradorInicialAsync(context, logger, configuracion, cancellationToken);
+            return;
+        }
+
+        logger.LogWarning("Semilla de DEMOSTRACIÓN activa: se crean usuarios con contraseñas conocidas. No usar en producción.");
 
         var adminRol = await context.Roles
             .FirstAsync(r => r.Nombre == Roles.Administrador, cancellationToken);
@@ -755,5 +787,46 @@ public static class DbSeeder
             await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Liquidaciones iniciales creadas.");
         }
+    }
+
+    /// <summary>
+    /// Fuera de la demo, crea un único administrador si todavía no hay
+    /// ninguno, con el correo y la contraseña de la configuración (variables
+    /// de entorno Semilla__AdminEmail y Semilla__AdminPassword). Si no se
+    /// configuraron, no crea nada y lo avisa.
+    /// </summary>
+    private static async Task SembrarAdministradorInicialAsync(
+        VitalisDbContext context, ILogger logger, IConfiguration? configuracion, CancellationToken ct)
+    {
+        var hayAdmin = await context.Usuarios.AnyAsync(u => u.Rol.Nombre == Roles.Administrador, ct);
+        if (hayAdmin) return;
+
+        var email = configuracion?["Semilla:AdminEmail"];
+        var password = configuracion?["Semilla:AdminPassword"];
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            logger.LogWarning("No hay ningún administrador y no se configuró Semilla:AdminEmail / Semilla:AdminPassword.");
+            return;
+        }
+
+        if (!Vitalis.Application.Validation.PasswordSeguraAttribute.EsSegura(password))
+        {
+            throw new InvalidOperationException("Semilla:AdminPassword no cumple la política de contraseñas.");
+        }
+
+        var rol = await context.Roles.FirstAsync(r => r.Nombre == Roles.Administrador, ct);
+        context.Usuarios.Add(new Usuario
+        {
+            Nombre = "Administrador",
+            Apellido = "Vitalis",
+            Email = email.Trim().ToLowerInvariant(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            RolId = rol.Id,
+            Activo = true,
+            EmailConfirmado = true,
+            FechaCreacion = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync(ct);
+        logger.LogInformation("Administrador inicial creado: {Email}.", email);
     }
 }

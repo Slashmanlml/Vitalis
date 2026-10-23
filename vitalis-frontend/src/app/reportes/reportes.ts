@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReporteService, EstadisticasGenerales, ConteoPorCategoria } from '../services/reporte.service';
@@ -39,6 +39,10 @@ type Dimension = 'profesional' | 'paciente' | 'obraSocial';
 type PestanaReporte = 'agenda' | 'financiero';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-reportes',
   standalone: true,
   imports: [CommonModule, FormsModule],
@@ -247,6 +251,12 @@ export class ReportesComponent implements OnInit {
       return this.pacientes.map(p => ({ id: p.id, nombre: `${p.apellido}, ${p.nombre}` }));
     }
     return this.obrasSociales.map(o => ({ id: o.id, nombre: o.nombre }));
+  }
+
+  /** Identidad estable de cada opción: sin esto, el desplegable se rearmaba en
+   *  cada ciclo de detección de cambios y Angular entraba en un bucle (NG0103). */
+  porId(_: number, e: { id: number }): number {
+    return e.id;
   }
 
   cambiarDimension() {

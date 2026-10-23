@@ -1,21 +1,4 @@
-/* Reportes. Todo el color sale de los tokens de styles.css.
-   Criterio de visualización: las barras comparan magnitud, así que van todas
-   del mismo tono (la longitud ya codifica el valor; teñir cada barra de un
-   color distinto gastaría el canal de identidad repitiendo esa información). */
 
-.page-container { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
-
-.page-header {
-  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
-}
-.page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px 0; }
-.page-header p { color: var(--text-secondary); font-size: .92rem; margin: 0; }
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 .cargando, .vacio {
   color: var(--text-muted); font-size: .9rem; padding: 12px 0;
@@ -78,8 +61,7 @@
 
 .kpi-label {
   display: flex; align-items: center; gap: 7px;
-  font-size: .78rem; font-weight: 600; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--text-secondary);
+  font-size: .78rem; font-weight: 600; color: var(--text-secondary);
 }
 
 /* El número usa color de texto, nunca el color del estado: el punto de al lado
@@ -188,8 +170,7 @@
 .filtros label, .filtros-fechas label { display: flex; flex-direction: column; gap: 5px; }
 .filtros label.crece { flex: 1 1 220px; }
 .filtros label > span, .filtros-fechas label > span {
-  font-size: .75rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: .04em; color: var(--text-secondary);
+  font-size: .75rem; font-weight: 600; color: var(--text-secondary);
 }
 .filtros select, .filtros input, .filtros-fechas input {
   padding: .55rem .8rem;
@@ -203,52 +184,6 @@
 }
 .acciones, .acciones-fechas { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: .55rem 1rem;
-  font-weight: 600;
-  font-size: .88rem;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  border-radius: var(--radius-sm);
-  padding: .55rem 1rem;
-  font-size: .88rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: var(--transition-fast);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 /* --------------------------------------------------------------- resultado */
 
 .resultado { margin-top: 18px; }
@@ -257,15 +192,7 @@
   gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
   font-size: .9rem; color: var(--text-secondary);
 }
-
-.table-container {
-  border: 1px solid var(--border-color); border-radius: var(--radius-md);
-  overflow: auto; max-height: 460px;
-}
-.data-table { width: 100%; border-collapse: collapse; }
 .data-table thead { position: sticky; top: 0; z-index: 1; background: var(--bg-secondary); }
-.data-table th { padding: 10px 14px; font-size: .8rem; text-transform: uppercase; color: var(--text-secondary); text-align: left; }
-.data-table td { padding: 12px 14px; font-size: .88rem; border-top: 1px solid var(--border-light); color: var(--text-primary); }
 
 .estado {
   display: inline-block; padding: 3px 9px; border-radius: 20px;

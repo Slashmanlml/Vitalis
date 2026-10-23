@@ -4,11 +4,20 @@ import {
   HttpHandler,
   HttpEvent,
   HttpInterceptor,
-  HttpErrorResponse
+  HttpErrorResponse,
+  HttpContextToken
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ToastService } from '../services/toast.service';
+
+/**
+ * Las pantallas públicas (login, registro, confirmar correo) muestran el error
+ * dentro del formulario. Con este token el interceptor no agrega además un
+ * toast, ni redirige al login ante un 401 (que ahí significa "contraseña
+ * incorrecta", no "sesión vencida").
+ */
+export const SIN_TOAST_DE_ERROR = new HttpContextToken<boolean>(() => false);
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -17,6 +26,10 @@ export class ErrorInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
+        if (request.context.get(SIN_TOAST_DE_ERROR)) {
+          return throwError(() => error);
+        }
+
         let mensaje = 'Error de conexión con el servidor';
 
         if (error.error instanceof ErrorEvent) {

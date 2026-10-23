@@ -4,7 +4,17 @@ namespace Vitalis.Domain.Exceptions;
 
 public abstract class VitalisException : Exception
 {
-    protected VitalisException(string mensaje) : base(mensaje) { }
+    protected VitalisException(string mensaje, string? codigo = null) : base(mensaje)
+    {
+        Codigo = codigo;
+    }
+
+    /// <summary>
+    /// Código estable que el frontend puede usar para decidir qué mostrar
+    /// (por ejemplo, ofrecer "reenviar correo" ante EMAIL_NO_CONFIRMADO) sin
+    /// depender del texto del mensaje.
+    /// </summary>
+    public string? Codigo { get; }
 }
 
 public class NotFoundException : VitalisException
@@ -30,5 +40,14 @@ public class ValidationException : VitalisException
 /// </summary>
 public class ForbiddenException : VitalisException
 {
-    public ForbiddenException(string mensaje) : base(mensaje) { }
+    public ForbiddenException(string mensaje, string? codigo = null) : base(mensaje, codigo) { }
+}
+
+/// <summary>
+/// Demasiados intentos (cuenta bloqueada temporalmente o reenvíos muy
+/// seguidos). Se traduce a 429 Too Many Requests.
+/// </summary>
+public class DemasiadosIntentosException : VitalisException
+{
+    public DemasiadosIntentosException(string mensaje, string? codigo = null) : base(mensaje, codigo) { }
 }

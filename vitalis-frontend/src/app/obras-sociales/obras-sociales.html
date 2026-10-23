@@ -1,12 +1,12 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Obras Sociales</h1>
+      <h1>Obras sociales</h1>
       <p>Administre los convenios con obras sociales y prepagas</p>
     </div>
     <button *ngIf="puedeEditar" class="btn-primary" (click)="abrirNuevo()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nueva Obra Social
+      Nueva obra social
     </button>
   </div>
 
@@ -53,7 +53,7 @@
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ editMode ? 'Editar Obra Social' : 'Nueva Obra Social' }}</h2>
+      <h2>{{ editMode ? 'Editar obra social' : 'Nueva obra social' }}</h2>
       <button class="btn-close" (click)="cerrarModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -74,7 +74,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" (click)="guardar()" [disabled]="!isFormValid()">{{ editMode ? 'Guardar Cambios' : 'Crear' }}</button>
+      <button class="btn-primary" (click)="guardar()" [disabled]="!isFormValid()">{{ editMode ? 'Guardar cambios' : 'Crear' }}</button>
     </div>
   </div>
 </div>

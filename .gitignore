@@ -31,3 +31,6 @@ docs/09-guion-demo-y-defensa.md
 # Archivos subidos por los usuarios: se conserva la carpeta, no su contenido.
 backend/src/Vitalis.Api/wwwroot/uploads/*
 !backend/src/Vitalis.Api/wwwroot/uploads/.gitkeep
+
+# Variables de Docker con secretos
+.env

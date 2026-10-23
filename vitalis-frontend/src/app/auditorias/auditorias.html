@@ -1,7 +1,7 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Registro de Auditoría</h1>
+      <h1>Auditorías</h1>
       <p>Trazabilidad y control de cambios en base de datos en tiempo real</p>
     </div>
   </div>
@@ -36,11 +36,11 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Fecha y Hora</th>
+          <th>Fecha y hora</th>
           <th>Usuario</th>
           <th>Acción</th>
           <th>Tabla</th>
-          <th>ID Registro</th>
+          <th>ID registro</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -63,8 +63,8 @@
           <td><span class="badge-table">{{ log.tabla }}</span></td>
           <td><code>{{ log.clavePrimaria }}</code></td>
           <td>
-            <button class="btn-primary btn-sm" (click)="verDetalles(log)">
-              Ver Cambios
+            <button class="btn-secondary btn-sm" (click)="verDetalles(log)">
+              Ver cambios
             </button>
           </td>
         </tr>
@@ -93,7 +93,7 @@
 
       <div class="comparison-grid">
         <div class="comparison-column">
-          <h3>Estado Anterior</h3>
+          <h3>Estado anterior</h3>
           <div class="json-viewer" *ngIf="parsedValoresAnteriores">
             <div *ngFor="let key of clavesAnteriores" class="json-row">
               <span class="json-key">{{ key }}:</span>
@@ -101,12 +101,12 @@
             </div>
           </div>
           <div class="empty-state-json" *ngIf="!parsedValoresAnteriores">
-            (No existe - Registro Nuevo)
+            (No existe - registro nuevo)
           </div>
         </div>
 
         <div class="comparison-column">
-          <h3>Estado Nuevo</h3>
+          <h3>Estado nuevo</h3>
           <div class="json-viewer" *ngIf="parsedValoresNuevos">
             <div *ngFor="let key of clavesNuevas" class="json-row">
               <span class="json-key" [ngClass]="{'modified-key': parsedValoresAnteriores && parsedValoresAnteriores[key] !== parsedValoresNuevos[key]}">
@@ -118,7 +118,7 @@
             </div>
           </div>
           <div class="empty-state-json" *ngIf="!parsedValoresNuevos">
-            (No existe - Registro Eliminado)
+            (No existe - registro eliminado)
           </div>
         </div>
       </div>

@@ -1,0 +1,321 @@
+.portal {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.barra {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.barra-interior {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 450;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--ink-raised);
+  border: 1px solid var(--ink-line);
+  color: var(--color-primary-light);
+}
+
+.logo svg {
+  width: 17px;
+  height: 17px;
+}
+
+.salir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--ink-line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--on-ink-muted);
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.salir:hover {
+  color: var(--on-ink);
+  background: var(--ink-raised);
+}
+
+.contenido {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 24px 72px;
+}
+
+.saludo h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  font-weight: 350;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.saludo p {
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+}
+
+.grilla {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+.principal {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* El próximo turno: lo único destacado de la pantalla. */
+.siguiente {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.siguiente-cuando {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 26px 24px;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.siguiente-falta {
+  font-size: .8rem;
+  color: var(--color-primary-light);
+  font-weight: 550;
+}
+
+.siguiente-dia {
+  font-family: var(--font-display);
+  font-size: 4rem;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.siguiente-mes {
+  font-size: .85rem;
+  color: var(--on-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.siguiente-datos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 26px 28px;
+}
+
+.siguiente-hora {
+  font-size: .95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+}
+
+.siguiente-datos h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.siguiente-datos p {
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+
+.vacio {
+  padding: 28px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.vacio h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.5rem;
+}
+
+.vacio p {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  max-width: 52ch;
+}
+
+.bloque h3,
+.datos h3 {
+  font-size: .9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.turnos {
+  list-style: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.turnos li {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.turnos li:first-child {
+  border-top: none;
+}
+
+.fecha,
+.detalle {
+  display: flex;
+  flex-direction: column;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+.fecha small,
+.detalle small {
+  font-weight: 400;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 550;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.estado::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.estado-confirmado { background: var(--color-primary-bg); color: var(--color-primary); }
+.estado-atendido { background: var(--success-bg); color: var(--color-success); }
+.estado-cancelado { background: var(--danger-bg); color: var(--color-danger); }
+.estado-solicitado { background: var(--warning-bg); color: var(--color-warning); }
+
+.datos {
+  position: sticky;
+  top: 24px;
+  padding: 22px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.datos dl {
+  display: flex;
+  flex-direction: column;
+}
+
+.datos dl div {
+  padding: 10px 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.datos dl div:first-child {
+  border-top: none;
+}
+
+.datos dt {
+  font-size: .75rem;
+  color: var(--text-muted);
+}
+
+.datos dd {
+  margin-top: 2px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.afiliado {
+  display: block;
+  font-size: .8rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.nota {
+  margin-top: 12px;
+  font-size: .8rem;
+  color: var(--text-muted);
+}
+
+.aviso-error {
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--danger-bg);
+  color: var(--color-danger);
+}
+
+@media (max-width: 860px) {
+  .grilla { grid-template-columns: 1fr; }
+  .datos { position: static; }
+}
+
+@media (max-width: 560px) {
+  .contenido { padding-top: 32px; }
+  .siguiente { grid-template-columns: 1fr; }
+  .siguiente-cuando { flex-direction: row; align-items: baseline; gap: 12px; padding: 18px 22px; }
+  .siguiente-dia { font-size: 2.6rem; }
+  .turnos li { grid-template-columns: 1fr auto; }
+  .turnos .detalle { grid-column: 1 / -1; grid-row: 2; }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ObraSocialService } from '../services/obra-social.service';
@@ -6,6 +6,10 @@ import { ObraSocial, CrearObraSocial, EditarObraSocial } from '../models/obra-so
 import { puedeEditar } from '../utils/permisos';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-obras-sociales',
   standalone: true,
   imports: [CommonModule, FormsModule],

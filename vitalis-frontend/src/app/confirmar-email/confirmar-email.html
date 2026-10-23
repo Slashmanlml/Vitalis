@@ -1,0 +1,36 @@
+<div class="auth">
+  <app-panel-marca
+    titulo="Un paso y listo."
+    bajada="Confirmar el correo nos asegura que la cuenta es tuya antes de mostrarte cualquier dato de salud.">
+  </app-panel-marca>
+
+  <main class="auth-lado">
+    <div class="auth-form">
+      <ng-container [ngSwitch]="estado">
+        <div *ngSwitchCase="'confirmando'" class="estado-confirmacion" role="status">
+          <span class="estado-icono cargando" aria-hidden="true"><span class="cargando-punto oscuro"></span></span>
+          <h1>Confirmando tu correo</h1>
+          <p>Esto tarda un segundo.</p>
+        </div>
+
+        <div *ngSwitchCase="'ok'" class="estado-confirmacion" role="status">
+          <span class="estado-icono ok" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </span>
+          <h1>Tu cuenta está activa</h1>
+          <p>{{ mensaje }}</p>
+          <a routerLink="/login" class="boton-principal">Iniciar sesión</a>
+        </div>
+
+        <div *ngSwitchCase="'error'" class="estado-confirmacion" role="alert">
+          <span class="estado-icono error" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+          </span>
+          <h1>El enlace no sirve</h1>
+          <p>{{ mensaje }}</p>
+          <a routerLink="/login" class="boton-principal">Ir a iniciar sesión y pedir uno nuevo</a>
+        </div>
+      </ng-container>
+    </div>
+  </main>
+</div>

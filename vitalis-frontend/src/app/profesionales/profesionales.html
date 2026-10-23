@@ -1,12 +1,12 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Gestión de Profesionales</h1>
+      <h1>Médicos</h1>
       <p>Administre los médicos y sus especialidades</p>
     </div>
     <button *ngIf="puedeEditar" class="btn-primary" (click)="abrirNuevo()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nuevo Profesional
+      Nuevo médico
     </button>
   </div>
 
@@ -67,7 +67,7 @@
 <div class="modal-overlay" *ngIf="showModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ editMode ? 'Editar Profesional' : 'Nuevo Profesional' }}</h2>
+      <h2>{{ editMode ? 'Editar médico' : 'Nuevo médico' }}</h2>
       <button class="btn-close" (click)="cerrarModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -80,7 +80,7 @@
         </div>
         <div class="photo-upload-controls">
           <label class="btn-file-upload">
-            Seleccionar Foto
+            Seleccionar foto
             <input type="file" (change)="onFileSelected($event)" accept="image/*" style="display: none;" />
           </label>
           <span class="photo-upload-help">Formatos permitidos: JPG, PNG, WEBP. Máx 5MB.</span>
@@ -122,7 +122,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" (click)="guardar()" [disabled]="!isFormValid()">{{ editMode ? 'Guardar Cambios' : 'Crear Profesional' }}</button>
+      <button class="btn-primary" (click)="guardar()" [disabled]="!isFormValid()">{{ editMode ? 'Guardar cambios' : 'Crear médico' }}</button>
     </div>
   </div>
 </div>

@@ -75,7 +75,10 @@ export function obtenerNombreUsuario(claims: JwtClaims): string {
 }
 
 export function obtenerRolUsuario(claims: JwtClaims): string {
-  return (claims[CLAIM_ROL] as string) || (claims['Rol'] as string) || 'Administrador';
+  // Sin rol en el token no se asume ninguno. Antes se asumía 'Administrador'
+  // (el más privilegiado): no daba acceso real, porque manda el backend, pero
+  // la interfaz mostraba el menú completo.
+  return (claims[CLAIM_ROL] as string) || (claims['Rol'] as string) || '';
 }
 
 export function obtenerEmailUsuario(claims: JwtClaims): string {

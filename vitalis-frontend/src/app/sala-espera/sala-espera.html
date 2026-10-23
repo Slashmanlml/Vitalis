@@ -8,7 +8,7 @@
           <span class="live-dot"></span>
           <span class="live-text">MONITOREO EN VIVO</span>
         </div>
-        <h1 class="page-title">Sala de Espera Virtual</h1>
+        <h1 class="page-title">Sala de espera</h1>
         <p class="page-subtitle">Flujo de atención ambulatoria, tiempos de espera y llamados en tiempo real</p>
       </div>
 
@@ -26,7 +26,7 @@
         </div>
         <div class="stat-body">
           <span class="stat-value">{{ countEnEspera }}</span>
-          <span class="stat-label">En Espera Ahora</span>
+          <span class="stat-label">En espera ahora</span>
         </div>
       </div>
 
@@ -36,7 +36,7 @@
         </div>
         <div class="stat-body">
           <span class="stat-value">{{ countEnAtencion }}</span>
-          <span class="stat-label">En Consulta Médica</span>
+          <span class="stat-label">En consulta médica</span>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
         </div>
         <div class="stat-body">
           <span class="stat-value">{{ countAtendidos }}</span>
-          <span class="stat-label">Atendidos Hoy</span>
+          <span class="stat-label">Atendidos hoy</span>
         </div>
       </div>
 
@@ -56,7 +56,7 @@
         </div>
         <div class="stat-body">
           <span class="stat-value">{{ turnosHoy.length }}</span>
-          <span class="stat-label">Total del Día</span>
+          <span class="stat-label">Total del día</span>
         </div>
       </div>
     </div>
@@ -79,7 +79,7 @@
         [class.active]="filtroEstado === 'En Espera'"
         (click)="filtroEstado = 'En Espera'">
         <span class="tab-dot dot-warning"></span>
-        <span class="tab-label">En Espera</span>
+        <span class="tab-label">En espera</span>
         <span class="tab-count count-highlight">{{ countEnEspera }}</span>
       </button>
 
@@ -88,7 +88,7 @@
         [class.active]="filtroEstado === 'En Atencion'"
         (click)="filtroEstado = 'En Atencion'">
         <span class="tab-dot dot-primary"></span>
-        <span class="tab-label">En Atención</span>
+        <span class="tab-label">En atención</span>
         <span class="tab-count">{{ countEnAtencion }}</span>
       </button>
 
@@ -197,7 +197,7 @@
               (click)="cambiarEstado(turno, 'En Espera')"
               title="Anunciar recepción del paciente en sala">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Paciente en Sala
+              Paciente en sala
             </button>
 
             <button 
@@ -206,7 +206,7 @@
               (click)="cambiarEstado(turno, 'En Atencion')"
               title="Hacer pasar al consultorio e iniciar atención">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4a7 7 0 1 0 0 14H3v-8a7 7 0 0 1 7-7z"/></svg>
-              Llamar a Consulta
+              Llamar a consulta
             </button>
 
             <button 
@@ -257,7 +257,7 @@
             <path d="m17 18 1 1 2-2"/>
           </svg>
         </div>
-        <h3>Sala de Espera Despejada</h3>
+        <h3>Sala de espera despejada</h3>
         <p *ngIf="filtroEstado === 'todos' && turnosHoy.length === 0">
           No hay turnos registrados en la agenda del día de hoy. Cuando se reserven turnos o lleguen pacientes, aparecerán automáticamente en esta pantalla.
         </p>

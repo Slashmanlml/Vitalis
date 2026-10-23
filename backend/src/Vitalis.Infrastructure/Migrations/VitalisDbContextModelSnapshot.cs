@@ -500,12 +500,18 @@ namespace Vitalis.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Dni")
                         .IsUnique();
 
                     b.HasIndex("ObraSocialId");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
 
                     b.ToTable("pacientes", (string)null);
                 });
@@ -729,6 +735,46 @@ namespace Vitalis.Infrastructure.Migrations
                     b.ToTable("roles", (string)null);
                 });
 
+            modelBuilder.Entity("Vitalis.Domain.Entities.TokenVerificacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaExpiracion")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FechaUso")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Proposito")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId", "Proposito");
+
+                    b.ToTable("tokens_verificacion", (string)null);
+                });
+
             modelBuilder.Entity("Vitalis.Domain.Entities.Turno", b =>
                 {
                     b.Property<int>("Id")
@@ -786,13 +832,25 @@ namespace Vitalis.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTime?>("BloqueadoHasta")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<bool>("EmailConfirmado")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("FechaConfirmacionEmail")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("IntentosFallidos")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -806,6 +864,9 @@ namespace Vitalis.Infrastructure.Migrations
 
                     b.Property<int>("RolId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UltimoAcceso")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -935,7 +996,14 @@ namespace Vitalis.Infrastructure.Migrations
                         .HasForeignKey("ObraSocialId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Vitalis.Domain.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("ObraSocial");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("Vitalis.Domain.Entities.Pago", b =>
@@ -1009,6 +1077,17 @@ namespace Vitalis.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Especialidad");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("Vitalis.Domain.Entities.TokenVerificacion", b =>
+                {
+                    b.HasOne("Vitalis.Domain.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Usuario");
                 });

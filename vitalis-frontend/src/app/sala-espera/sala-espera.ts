@@ -1,10 +1,14 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../services/turno.service';
 import { Turno } from '../models/turno.model';
 
 @Component({
+  // Angular 22 usa OnPush por defecto. Esta pantalla guarda lo que llega del
+  // servidor en propiedades comunes (no signals), así que necesita la
+  // detección de cambios "de siempre" para que se dibuje al llegar la respuesta.
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-sala-espera',
   standalone: true,
   imports: [CommonModule, FormsModule],
@@ -52,7 +56,8 @@ export class SalaEsperaComponent implements OnInit, OnDestroy {
     this.horaActual = ahora.toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hour12: false
     });
   }
 

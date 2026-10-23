@@ -1,55 +1,59 @@
-<div class="login-wrapper">
-  <div class="login-decor">
-    <div class="glow-sphere-1"></div>
-    <div class="glow-sphere-2"></div>
-  </div>
-  
-  <div class="login-card glass-panel">
-    <div class="brand-section">
-      <div class="brand-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="heart-pulse-icon">
-          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-          <path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h4.78"/>
-        </svg>
-      </div>
-      <h1 class="brand-name">Vitalis</h1>
-      <p class="brand-subtitle">Gestión de Consultorio Médico Virtual</p>
-    </div>
+<div class="auth">
+  <app-panel-marca
+    titulo="El consultorio, en orden."
+    bajada="Turnos, historias clínicas, recetas y facturación en un mismo lugar, con cada persona viendo solo lo que le corresponde.">
+  </app-panel-marca>
 
-    <!-- Banner de error inline -->
-    <div class="error-banner" *ngIf="errorMsg">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{{ errorMsg }}</span>
-    </div>
+  <main class="auth-lado">
+    <div class="auth-form" [class.sacudir]="sacudir">
+      <header class="auth-encabezado">
+        <h1>Iniciar sesión</h1>
+        <p>Ingresá con el correo y la contraseña de tu cuenta.</p>
+      </header>
 
-    <form (ngSubmit)="login()" class="login-form">
-      <div class="form-group">
-        <label for="email" class="form-label">Correo Electrónico</label>
-        <div class="input-wrapper">
-          <input type="email" id="email" [(ngModel)]="email" name="email" class="form-input" placeholder="ejemplo@vitalis.local" required autocomplete="email" [disabled]="isLoading">
+      <div class="aviso aviso-error" id="aviso-login" *ngIf="errorMsg" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <p>{{ errorMsg }}</p>
+          <div class="aviso-acciones" *ngIf="puedeReenviar">
+            <button type="button" class="boton-texto" (click)="reenviar()" [disabled]="reenviando">
+              {{ reenviando ? 'Enviando el correo' : 'Enviarme el enlace de nuevo' }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="password" class="form-label">Contraseña</label>
-        <div class="input-wrapper">
-          <input type="password" id="password" [(ngModel)]="password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password" [disabled]="isLoading">
-        </div>
+      <div class="aviso aviso-ok" *ngIf="infoMsg" role="status">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        <p>{{ infoMsg }}</p>
       </div>
 
-      <button type="submit" class="btn-primary login-btn" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Ingresar al Sistema</span>
-        <span *ngIf="isLoading" class="spinner-text">Procesando...</span>
-        <svg *ngIf="!isLoading" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </button>
+      <form (ngSubmit)="login()" novalidate class="campos">
+        <div class="campo-grupo">
+          <label for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" class="entrada" [class.invalido]="intentoEnviar && !email.trim()" [(ngModel)]="email" autocomplete="username" placeholder="nombre@gmail.com" [disabled]="isLoading">
+        </div>
 
-    </form>
+        <div class="campo-grupo">
+          <label for="password">Contraseña</label>
+          <app-campo-password inputId="password" name="password" autocomplete="current-password"
+            [(valor)]="password" [invalido]="intentoEnviar && !!errorMsg && !infoMsg" [disabled]="isLoading">
+          </app-campo-password>
+        </div>
 
-    <div class="login-footer">
-      <p>Credenciales de Tesis: <code>admin@vitalis.local</code> / <code>Admin123!</code></p>
+        <button type="submit" class="boton-principal" [disabled]="isLoading">
+          <span class="cargando-punto" *ngIf="isLoading" aria-hidden="true"></span>
+          {{ isLoading ? 'Ingresando' : 'Ingresar' }}
+        </button>
+      </form>
+
+      <p class="enlaces">¿Sos paciente y todavía no tenés cuenta? <a routerLink="/registro">Creá tu cuenta</a></p>
+
+      <!-- Solo en desarrollo: en producción los usuarios de prueba no existen
+           (ver Semilla:DatosDemo) y no tiene sentido publicar sus contraseñas. -->
+      <p class="demo" *ngIf="mostrarCredencialesDemo">
+        Usuario de prueba para la demostración: <code>admin&#64;vitalis.local</code> con la contraseña <code>Admin123!</code>
+      </p>
     </div>
-  </div>
+  </main>
 </div>

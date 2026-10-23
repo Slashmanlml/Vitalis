@@ -44,12 +44,15 @@ public class ExceptionHandlingMiddleware
 
         var statusCode = HttpStatusCode.InternalServerError;
         string mensaje = "Ha ocurrido un error interno en el servidor.";
+        string? codigo = null;
 
         if (exception is VitalisException domainEx)
         {
             mensaje = domainEx.Message;
+            codigo = domainEx.Codigo;
             statusCode = exception switch
             {
+                DemasiadosIntentosException => HttpStatusCode.TooManyRequests,
                 NotFoundException => HttpStatusCode.NotFound,
                 ForbiddenException => HttpStatusCode.Forbidden,
                 ConflictException => HttpStatusCode.Conflict,
@@ -63,6 +66,7 @@ public class ExceptionHandlingMiddleware
         var response = new
         {
             mensaje = mensaje,
+            codigo = codigo,
             detalle = _env.IsDevelopment() ? exception.ToString() : null
         };
 

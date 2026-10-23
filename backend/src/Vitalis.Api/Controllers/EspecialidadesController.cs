@@ -8,7 +8,9 @@ namespace Vitalis.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+// Solo personal del consultorio: con el registro público, un [Authorize] a
+// secas también dejaría entrar a las cuentas de pacientes.
+[Authorize(Roles = Roles.PersonalClinica)]
 public class EspecialidadesController : ControllerBase
 {
     private readonly IEspecialidadService _especialidadService;

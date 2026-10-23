@@ -1,13 +1,13 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1>Historia Clínica Electrónica</h1>
+      <h1>Historia clínica</h1>
       <p>Registro cronológico de la atención médica del paciente</p>
     </div>
   </div>
 
   <div class="patient-selector">
-    <label>Seleccionar Paciente:</label>
+    <label>Seleccionar paciente:</label>
     <select [(ngModel)]="selectedPacienteId" (change)="seleccionarPaciente(selectedPacienteId)">
       <option [ngValue]="0">-- Seleccione un paciente --</option>
       <option *ngFor="let p of pacientes" [ngValue]="p.id">{{ p.nombre }} {{ p.apellido }} ({{ p.dni }})</option>
@@ -18,17 +18,17 @@
     <div class="print-actions no-print" *ngIf="consultas.length > 0 || antecedentes.length > 0 || alergias.length > 0">
       <button class="btn-outline" (click)="imprimirHistoria()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        Imprimir Historia
+        Imprimir historia
       </button>
     </div>
     <div id="hc-print-content">
     <div class="hc-grid">
       <section class="hc-card hc-main">
         <div class="section-header">
-          <h2>Consultas Médicas</h2>
+          <h2>Consultas médicas</h2>
           <button class="btn-primary btn-sm" (click)="abrirNuevaConsulta()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nueva Consulta
+            Nueva consulta
           </button>
         </div>
 
@@ -58,11 +58,11 @@
                   <p>{{ c.indicaciones }}</p>
                 </div>
                 <div class="tl-field" *ngIf="c.estudioAdjuntoUrl">
-                  <label>Estudio Clínico Adjunto</label>
+                  <label>Estudio clínico adjunto</label>
                   <div class="clinical-attachment-view">
                     <a [href]="serverUrl + c.estudioAdjuntoUrl" target="_blank" class="attachment-link">
                       <img [src]="serverUrl + c.estudioAdjuntoUrl" class="attachment-thumbnail" />
-                      <span class="attachment-link-label">Ver Estudio Ampliado</span>
+                      <span class="attachment-link-label">Ver estudio ampliado</span>
                     </a>
                   </div>
                 </div>
@@ -115,7 +115,7 @@
 <div class="modal-overlay" *ngIf="showConsultaModal" (click)="cerrarModal()">
   <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Nueva Consulta Médica</h2>
+      <h2>Nueva consulta médica</h2>
       <button class="btn-close" (click)="cerrarModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -136,7 +136,7 @@
         </div>
       </div>
       <div class="form-group">
-        <label>Motivo de Consulta *</label>
+        <label>Motivo de consulta *</label>
         <input type="text" [(ngModel)]="consultaForm.motivoConsulta" required />
       </div>
       <div class="form-group">
@@ -156,23 +156,23 @@
         <textarea [(ngModel)]="consultaForm.observaciones" rows="2"></textarea>
       </div>
       <div class="form-group attachment-upload-group">
-        <label>Adjuntar Estudio Clínico (Radiografía, análisis, etc.)</label>
+        <label>Adjuntar estudio clínico (radiografía, análisis, etc.)</label>
         <div class="attachment-upload-box">
           <input type="file" (change)="onFileSelected($event)" accept="image/*" id="attachment-file-input" style="display: none;" />
           <label for="attachment-file-input" class="btn-attachment-upload">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            Seleccionar Archivo de Estudio
+            Seleccionar archivo de estudio
           </label>
           <span class="attachment-name" *ngIf="consultaForm.estudioAdjuntoUrl">
             ✓ Archivo cargado correctamente: 
-            <a [href]="serverUrl + consultaForm.estudioAdjuntoUrl" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Ver Archivo</a>
+            <a [href]="serverUrl + consultaForm.estudioAdjuntoUrl" target="_blank" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">Ver archivo</a>
           </span>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-primary" (click)="guardarConsulta()">Registrar Consulta</button>
+      <button class="btn-primary" (click)="guardarConsulta()">Registrar consulta</button>
     </div>
   </div>
 </div>
@@ -181,7 +181,7 @@
 <div class="modal-overlay" *ngIf="showAntecedenteModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Nuevo Antecedente</h2>
+      <h2>Nuevo antecedente</h2>
       <button class="btn-close" (click)="cerrarModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -211,7 +211,7 @@
 <div class="modal-overlay" *ngIf="showAlergiaModal" (click)="cerrarModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Nueva Alergia</h2>
+      <h2>Nueva alergia</h2>
       <button class="btn-close" (click)="cerrarModal()">&times;</button>
     </div>
     <div class="modal-body">
