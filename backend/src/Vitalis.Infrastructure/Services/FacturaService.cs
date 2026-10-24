@@ -166,6 +166,14 @@ public class FacturaService : IFacturaService
         // cuanto se llama Add(), así que sumar después duplicaría el importe.
         var totalPagadoPrevio = factura.Pagos.Sum(p => p.Importe);
 
+        // Un pago no puede superar lo que falta cobrar: si no, la factura queda
+        // "Pagada" con plata de más registrada que no corresponde a ninguna deuda.
+        var saldo = factura.Total - totalPagadoPrevio;
+        if (dto.Importe > saldo)
+        {
+            throw new ValidationException($"El pago supera el saldo pendiente de la factura ({saldo:N2}).");
+        }
+
         var pago = new Pago
         {
             FacturaId = dto.FacturaId,

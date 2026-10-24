@@ -188,6 +188,42 @@ public static class PlantillasEmail
                 return (asunto, cuerpo);
             }
 
+            case EventoNotificacion.RecuperarPassword:
+            {
+                string url = ObtenerDato(datos, "UrlRecuperacion", "");
+                string minutos = ObtenerDato(datos, "MinutosValidez", "60");
+                string urlHtml = WebUtility.HtmlEncode(url);
+                string asunto = "Elegí una contraseña nueva - Vitalis";
+                string cuerpo = FormatearContenedor(
+                    "Cambiar tu contraseña",
+                    "#0b6b66",
+                    $@"<p>Hola <strong>{WebUtility.HtmlEncode(pacNombre)}</strong>,</p>
+                    <p>Recibimos un pedido para cambiar la contraseña de tu cuenta de Vitalis.</p>
+                    <p style='text-align:center; margin: 24px 0;'>
+                        <a href='{urlHtml}' style='background:#0b6b66; color:#ffffff; padding:12px 22px; border-radius:6px; text-decoration:none; font-weight:700; display:inline-block;'>Elegir una contraseña nueva</a>
+                    </p>
+                    <p style='font-size: 13px; color: #475569;'>Si el botón no funciona, copiá y pegá este enlace en el navegador:<br/><span style='word-break:break-all;'>{urlHtml}</span></p>
+                    <hr style='border:0; border-top:1px solid #e2e8f0; margin: 15px 0;'/>
+                    <p style='font-size: 13px; color: #475569;'>El enlace vence en {WebUtility.HtmlEncode(minutos)} minutos y sirve una sola vez.</p>
+                    <p style='font-size: 13px; color: #475569;'><strong>¿No lo pediste vos?</strong> Ignorá este mensaje: tu contraseña actual sigue funcionando.</p>"
+                );
+                return (asunto, cuerpo);
+            }
+
+            case EventoNotificacion.PasswordCambiada:
+            {
+                string asunto = "Tu contraseña fue cambiada - Vitalis";
+                string cuerpo = FormatearContenedor(
+                    "Tu contraseña fue cambiada",
+                    "#0b6b66",
+                    $@"<p>Hola <strong>{WebUtility.HtmlEncode(pacNombre)}</strong>,</p>
+                    <p>Te avisamos que la contraseña de tu cuenta de Vitalis se cambió recién.</p>
+                    <hr style='border:0; border-top:1px solid #e2e8f0; margin: 15px 0;'/>
+                    <p style='font-size: 13px; color: #475569;'><strong>¿No fuiste vos?</strong> Comunicate con el consultorio cuanto antes para bloquear el acceso.</p>"
+                );
+                return (asunto, cuerpo);
+            }
+
             default:
             {
                 string asunto = ObtenerDato(datos, "Asunto", "Notificación Informativa - Vitalis");

@@ -272,10 +272,40 @@ export class TurnosComponent implements OnInit {
     }
   }
 
+  /** Atendido y Cancelado son finales: el backend ya no deja editarlos. */
+  cerrado(t: Turno): boolean {
+    return t.estado === 'Atendido' || t.estado === 'Cancelado';
+  }
+
+  /** Se cancela antes de que empiece la consulta (mismas reglas que EstadosTurno en el backend). */
+  puedeCancelar(t: Turno): boolean {
+    return ['Solicitado', 'Confirmado', 'En Espera'].includes(t.estado);
+  }
+
+  etiquetaEstado(t: Turno): string {
+    if (t.estado === 'Solicitado') return t.confirmado ? 'Confirmado' : 'Pendiente';
+    if (t.estado === 'En Atencion') return 'En atención';
+    if (t.estado === 'En Espera') return 'En espera';
+    return t.estado;
+  }
+
+  claseEstado(t: Turno): string {
+    switch (t.estado) {
+      case 'Cancelado': return 'status-danger';
+      case 'Atendido': return 'status-neutral';
+      case 'En Espera': case 'En Atencion': return 'status-info';
+      case 'Confirmado': return 'status-success';
+      default: return t.confirmado ? 'status-success' : 'status-warning';
+    }
+  }
+
   confirmarTurno(t: Turno) {
     const dto: EditarTurno = {
       pacienteId: t.pacienteId, profesionalId: t.profesionalId,
-      obraSocialId: t.obraSocialId, fechaHora: t.fechaHora, confirmado: true
+      obraSocialId: t.obraSocialId, fechaHora: t.fechaHora, confirmado: true,
+      // Antes solo se marcaba "confirmado" y el estado quedaba en Solicitado,
+      // así que la sala de espera lo seguía mostrando como sin confirmar.
+      estado: t.estado === 'Solicitado' ? 'Confirmado' : undefined
     };
     this.turnoService.editar(t.id, dto).subscribe({
       next: () => {

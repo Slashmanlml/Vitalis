@@ -697,6 +697,7 @@ table {
 .badge-warning, .status-warning, .status-pending { background: var(--warning-bg); color: var(--color-warning); }
 .badge-danger, .status-danger { background: var(--danger-bg); color: var(--color-danger); }
 .badge-info, .status-info { background: var(--info-bg); color: var(--color-info); }
+.badge-neutral, .status-neutral { background: var(--bg-secondary); color: var(--text-secondary); }
 
 .read-only-notice {
   display: flex;

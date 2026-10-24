@@ -1,0 +1,24 @@
+# Dependabot revisa una vez por semana si hay versiones nuevas (sobre todo
+# arreglos de seguridad) y abre un pull request por cada una. La CI corre
+# sobre ese pull request, así que se ve enseguida si la actualización rompe algo.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /vitalis-frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      angular:
+        patterns: ["@angular/*", "@angular-devkit/*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

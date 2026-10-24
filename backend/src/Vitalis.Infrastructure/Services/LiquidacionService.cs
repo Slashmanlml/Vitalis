@@ -1,3 +1,4 @@
+using Vitalis.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Liquidaciones;
 using Vitalis.Application.Interfaces;
@@ -53,7 +54,12 @@ public class LiquidacionService : ILiquidacionService
     public async Task<LiquidacionDto> CrearAsync(CrearLiquidacionDto dto)
     {
         var profesional = await _context.Profesionales.FindAsync(dto.ProfesionalId)
-            ?? throw new Exception("Profesional no encontrado");
+            ?? throw new NotFoundException("Profesional no encontrado");
+
+        if (dto.PeriodoDesde.Date > dto.PeriodoHasta.Date)
+        {
+            throw new ValidationException("La fecha de inicio del período debe ser anterior o igual a la de fin.");
+        }
 
         // Se normaliza a Utc antes de usarla en la consulta: Npgsql rechaza
         // DateTimeKind.Unspecified como parámetro de consulta.
@@ -67,6 +73,23 @@ public class LiquidacionService : ILiquidacionService
                         t.FechaHora <= fechaHastaFinDia &&
                         (t.Estado == "Atendido" || t.Estado == "En Consulta" || t.ConsultaMedica != null))
             .ToListAsync();
+
+        if (turnos.Count == 0)
+        {
+            throw new ValidationException("No hay turnos atendidos de este profesional en ese período: no hay nada para liquidar.");
+        }
+
+        // Liquidar dos veces el mismo período le pagaría dos veces los mismos
+        // turnos al profesional. Se rechaza cualquier superposición.
+        var desdeUtc = DateTime.SpecifyKind(dto.PeriodoDesde.Date, DateTimeKind.Utc);
+        var haySuperposicion = await _context.Liquidaciones.AnyAsync(l =>
+            l.ProfesionalId == dto.ProfesionalId &&
+            l.PeriodoDesde <= fechaHastaFinDia &&
+            l.PeriodoHasta >= desdeUtc);
+        if (haySuperposicion)
+        {
+            throw new ConflictException("Ya hay una liquidación de este profesional que cubre parte de ese período.");
+        }
 
         decimal total = 0;
         foreach (var t in turnos)
@@ -112,13 +135,18 @@ public class LiquidacionService : ILiquidacionService
         _context.Liquidaciones.Add(liquidacion);
         await _context.SaveChangesAsync();
 
-        return await ObtenerPorIdAsync(liquidacion.Id) ?? throw new Exception("Error al crear liquidacion");
+        return await ObtenerPorIdAsync(liquidacion.Id) ?? throw new InvalidOperationException("No se pudo recuperar la liquidación recién creada.");
     }
 
     public async Task<LiquidacionDto?> LiquidarAsync(int id)
     {
-        var liquidacion = await _context.Liquidaciones.FindAsync(id)
-            ?? throw new Exception("Liquidacion no encontrada");
+        var liquidacion = await _context.Liquidaciones.FindAsync(id);
+        if (liquidacion == null) return null;
+
+        if (liquidacion.Estado == "Liquidada")
+        {
+            throw new ConflictException("Esta liquidación ya fue marcada como liquidada.");
+        }
 
         liquidacion.Estado = "Liquidada";
         await _context.SaveChangesAsync();

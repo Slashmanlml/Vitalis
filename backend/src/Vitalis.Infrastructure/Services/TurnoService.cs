@@ -1,3 +1,4 @@
+using Vitalis.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
 using Vitalis.Application.DTOs.Turnos;
 using Vitalis.Application.Interfaces;
@@ -212,6 +213,8 @@ public class TurnoService : ITurnoService
 
         var fechaHoraUtc = DateTime.SpecifyKind(dto.FechaHora, DateTimeKind.Utc);
 
+        ValidarCambioDeEstado(turno, dto, fechaHoraUtc);
+
         // Validar lógica si cambió fecha, médico o paciente
         if (turno.FechaHora != fechaHoraUtc || turno.ProfesionalId != dto.ProfesionalId || turno.PacienteId != dto.PacienteId)
         {
@@ -318,5 +321,38 @@ public class TurnoService : ITurnoService
         _context.Turnos.Remove(turno);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>
+    /// Un turno atendido o cancelado no se edita, y el estado solo avanza por
+    /// los pasos que define <see cref="EstadosTurno"/>.
+    /// </summary>
+    private static void ValidarCambioDeEstado(Turno turno, EditarTurnoDto dto, DateTime fechaHoraUtc)
+    {
+        var nuevoEstado = string.IsNullOrWhiteSpace(dto.Estado) ? turno.Estado : dto.Estado.Trim();
+
+        if (!EstadosTurno.EsValido(nuevoEstado))
+        {
+            throw new ValidationException($"\"{nuevoEstado}\" no es un estado de turno válido.");
+        }
+
+        if (EstadosTurno.EsFinal(turno.Estado))
+        {
+            var cambiaAlgo = nuevoEstado != turno.Estado
+                || turno.FechaHora != fechaHoraUtc
+                || turno.ProfesionalId != dto.ProfesionalId
+                || turno.PacienteId != dto.PacienteId;
+            if (cambiaAlgo)
+            {
+                throw new ConflictException(turno.Estado == EstadosTurno.Atendido
+                    ? "Este turno ya fue atendido: forma parte de la historia clínica y no se puede modificar."
+                    : "Este turno está cancelado y no se puede modificar. Si hace falta, dale un turno nuevo.");
+            }
+        }
+
+        if (!EstadosTurno.PuedePasar(turno.Estado, nuevoEstado))
+        {
+            throw new ValidationException($"Un turno en estado \"{turno.Estado}\" no puede pasar a \"{nuevoEstado}\".");
+        }
     }
 }

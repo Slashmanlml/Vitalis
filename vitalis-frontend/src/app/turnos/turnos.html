@@ -66,21 +66,19 @@
             </div>
           </td>
           <td>
-            <span class="status-badge" [ngClass]="t.estado === 'Cancelado' ? 'status-danger' : (t.confirmado ? 'status-success' : 'status-warning')">
-              {{ t.estado === 'Cancelado' ? 'Cancelado' : (t.confirmado ? 'Confirmado' : 'Pendiente') }}
-            </span>
+            <span class="status-badge" [ngClass]="claseEstado(t)">{{ etiquetaEstado(t) }}</span>
           </td>
           <td class="actions-cell">
-            <button class="btn-icon" title="Editar" (click)="abrirEditar(t)" *ngIf="t.estado !== 'Cancelado'">
+            <button class="btn-icon" title="Editar" (click)="abrirEditar(t)" *ngIf="!cerrado(t)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn-icon btn-icon-success" title="Confirmar" (click)="confirmarTurno(t)" *ngIf="!t.confirmado && t.estado !== 'Cancelado'">
+            <button class="btn-icon btn-icon-success" title="Confirmar" (click)="confirmarTurno(t)" *ngIf="!t.confirmado && t.estado === 'Solicitado'">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
-            <button class="btn-icon btn-icon-danger" title="Cancelar" (click)="cancelarTurno(t)" *ngIf="t.estado !== 'Cancelado'">
+            <button class="btn-icon btn-icon-danger" title="Cancelar" (click)="cancelarTurno(t)" *ngIf="puedeCancelar(t)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-            <span class="cell-muted" *ngIf="t.estado === 'Cancelado'">—</span>
+            <span class="cell-muted" *ngIf="cerrado(t)" title="Un turno atendido o cancelado ya no se modifica">—</span>
           </td>
         </tr>
         <tr *ngIf="filteredTurnos.length === 0">

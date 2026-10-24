@@ -787,6 +787,114 @@ public static class DbSeeder
             await context.SaveChangesAsync(cancellationToken);
             logger.LogInformation("Liquidaciones iniciales creadas.");
         }
+
+        await SembrarJornadaDeHoyAsync(context, logger, configuracion, cancellationToken);
+    }
+
+    /// <summary>
+    /// Turnos para el DÍA EN QUE SE CORRE la demo.
+    ///
+    /// Por qué existe: la siembra original crea los turnos una sola vez, con
+    /// fechas relativas al día en que se creó la base. Semanas después, el panel
+    /// principal y la sala de espera aparecían vacíos ("Hoy no hay turnos"), que
+    /// es justo lo primero que se ve al mostrar el sistema.
+    ///
+    /// Solo corre en modo demostración y solo si hoy (en hora de la clínica)
+    /// todavía no hay ningún turno: no pisa nada que alguien haya cargado. Los
+    /// estados se reparten según la hora actual, como en una jornada real: lo que
+    /// ya pasó quedó atendido, hay alguien en consulta, gente en la sala de espera
+    /// y turnos por delante.
+    /// </summary>
+    private static async Task SembrarJornadaDeHoyAsync(
+        VitalisDbContext context, ILogger logger, IConfiguration? configuracion, CancellationToken ct)
+    {
+        var zona = ObtenerZonaClinica(configuracion?["Clinica:ZonaHoraria"]);
+        var ahoraLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zona);
+        var inicioDiaUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(ahoraLocal.Date, DateTimeKind.Unspecified), zona);
+        var finDiaUtc = inicioDiaUtc.AddDays(1);
+
+        // El consultorio no atiende sábados ni domingos (TurnoService lo
+        // rechaza): armar una jornada ese día mostraría turnos imposibles.
+        if (ahoraLocal.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+        {
+            logger.LogInformation("Hoy es fin de semana: no se arma la jornada de demostración.");
+            return;
+        }
+
+        var yaHay =await context.Turnos.AnyAsync(t => t.FechaHora >= inicioDiaUtc && t.FechaHora < finDiaUtc, ct);
+        if (yaHay) return;
+
+        var pacientes = await context.Pacientes.Where(p => p.Activo).OrderBy(p => p.Id).ToListAsync(ct);
+        var profesionales = await context.Profesionales.Where(p => p.Activo).OrderBy(p => p.Id).ToListAsync(ct);
+        var obras = await context.ObrasSociales.OrderBy(o => o.Id).ToListAsync(ct);
+        if (pacientes.Count == 0 || profesionales.Count == 0 || obras.Count == 0) return;
+
+        // Franjas de la jornada (hora local de la clínica): mañana y tarde.
+        var franjas = new (int Hora, int Minuto)[]
+        {
+            (8, 30), (9, 15), (10, 0), (10, 45), (11, 30), (12, 15),
+            (14, 0), (14, 45), (15, 30), (16, 15), (17, 0), (17, 45), (18, 30)
+        };
+
+        var turnos = new List<Turno>();
+        var enAtencionAsignado = false;
+        var enEspera = 0;
+
+        for (int i = 0; i < franjas.Length; i++)
+        {
+            var (h, m) = franjas[i];
+            var local = new DateTime(ahoraLocal.Year, ahoraLocal.Month, ahoraLocal.Day, h, m, 0, DateTimeKind.Unspecified);
+            var utc = TimeZoneInfo.ConvertTimeToUtc(local, zona);
+            var minutosHastaElTurno = (local - ahoraLocal).TotalMinutes;
+
+            string estado;
+            if (minutosHastaElTurno < -45)
+            {
+                estado = i % 6 == 5 ? "Cancelado" : "Atendido";
+            }
+            else if (minutosHastaElTurno < 0 && !enAtencionAsignado)
+            {
+                estado = "En Atencion";
+                enAtencionAsignado = true;
+            }
+            else if (minutosHastaElTurno < 90 && enEspera < 2)
+            {
+                estado = "En Espera";
+                enEspera++;
+            }
+            else
+            {
+                estado = i % 4 == 3 ? "Solicitado" : "Confirmado";
+            }
+
+            var paciente = pacientes[(i * 3) % pacientes.Count];
+            turnos.Add(new Turno
+            {
+                FechaHora = DateTime.SpecifyKind(utc, DateTimeKind.Utc),
+                PacienteId = paciente.Id,
+                // Cada franja con un profesional distinto: nadie con dos turnos a la vez.
+                ProfesionalId = profesionales[i % profesionales.Count].Id,
+                ObraSocialId = paciente.ObraSocialId ?? obras[0].Id,
+                Estado = estado,
+                Confirmado = estado != "Solicitado" && estado != "Cancelado"
+            });
+        }
+
+        context.Turnos.AddRange(turnos);
+        await context.SaveChangesAsync(ct);
+        logger.LogInformation("Jornada de demostración creada para hoy: {Cantidad} turnos.", turnos.Count);
+    }
+
+    private static TimeZoneInfo ObtenerZonaClinica(string? id)
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrWhiteSpace(id) ? "America/Argentina/Buenos_Aires" : id);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.Utc;
+        }
     }
 
     /// <summary>

@@ -17,6 +17,12 @@ public class SeguridadOptions
     /// <summary>Vigencia del enlace de confirmación de correo.</summary>
     public int HorasValidezConfirmacion { get; set; } = 24;
 
+    /// <summary>
+    /// Vigencia del enlace de "olvidé mi contraseña". Más corta que la de
+    /// confirmación: quien tiene ese enlace puede tomar la cuenta.
+    /// </summary>
+    public int MinutosValidezRecuperacion { get; set; } = 60;
+
     /// <summary>Tiempo mínimo entre dos reenvíos del correo de confirmación.</summary>
     public int SegundosEntreReenvios { get; set; } = 60;
 

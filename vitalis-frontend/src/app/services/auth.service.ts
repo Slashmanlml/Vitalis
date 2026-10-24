@@ -67,6 +67,16 @@ export class AuthService {
     return this.http.post<Mensaje>(`${this.apiUrl}/reenviar-confirmacion`, { email }, this.publico());
   }
 
+  /** Pide el enlace para elegir una contraseña nueva. La respuesta es la misma exista o no la cuenta. */
+  olvidePassword(email: string): Observable<Mensaje> {
+    return this.http.post<Mensaje>(`${this.apiUrl}/olvide-password`, { email }, this.publico());
+  }
+
+  restablecerPassword(token: string, passwordNuevo: string, confirmarPassword: string): Observable<Mensaje> {
+    return this.http.post<Mensaje>(`${this.apiUrl}/restablecer-password`,
+      { token, passwordNuevo, confirmarPassword }, this.publico());
+  }
+
   obtenerPerfil(): Observable<UsuarioPerfil> {
     return this.http.get<UsuarioPerfil>(`${this.apiUrl}/me`);
   }

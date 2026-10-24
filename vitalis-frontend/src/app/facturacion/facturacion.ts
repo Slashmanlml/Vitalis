@@ -32,6 +32,16 @@ export class FacturacionComponent implements OnInit {
 
   facturaForm: any = { pacienteId: 0, observaciones: '', detalles: [] };
   pagoForm: RegistrarPago = { facturaId: 0, medioPago: 'Efectivo', importe: 0, observaciones: '' };
+  /** Lo que falta cobrar de la factura abierta en el modal de pago. */
+  saldoPendiente = 0;
+
+  /** Mismo control que hace el backend: el pago tiene que ser mayor a cero y no superar el saldo. */
+  get errorImportePago(): string {
+    const importe = Number(this.pagoForm.importe);
+    if (!importe || importe <= 0) return 'El importe tiene que ser mayor a cero.';
+    if (importe > this.saldoPendiente) return `No puede superar el saldo pendiente ($ ${this.saldoPendiente.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}).`;
+    return '';
+  }
   nuevoDetalle: any = { prestacionId: 0, cantidad: 1, precioUnitario: 0 };
 
   constructor(
@@ -108,11 +118,13 @@ export class FacturacionComponent implements OnInit {
 
   abrirPago(f: Factura) {
     this.selectedFactura = f;
-    this.pagoForm = { facturaId: f.id, medioPago: 'Efectivo', importe: f.total - f.pagos.reduce((s, p) => s + p.importe, 0), observaciones: '' };
+    this.saldoPendiente = Math.round((f.total - f.pagos.reduce((s, p) => s + p.importe, 0)) * 100) / 100;
+    this.pagoForm = { facturaId: f.id, medioPago: 'Efectivo', importe: this.saldoPendiente, observaciones: '' };
     this.showPagoModal = true;
   }
 
   guardarPago() {
+    if (this.errorImportePago) return;
     this.facturaService.registrarPago(this.pagoForm).subscribe(() => {
       this.cargarFacturas();
       this.showPagoModal = false;

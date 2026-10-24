@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { forkJoin, filter } from 'rxjs';
 import { TurnoService } from '../services/turno.service';
+import { FacturaService } from '../services/factura.service';
 import { ProfesionalService } from '../services/profesional.service';
 import { SearchService, SearchResults, SearchItem } from '../services/search.service';
 import { ToastService } from '../services/toast.service';
@@ -51,6 +52,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private router: Router,
     private turnoService: TurnoService,
+    private facturaService: FacturaService,
     private profesionalService: ProfesionalService,
     private searchService: SearchService,
     public toastService: ToastService
@@ -105,7 +107,64 @@ export class DashboardComponent implements OnInit {
     this.router.events
       .pipe(filter(evento => evento instanceof NavigationEnd))
       .subscribe(() => this.actualizarRutaRaiz());
-    this.cargarEstadisticas();
+    if (this.veAgenda) {
+      this.cargarEstadisticas();
+    } else {
+      this.cargarResumenCobros();
+    }
+  }
+
+  /**
+   * Facturación no tiene acceso a la agenda (el backend responde 403). Antes el
+   * inicio pedía los turnos igual: error en la consola y un panel vacío con un
+   * enlace a una pantalla que no puede abrir. Ahora ve un resumen de cobros.
+   */
+  get veAgenda(): boolean {
+    return ['Administrador', 'Recepcionista', 'Medico'].includes(this.rolUsuario);
+  }
+
+  /** Frase de la bajada cuando el inicio muestra cobros en vez de turnos. */
+  bajadaCobros = '';
+
+  cargarResumenCobros() {
+    this.cargando = true;
+    this.hoyTexto = this.formatearFechaLarga(new Date());
+    this.facturaService.obtenerTodas().subscribe({
+      next: (facturas) => {
+        const pagado = (f: { pagos: { importe: number }[] }) => f.pagos.reduce((s, p) => s + p.importe, 0);
+        const conSaldo = facturas.filter(f => f.estado !== 'Pagada');
+        const porCobrar = conSaldo.reduce((s, f) => s + (f.total - pagado(f)), 0);
+        const ahora = new Date();
+        const delMes = (fecha: string | Date) => {
+          const d = new Date(fecha);
+          return d.getFullYear() === ahora.getFullYear() && d.getMonth() === ahora.getMonth();
+        };
+        const cobradoMes = facturas
+          .flatMap(f => f.pagos)
+          .filter(p => delMes(p.fecha))
+          .reduce((s, p) => s + p.importe, 0);
+        const emitidasMes = facturas.filter(f => delMes(f.fecha)).length;
+        const sinPagos = conSaldo.filter(f => pagado(f) === 0).length;
+
+        this.indicadores = [
+          { etiqueta: 'Facturas por cobrar', valor: conSaldo.length, tono: 'warning',
+            detalle: sinPagos ? `${sinPagos} sin ningún pago` : '' },
+          { etiqueta: 'Saldo por cobrar', valor: porCobrar, texto: this.moneda(porCobrar), tono: 'danger' },
+          { etiqueta: 'Cobrado este mes', valor: cobradoMes, texto: this.moneda(cobradoMes), tono: 'success' },
+          { etiqueta: 'Facturas del mes', valor: emitidasMes, tono: 'neutro' }
+        ];
+        this.bajadaCobros = conSaldo.length === 0
+          ? 'No hay facturas con saldo pendiente.'
+          : `${conSaldo.length} factura${conSaldo.length === 1 ? '' : 's'} con saldo: ${this.moneda(porCobrar)} por cobrar.`;
+        this.cargando = false;
+      },
+      // El ErrorInterceptor global ya notifica.
+      error: () => { this.cargando = false; }
+    });
+  }
+
+  private moneda(valor: number): string {
+    return valor.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
   }
 
 
@@ -144,6 +203,7 @@ export class DashboardComponent implements OnInit {
   /** Una sola frase con lo importante del día, en vez de un "bienvenido". */
   get bajada(): string {
     if (this.cargando) return 'Cargando la actividad del día.';
+    if (!this.veAgenda) return this.bajadaCobros;
     if (this.turnosHoyTotal === 0) return 'Hoy no hay turnos agendados.';
     const turnos = `${this.turnosHoyTotal} turno${this.turnosHoyTotal === 1 ? '' : 's'} hoy`;
     if (this.pendientesHoy === 0) return `${turnos}, todos confirmados.`;
@@ -274,6 +334,8 @@ export class DashboardComponent implements OnInit {
 export interface Indicador {
   etiqueta: string;
   valor: number;
+  /** Valor ya formateado (por ejemplo, un importe); si falta se muestra `valor`. */
+  texto?: string;
   detalle?: string;
   tono: 'neutro' | 'primary' | 'warning' | 'success' | 'danger';
 }

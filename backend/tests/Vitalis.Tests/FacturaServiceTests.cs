@@ -204,4 +204,20 @@ public class FacturaServiceTests
 
         result.Estado.Should().Be("Pago Parcial");
     }
+
+    [Fact]
+    public async Task RegistrarPagoAsync_MayorAlSaldo_Rechaza()
+    {
+        var factura = await FacturaDe(3000m);
+        await _service.RegistrarPagoAsync(new RegistrarPagoDto { FacturaId = factura.Id, MedioPago = "Efectivo", Importe = 1000m });
+
+        // Quedan 2000: un pago de 2500 dejaría 500 cobrados de más.
+        var act = async () => await _service.RegistrarPagoAsync(new RegistrarPagoDto
+        {
+            FacturaId = factura.Id, MedioPago = "Efectivo", Importe = 2500m
+        });
+
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*saldo pendiente*");
+        (await _context.Pagos.CountAsync()).Should().Be(1);
+    }
 }

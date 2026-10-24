@@ -17,6 +17,8 @@ public static class EventoNotificacion
     public const string NuevaPrescripcion = "NuevaPrescripcion";
     public const string BienvenidaPaciente = "BienvenidaPaciente";
     public const string ConfirmacionEmail = "ConfirmacionEmail";
+    public const string RecuperarPassword = "RecuperarPassword";
+    public const string PasswordCambiada = "PasswordCambiada";
     public const string Personalizado = "Personalizado";
 }
 
@@ -30,4 +32,5 @@ public static class EstadoNotificacion
 public static class PropositoToken
 {
     public const string ConfirmacionEmail = "ConfirmacionEmail";
+    public const string RecuperarPassword = "RecuperarPassword";
 }

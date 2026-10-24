@@ -35,7 +35,10 @@
         </div>
 
         <div class="campo-grupo">
-          <label for="password">Contraseña</label>
+          <label for="password">
+            Contraseña
+            <a routerLink="/olvide-password" [state]="{ email: email.trim() }" class="olvide">¿Te la olvidaste?</a>
+          </label>
           <app-campo-password inputId="password" name="password" autocomplete="current-password"
             [(valor)]="password" [invalido]="intentoEnviar && !!errorMsg && !infoMsg" [disabled]="isLoading">
           </app-campo-password>

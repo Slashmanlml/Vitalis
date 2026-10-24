@@ -40,7 +40,7 @@ public class RegistroYPortalIntegrationTests : IClassFixture<TestFactory>
     /// fabrica igual que lo haría el servicio y se guarda su hash: es lo mismo
     /// que hace la persona al abrir el enlace.
     /// </summary>
-    private async Task<string> PlantarTokenAsync(string email)
+    private async Task<string> PlantarTokenAsync(string email, string proposito = PropositoToken.ConfirmacionEmail)
     {
         using var scope = _factory.Services.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<VitalisDbContext>();
@@ -48,7 +48,7 @@ public class RegistroYPortalIntegrationTests : IClassFixture<TestFactory>
         var token = TokenSeguro.Generar();
         ctx.TokensVerificacion.Add(new Vitalis.Domain.Entities.TokenVerificacion
         {
-            UsuarioId = usuario.Id, TokenHash = TokenSeguro.Hash(token), Proposito = PropositoToken.ConfirmacionEmail,
+            UsuarioId = usuario.Id, TokenHash = TokenSeguro.Hash(token), Proposito = proposito,
             FechaCreacion = DateTime.UtcNow, FechaExpiracion = DateTime.UtcNow.AddHours(1)
         });
         await ctx.SaveChangesAsync();
@@ -119,5 +119,37 @@ public class RegistroYPortalIntegrationTests : IClassFixture<TestFactory>
         r.Headers.GetValues("X-Content-Type-Options").Should().Contain("nosniff");
         r.Headers.GetValues("X-Frame-Options").Should().Contain("DENY");
         r.Headers.Contains("Content-Security-Policy").Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Recuperar_la_contraseña_por_http()
+    {
+        var client = _factory.CreateClient();
+        const string email = "rita.recupera@example.com";
+        (await client.PostAsJsonAsync("/api/auth/registro", Dto(email, "36123457"))).StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var confirmacion = await PlantarTokenAsync(email);
+        (await client.PostAsJsonAsync("/api/auth/confirmar-email", new ConfirmarEmailDto { Token = confirmacion })).EnsureSuccessStatusCode();
+
+        // Pedir el enlace responde igual exista o no la cuenta.
+        var existe = await client.PostAsJsonAsync("/api/auth/olvide-password", new SolicitarRecuperacionDto { Email = email });
+        var noExiste = await client.PostAsJsonAsync("/api/auth/olvide-password", new SolicitarRecuperacionDto { Email = "nadie.nunca@example.com" });
+        existe.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        noExiste.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await existe.Content.ReadAsStringAsync()).Should().Be(await noExiste.Content.ReadAsStringAsync());
+
+        var token = await PlantarTokenAsync(email, PropositoToken.RecuperarPassword);
+
+        var debil = await client.PostAsJsonAsync("/api/auth/restablecer-password",
+            new RestablecerPasswordDto { Token = token, PasswordNuevo = "corta", ConfirmarPassword = "corta" });
+        debil.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var ok = await client.PostAsJsonAsync("/api/auth/restablecer-password",
+            new RestablecerPasswordDto { Token = token, PasswordNuevo = "Rita2026!x", ConfirmarPassword = "Rita2026!x" });
+        ok.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await client.PostAsJsonAsync("/api/auth/login", new LoginRequestDto { Email = email, Password = "Rita2026!x" }))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsJsonAsync("/api/auth/login", new LoginRequestDto { Email = email, Password = "Mario12345" }))
+            .StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

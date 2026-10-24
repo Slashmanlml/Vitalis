@@ -213,6 +213,20 @@ using (var scope = app.Services.CreateScope())
     // Administrador. Por defecto: sí en Development, no en otro entorno.
     var datosDemo = app.Configuration.GetValue("Semilla:DatosDemo", app.Environment.IsDevelopment());
     await DbSeeder.SeedAsync(context, logger, datosDemo, app.Configuration);
+
+    // Una línea al arrancar que dice a dónde van los correos. Sin esto, con el
+    // SMTP mal configurado, los mails "se mandan" y nadie se entera de que no salen.
+    var correo = app.Configuration.GetSection(Vitalis.Infrastructure.Notificaciones.NotificacionesOptions.SectionName)
+        .Get<Vitalis.Infrastructure.Notificaciones.NotificacionesOptions>() ?? new();
+    if (!correo.Habilitado)
+        logger.LogWarning("Correos: deshabilitados (Notificaciones:Habilitado = false).");
+    else if (correo.ModoPrueba)
+        logger.LogInformation("Correos: modo prueba. No salen; se ven en Notificaciones.");
+    else if (string.IsNullOrWhiteSpace(correo.Usuario) || string.IsNullOrWhiteSpace(correo.Password))
+        logger.LogWarning("Correos: envío real activado pero falta Notificaciones:Usuario o Notificaciones:Password. Los envíos van a fallar.");
+    else
+        logger.LogInformation("Correos: envío real por {Host}:{Puerto}{Redireccion}.", correo.Host, correo.Puerto,
+            string.IsNullOrWhiteSpace(correo.RedirigirTodoA) ? "" : $", todos redirigidos a {correo.RedirigirTodoA}");
 }
 
 if (app.Environment.IsDevelopment())

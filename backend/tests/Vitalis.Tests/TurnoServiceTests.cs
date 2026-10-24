@@ -492,4 +492,66 @@ public class TurnoServiceTests
         }
         return fecha.ToUniversalTime();
     }
+
+    private async Task<TurnoDto> TurnoEn(string estado)
+    {
+        var fecha = ProximoHorarioLaboralValido();
+        var turno = await _service.CrearAsync(new CrearTurnoDto { PacienteId = 1, ProfesionalId = 1, ObraSocialId = 1, FechaHora = fecha });
+        var enDb = await _context.Turnos.FindAsync(turno.Id);
+        enDb!.Estado = estado;
+        await _context.SaveChangesAsync();
+        return turno;
+    }
+
+    private EditarTurnoDto Edicion(TurnoDto t, string? estado, DateTime? fecha = null) => new()
+    {
+        PacienteId = t.PacienteId, ProfesionalId = t.ProfesionalId, ObraSocialId = t.ObraSocialId,
+        FechaHora = fecha ?? t.FechaHora, Confirmado = true, Estado = estado
+    };
+
+    [Theory]
+    [InlineData(EstadosTurno.Solicitado, EstadosTurno.Confirmado)]
+    [InlineData(EstadosTurno.Confirmado, EstadosTurno.EnEspera)]
+    [InlineData(EstadosTurno.EnEspera, EstadosTurno.EnAtencion)]
+    [InlineData(EstadosTurno.EnAtencion, EstadosTurno.Atendido)]
+    [InlineData(EstadosTurno.EnAtencion, EstadosTurno.EnEspera)]
+    public async Task EditarAsync_FlujoDeLaSalaDeEspera_Permite(string desde, string hacia)
+    {
+        var t = await TurnoEn(desde);
+        var r = await _service.EditarAsync(t.Id, Edicion(t, hacia));
+        r!.Estado.Should().Be(hacia);
+    }
+
+    [Theory]
+    [InlineData(EstadosTurno.Solicitado, EstadosTurno.Atendido)]
+    [InlineData(EstadosTurno.Confirmado, EstadosTurno.EnAtencion)]
+    [InlineData(EstadosTurno.EnAtencion, EstadosTurno.Cancelado)]
+    public async Task EditarAsync_SaltearPasos_Rechaza(string desde, string hacia)
+    {
+        var t = await TurnoEn(desde);
+        var act = () => _service.EditarAsync(t.Id, Edicion(t, hacia));
+        await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Theory]
+    [InlineData(EstadosTurno.Atendido)]
+    [InlineData(EstadosTurno.Cancelado)]
+    public async Task EditarAsync_TurnoCerrado_NoSeModifica(string estado)
+    {
+        var t = await TurnoEn(estado);
+
+        var cambiarEstado = () => _service.EditarAsync(t.Id, Edicion(t, EstadosTurno.Solicitado));
+        var reprogramar = () => _service.EditarAsync(t.Id, Edicion(t, null, t.FechaHora.AddDays(1)));
+
+        await cambiarEstado.Should().ThrowAsync<ConflictException>();
+        await reprogramar.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task EditarAsync_EstadoInventado_Rechaza()
+    {
+        var t = await TurnoEn(EstadosTurno.Solicitado);
+        var act = () => _service.EditarAsync(t.Id, Edicion(t, "Volando"));
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*no es un estado*");
+    }
 }

@@ -4,6 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Secretos de desarrollo (clave SMTP, etc.) fuera del repositorio:
+         dotnet user-secrets set "Notificaciones:Password" "..." -->
+    <UserSecretsId>vitalis-api-desarrollo</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

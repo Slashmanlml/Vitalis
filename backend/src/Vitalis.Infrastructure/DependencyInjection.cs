@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRegistroPacienteService, RegistroPacienteService>();
+        services.AddScoped<IRecuperacionPasswordService, RecuperacionPasswordService>();
         services.AddScoped<IPortalPacienteService, PortalPacienteService>();
         services.Configure<Configuracion.SeguridadOptions>(
             configuration.GetSection(Configuracion.SeguridadOptions.SectionName));

@@ -1,0 +1,115 @@
+# Integración continua de Vitalis.
+#
+# En cada push y en cada pull request se compila todo, se corren las pruebas
+# automáticas y se revisan las dependencias con vulnerabilidades conocidas.
+# Si algo falla, GitHub marca el commit con una cruz roja y no hace falta
+# descubrirlo el día de la demo.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# Solo lectura: este flujo no publica nada ni toca el repositorio.
+permissions:
+  contents: read
+
+# Si se sube otro commit a la misma rama, se cancela la corrida anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (.NET 8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restaurar paquetes
+        run: dotnet restore Vitalis.sln
+
+      - name: Compilar
+        run: dotnet build Vitalis.sln --no-restore --configuration Release
+
+      # Las pruebas usan una base en memoria: no hace falta PostgreSQL.
+      - name: Pruebas automáticas
+        run: >
+          dotnet test tests/Vitalis.Tests --no-build --configuration Release
+          --logger "trx;LogFileName=resultados.trx"
+          --results-directory ../resultados-backend
+
+      - name: Guardar resultados de las pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-backend
+          path: resultados-backend
+          if-no-files-found: ignore
+
+      # Falla si algún paquete NuGet (directo o transitivo) tiene una
+      # vulnerabilidad conocida. Es el mismo control del informe de auditoría.
+      - name: Paquetes vulnerables
+        run: |
+          dotnet list Vitalis.sln package --vulnerable --include-transitive 2>&1 | tee vulnerables.txt
+          if grep -q "has the following vulnerable packages" vulnerables.txt; then
+            echo "::error::Hay paquetes NuGet con vulnerabilidades conocidas (ver arriba)."
+            exit 1
+          fi
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: vitalis-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      # Angular 22 necesita Node 22.22 o más nuevo.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: vitalis-frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Pruebas automáticas
+        run: npx ng test --watch=false
+
+      - name: Compilar para producción
+        run: npx ng build
+
+      # Solo las dependencias que llegan al navegador; altas y críticas cortan.
+      - name: Dependencias vulnerables
+        run: npm audit --omit=dev --audit-level=high
+
+  imagenes:
+    name: Imágenes Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Solo si compila y pasan las pruebas: no tiene sentido empaquetar algo roto.
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Se construyen las mismas imágenes que levanta docker-compose.yml, sin
+      # publicarlas: alcanza con saber que el despliegue sigue funcionando.
+      - name: Imagen de la API
+        run: docker build --tag vitalis-api:ci backend
+
+      - name: Imagen del frontend
+        run: docker build --tag vitalis-frontend:ci vitalis-frontend

@@ -8,7 +8,10 @@ namespace Vitalis.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService, IRegistroPacienteService registroService) : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    IRegistroPacienteService registroService,
+    IRecuperacionPasswordService recuperacionService) : ControllerBase
 {
     /// <summary>Políticas de límite de pedidos (ver Program.cs).</summary>
     public const string PoliticaLogin = "login";
@@ -63,6 +66,20 @@ public class AuthController(IAuthService authService, IRegistroPacienteService r
     [HttpPost("reenviar-confirmacion")]
     public async Task<ActionResult<MensajeDto>> ReenviarConfirmacion([FromBody] ReenviarConfirmacionDto dto, CancellationToken ct) =>
         Accepted(await registroService.ReenviarConfirmacionAsync(dto.Email, ct));
+
+    /// <summary>"Olvidé mi contraseña": manda un enlace por correo. Respuesta siempre igual.</summary>
+    [AllowAnonymous]
+    [EnableRateLimiting(PoliticaRegistro)]
+    [HttpPost("olvide-password")]
+    public async Task<ActionResult<MensajeDto>> OlvidePassword([FromBody] SolicitarRecuperacionDto dto, CancellationToken ct) =>
+        Accepted(await recuperacionService.SolicitarAsync(dto.Email, ct));
+
+    /// <summary>Elige una contraseña nueva con el token del enlace.</summary>
+    [AllowAnonymous]
+    [EnableRateLimiting(PoliticaRegistro)]
+    [HttpPost("restablecer-password")]
+    public async Task<ActionResult<MensajeDto>> RestablecerPassword([FromBody] RestablecerPasswordDto dto, CancellationToken ct) =>
+        Ok(await recuperacionService.RestablecerAsync(dto, ct));
 
     [Authorize]
     [HttpGet("me")]

@@ -157,7 +157,21 @@
 
       <div class="loading-overlay" *ngIf="cargando"><div class="spinner"></div></div>
 
-      <ng-container *ngIf="!cargando">
+      <ng-container *ngIf="!cargando && !veAgenda">
+        <div class="panel-encabezado">
+          <h2>Cobros</h2>
+          <a class="ver-agenda" routerLink="/dashboard/facturacion">Ir a facturación</a>
+        </div>
+        <section class="indicadores">
+          <div class="indicador" *ngFor="let i of indicadores" [ngClass]="'tono-' + i.tono">
+            <span class="indicador-etiqueta">{{ i.etiqueta }}</span>
+            <span class="indicador-valor">{{ i.texto ?? i.valor }}</span>
+            <span class="indicador-detalle" *ngIf="i.detalle">{{ i.detalle }}</span>
+          </div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngIf="!cargando && veAgenda">
 
         <div class="panel-encabezado">
           <h2>Actividad de hoy</h2>
@@ -179,7 +193,7 @@
         <section class="indicadores">
           <div class="indicador" *ngFor="let i of indicadores" [ngClass]="'tono-' + i.tono">
             <span class="indicador-etiqueta">{{ i.etiqueta }}</span>
-            <span class="indicador-valor">{{ i.valor }}</span>
+            <span class="indicador-valor">{{ i.texto ?? i.valor }}</span>
             <span class="indicador-detalle" *ngIf="i.detalle">{{ i.detalle }}</span>
           </div>
         </section>

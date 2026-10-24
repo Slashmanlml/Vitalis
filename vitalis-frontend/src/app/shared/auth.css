@@ -337,3 +337,16 @@
     font-size: 1.9rem;
   }
 }
+
+/* "¿Te la olvidaste?" al lado de la etiqueta de contraseña del login. */
+.olvide {
+  font-weight: 450;
+  font-size: .8rem;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.olvide:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

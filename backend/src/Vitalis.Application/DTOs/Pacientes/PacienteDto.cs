@@ -28,7 +28,10 @@ public class CrearPacienteDto
     public string Apellido { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El DNI es obligatorio")]
-    [StringLength(20, MinimumLength = 6, ErrorMessage = "El DNI debe tener entre 6 y 20 caracteres")]
+    // Solo números: antes se aceptaba cualquier texto de 6 a 20 caracteres
+    // ("12ab456" pasaba si se llamaba a la API sin la pantalla). Mismo rango
+    // que valida el formulario de recepción.
+    [RegularExpression(@"^\d{6,9}$", ErrorMessage = "El DNI tiene que tener entre 6 y 9 números, sin puntos ni letras.")]
     public string Dni { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]

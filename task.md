@@ -7,6 +7,22 @@
 
 ## Hecho
 
+- [x] **Correcciones del plan de pruebas, CI y correo real** (octubre 2026).
+      DNI de recepción solo números (también en el servidor); un pago no puede
+      superar el saldo (y la pantalla lo avisa antes de enviar); liquidaciones:
+      no se liquida dos veces ni un período superpuesto ni vacío, y un id
+      inexistente da 404 en vez de 500; estados de turno con pasos permitidos
+      (`EstadosTurno`), atendidos y cancelados ya no se editan, y la agenda solo
+      ofrece lo que el backend permite; la jornada demo no se arma en fin de
+      semana. GitHub Actions (`.github/workflows/ci.yml`) + Dependabot. Secretos
+      de usuario para el SMTP y aviso en el arranque de a dónde van los correos
+      (ver `docs/23-correo-real-e-integracion-continua.md`).
+- [x] **Olvidé mi contraseña y jornada de demo** (octubre 2026). Pantallas
+      `/olvide-password` y `/restablecer-password`, endpoints
+      `olvide-password` / `restablecer-password` con el mismo mecanismo de
+      tokens del registro (SHA-256, un solo uso, 60 min), aviso por mail del
+      cambio, enlace en el login. La semilla demo arma los turnos de hoy si no
+      hay. Tests: 9 de servicio + 1 de integración (backend), 5 de la pantalla.
 - [x] **Registro de pacientes con confirmación por correo** (rama
       `feature/registro-confirmacion-auditoria`, octubre 2026). Página pública
       `/registro`, enlace de un solo uso que vence a las 24 h (`/confirmar-email`),

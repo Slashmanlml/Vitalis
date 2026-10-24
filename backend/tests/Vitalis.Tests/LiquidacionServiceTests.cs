@@ -1,3 +1,4 @@
+using Vitalis.Domain.Exceptions;
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -232,5 +233,76 @@ public class LiquidacionServiceTests
 
         liquidada.Should().NotBeNull();
         liquidada!.Estado.Should().Be("Liquidada");
+    }
+
+    private Task<LiquidacionDto> LiquidarEnero(int profesionalId = 1) => _service.CrearAsync(new CrearLiquidacionDto
+    {
+        ProfesionalId = profesionalId, PeriodoDesde = PeriodoDesde, PeriodoHasta = PeriodoHasta
+    });
+
+    [Fact]
+    public async Task LiquidarAsync_DosVeces_Rechaza()
+    {
+        _context.Turnos.Add(NuevoTurno(1, profesionalId: 1, obraSocialId: ObraSocialOsdeId, new DateTime(2026, 1, 15), "Atendido"));
+        await _context.SaveChangesAsync();
+        var creada = await LiquidarEnero();
+        await _service.LiquidarAsync(creada.Id);
+
+        var otraVez = () => _service.LiquidarAsync(creada.Id);
+
+        await otraVez.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task LiquidarAsync_Inexistente_DevuelveNull()
+    {
+        (await _service.LiquidarAsync(999)).Should().BeNull("el controlador lo convierte en 404, no en un error 500");
+    }
+
+    [Fact]
+    public async Task CrearAsync_PeriodoSuperpuesto_Rechaza()
+    {
+        _context.Turnos.Add(NuevoTurno(1, profesionalId: 1, obraSocialId: ObraSocialOsdeId, new DateTime(2026, 1, 15), "Atendido"));
+        await _context.SaveChangesAsync();
+        await LiquidarEnero();
+
+        // Del 10 al 20 de enero ya está dentro de la liquidación de enero.
+        var superpuesta = () => _service.CrearAsync(new CrearLiquidacionDto
+        {
+            ProfesionalId = 1, PeriodoDesde = new DateTime(2026, 1, 10), PeriodoHasta = new DateTime(2026, 1, 20)
+        });
+
+        await superpuesta.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CrearAsync_OtroProfesionalMismoPeriodo_Permite()
+    {
+        _context.Turnos.AddRange(
+            NuevoTurno(1, profesionalId: 1, obraSocialId: ObraSocialOsdeId, new DateTime(2026, 1, 15), "Atendido"),
+            NuevoTurno(2, profesionalId: 2, obraSocialId: ObraSocialOsdeId, new DateTime(2026, 1, 16), "Atendido"));
+        await _context.SaveChangesAsync();
+        await LiquidarEnero(1);
+
+        var segunda = await LiquidarEnero(2);
+
+        segunda.Total.Should().Be(2560m);
+    }
+
+    [Fact]
+    public async Task CrearAsync_SinTurnosAtendidos_Rechaza()
+    {
+        var vacia = () => LiquidarEnero();
+        await vacia.Should().ThrowAsync<ValidationException>().WithMessage("*nada para liquidar*");
+    }
+
+    [Fact]
+    public async Task CrearAsync_PeriodoInvertido_Rechaza()
+    {
+        var invertida = () => _service.CrearAsync(new CrearLiquidacionDto
+        {
+            ProfesionalId = 1, PeriodoDesde = PeriodoHasta, PeriodoHasta = PeriodoDesde
+        });
+        await invertida.Should().ThrowAsync<ValidationException>();
     }
 }

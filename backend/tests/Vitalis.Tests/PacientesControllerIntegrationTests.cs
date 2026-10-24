@@ -32,6 +32,8 @@ public class TestFactory : WebApplicationFactory<Program>
         // Variable de entorno además de UseSetting: Program.cs lee la clave
         // antes de construir la app, y así se garantiza que la vea.
         Environment.SetEnvironmentVariable("Jwt__Key", ClaveJwtDePrueba);
+        Environment.SetEnvironmentVariable("LimitePedidos__RegistroCada10Minutos", "1000");
+        Environment.SetEnvironmentVariable("LimitePedidos__LoginPorMinuto", "1000");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -39,6 +41,10 @@ public class TestFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Key", ClaveJwtDePrueba);
         // Los correos de las pruebas nunca salen.
         builder.UseSetting("Notificaciones:ModoPrueba", "true");
+        // Todas las pruebas salen de la misma "IP": sin esto, el límite de
+        // pedidos (pensado para frenar ataques) las cortaría con 429.
+        builder.UseSetting("LimitePedidos:RegistroCada10Minutos", "1000");
+        builder.UseSetting("LimitePedidos:LoginPorMinuto", "1000");
 
         builder.ConfigureServices(services =>
         {

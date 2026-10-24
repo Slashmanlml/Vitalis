@@ -25,6 +25,8 @@ const routes: Routes = [
   // Páginas públicas del portal de pacientes.
   { path: 'registro', loadComponent: () => import('./registro/registro').then(m => m.RegistroComponent) },
   { path: 'confirmar-email', loadComponent: () => import('./confirmar-email/confirmar-email').then(m => m.ConfirmarEmailComponent) },
+  { path: 'olvide-password', loadComponent: () => import('./olvide-password/olvide-password').then(m => m.OlvidePasswordComponent) },
+  { path: 'restablecer-password', loadComponent: () => import('./restablecer-password/restablecer-password').then(m => m.RestablecerPasswordComponent) },
   {
     path: 'portal',
     loadComponent: () => import('./portal/portal').then(m => m.PortalComponent),
