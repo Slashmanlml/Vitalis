@@ -72,11 +72,9 @@ public class EmailService : IEmailService
         // Envío Real SMTP
         try
         {
-            string destinatarioReal = !string.IsNullOrWhiteSpace(_options.RedirigirTodoA) 
-                ? _options.RedirigirTodoA 
-                : request.Destinatario;
+            var (destinatarioReal, redirigido) = ResolverDestinatario(_options, request.Destinatario);
 
-            string asuntoEnvio = !string.IsNullOrWhiteSpace(_options.RedirigirTodoA)
+            string asuntoEnvio = redirigido
                 ? $"[Para: {request.Destinatario}] {asunto}"
                 : asunto;
 
@@ -102,6 +100,35 @@ public class EmailService : IEmailService
         await _context.SaveChangesAsync();
 
         return log.Estado == EstadoNotificacion.Enviado;
+    }
+
+    /// <summary>
+    /// A quién se manda de verdad un correo. Sin <c>RedirigirTodoA</c>, al
+    /// destinatario. Con él y sin <c>RedirigirSoloDominios</c>, todo va a esa
+    /// casilla. Con ambos, solo se redirigen los dominios de la lista (los de
+    /// los datos de prueba) y el resto llega a su dueño.
+    /// </summary>
+    public static (string Destino, bool Redirigido) ResolverDestinatario(NotificacionesOptions opciones, string destinatario)
+    {
+        if (string.IsNullOrWhiteSpace(opciones.RedirigirTodoA))
+            return (destinatario, false);
+
+        var dominios = opciones.RedirigirSoloDominios
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(d => d.TrimStart('@').ToLowerInvariant())
+            .ToList();
+
+        if (dominios.Count == 0)
+            return (opciones.RedirigirTodoA, true);
+
+        var arroba = destinatario.LastIndexOf('@');
+        var dominio = arroba >= 0 ? destinatario[(arroba + 1)..].Trim().ToLowerInvariant() : string.Empty;
+
+        // Un destinatario sin dominio reconocible se redirige: ante la duda,
+        // no se le escribe a nadie de afuera.
+        return dominio.Length == 0 || dominios.Contains(dominio)
+            ? (opciones.RedirigirTodoA, true)
+            : (destinatario, false);
     }
 
     /// <summary>

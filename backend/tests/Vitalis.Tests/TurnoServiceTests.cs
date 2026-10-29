@@ -288,8 +288,10 @@ public class TurnoServiceTests
         notif.Evento.Should().Be(EventoNotificacion.TurnoReprogramado);
         notif.TurnoId.Should().Be(turno.Id);
         notif.Datos.Should().ContainKey("FechaAnterior");
-        notif.Datos!["FechaAnterior"].Should().Be(fechaOriginal.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
-        notif.Datos["FechaHora"].Should().Be(fechaNueva.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+        // Hora de la clínica, no la del servidor: con ToLocalTime() la prueba solo
+        // pasaba en una máquina configurada en hora argentina (falló en la CI, en UTC).
+        notif.Datos!["FechaAnterior"].Should().Be(_reloj.AHoraDeLaClinica(fechaOriginal).ToString("dd/MM/yyyy HH:mm"));
+        notif.Datos["FechaHora"].Should().Be(_reloj.AHoraDeLaClinica(fechaNueva).ToString("dd/MM/yyyy HH:mm"));
     }
 
     [Fact]

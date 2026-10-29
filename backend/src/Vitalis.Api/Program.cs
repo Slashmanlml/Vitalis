@@ -226,7 +226,9 @@ using (var scope = app.Services.CreateScope())
         logger.LogWarning("Correos: envío real activado pero falta Notificaciones:Usuario o Notificaciones:Password. Los envíos van a fallar.");
     else
         logger.LogInformation("Correos: envío real por {Host}:{Puerto}{Redireccion}.", correo.Host, correo.Puerto,
-            string.IsNullOrWhiteSpace(correo.RedirigirTodoA) ? "" : $", todos redirigidos a {correo.RedirigirTodoA}");
+            string.IsNullOrWhiteSpace(correo.RedirigirTodoA) ? ""
+            : string.IsNullOrWhiteSpace(correo.RedirigirSoloDominios) ? $", todos redirigidos a {correo.RedirigirTodoA}"
+            : $", los de {correo.RedirigirSoloDominios} redirigidos a {correo.RedirigirTodoA}; el resto a su destinatario");
 }
 
 if (app.Environment.IsDevelopment())

@@ -38,6 +38,21 @@ se suben a GitHub.
    `Correos: envío real por smtp.gmail.com:587, todos redirigidos a ...`
 5. Probá: registrá un paciente nuevo y el correo de confirmación te llega a vos.
 
+### Redirigir solo los correos de prueba
+
+Con `RedirigirTodoA` solo, **todos** los correos van a tu casilla. Para que
+cualquiera que se registre con su propio correo (por ejemplo, el profesor)
+reciba el mail en su bandeja, sumá la lista de dominios de los datos de
+prueba. Esos se siguen redirigiendo a vos y el resto llega a su dueño:
+
+```powershell
+cd C:\Users\Tito\Proyectos\Vitalis\vitalis\backend\src\Vitalis.Api
+dotnet user-secrets set "Notificaciones:RedirigirSoloDominios" "email.com,vitalis.local"
+```
+
+Los pacientes de la semilla usan `@email.com`, que es un dominio real: por
+eso no conviene sacar la redirección del todo.
+
 Para volver al modo prueba:
 
 ```powershell
