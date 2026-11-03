@@ -10,6 +10,11 @@
 #
 # Para volver a empezar de cero (borra la base):
 #   docker compose down -v
+#
+# Para verlo desde el celular o mandarle el enlace a alguien, sin dominio ni
+# cuenta (túnel rápido de Cloudflare, la dirección cambia cada vez):
+#   docker compose --profile tunel up --build
+# y buscar en el log la línea con https://....trycloudflare.com
 # ---------------------------------------------------------------------------
 
 services:
@@ -83,6 +88,17 @@ services:
       - api
     ports:
       - "8080:80"
+
+  # Solo arranca con --profile tunel. Le pide a Cloudflare una dirección
+  # pública provisoria que apunta a este nginx. Sirve para probar; para el
+  # sitio real está docker-compose.prod.yml, con un túnel propio y dominio.
+  tunel-rapido:
+    image: cloudflare/cloudflared:2026.10.7
+    container_name: vitalis-tunel
+    profiles: [tunel]
+    command: tunnel --no-autoupdate --url http://frontend:80
+    depends_on:
+      - frontend
 
 volumes:
   datos-postgres:

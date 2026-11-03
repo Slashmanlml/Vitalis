@@ -22,3 +22,29 @@ updates:
     directory: /
     schedule:
       interval: monthly
+
+  # Imágenes base de los Dockerfile (SDK de .NET, Node, nginx) y las del
+  # compose (PostgreSQL, cloudflared). Las imágenes viejas acumulan
+  # vulnerabilidades aunque el código no cambie.
+  - package-ecosystem: docker
+    directories: ["/backend", "/vitalis-frontend"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    # .NET 8 se queda en 8 (el proyecto apunta a net8.0): pasar a 9 o 10 es
+    # una migración, no una actualización.
+    ignore:
+      - dependency-name: "dotnet/*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    # PostgreSQL 16 → 17 no se puede hacer cambiando la etiqueta: los datos
+    # en disco de una versión mayor no los lee la otra (hace falta volcar y
+    # restaurar). Solo se aceptan arreglos dentro de la 16.
+    ignore:
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]

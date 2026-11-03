@@ -32,5 +32,11 @@ docs/09-guion-demo-y-defensa.md
 backend/src/Vitalis.Api/wwwroot/uploads/*
 !backend/src/Vitalis.Api/wwwroot/uploads/.gitkeep
 
-# Variables de Docker con secretos
+# Variables de Docker con secretos (los .example sí se suben)
 .env
+.env.*
+!.env.example
+!.env.produccion.example
+
+# Copias de seguridad del servidor
+respaldos/

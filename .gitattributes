@@ -1,0 +1,3 @@
+# Los scripts de shell se ejecutan en Linux: si Git les pusiera finales de
+# línea de Windows (CRLF), bash fallaría con "$'\r': command not found".
+*.sh text eol=lf

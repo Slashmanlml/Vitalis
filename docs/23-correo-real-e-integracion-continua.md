@@ -78,13 +78,14 @@ Las mismas claves como variables de entorno en el `.env`
 ## 2. Integración continua (GitHub Actions)
 
 `.github/workflows/ci.yml` corre en cada push, en cualquier rama, y en cada
-pull request. Tiene tres trabajos:
+pull request. Tiene cuatro trabajos:
 
 | Trabajo | Qué hace | Si falla |
 | --- | --- | --- |
 | Backend | Restaura, compila en Release, corre las pruebas automáticas y revisa paquetes NuGet con vulnerabilidades conocidas | Prueba rota o paquete vulnerable |
 | Frontend | `npm ci`, pruebas, compilación de producción y `npm audit` de lo que llega al navegador | Prueba rota, error de compilación o dependencia con vulnerabilidad alta |
-| Imágenes Docker | Construye las imágenes de la API y del frontend, sin publicarlas | El `docker compose` de despliegue dejó de funcionar |
+| Imágenes Docker | Construye las imágenes de la API y del frontend; en `main`, además las publica en ghcr.io | El `docker compose` de despliegue dejó de funcionar |
+| Desplegar | Solo en `main` y si está habilitado: actualiza el servidor (ver `24-despliegue.md`) | El servidor no respondió después de actualizar |
 
 Los resultados se ven en la pestaña **Actions** del repositorio. Un tilde verde
 al lado del commit significa que todo pasó; una cruz roja, que algo se rompió.

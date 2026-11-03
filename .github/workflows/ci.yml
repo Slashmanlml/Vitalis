@@ -100,16 +100,117 @@ jobs:
   imagenes:
     name: Imágenes Docker
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     # Solo si compila y pasan las pruebas: no tiene sentido empaquetar algo roto.
     needs: [backend, frontend]
+    # Este trabajo sí necesita escribir: publica las imágenes en GitHub
+    # Packages (ghcr.io). El permiso vale solo para este trabajo.
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      etiqueta: ${{ steps.nombres.outputs.etiqueta }}
     steps:
       - uses: actions/checkout@v4
 
-      # Se construyen las mismas imágenes que levanta docker-compose.yml, sin
-      # publicarlas: alcanza con saber que el despliegue sigue funcionando.
-      - name: Imagen de la API
-        run: docker build --tag vitalis-api:ci backend
+      # ghcr.io exige minúsculas y el usuario de GitHub es "Slashmanlml".
+      - name: Nombres de las imágenes
+        id: nombres
+        run: |
+          duenio="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "api=ghcr.io/$duenio/vitalis-api" >> "$GITHUB_OUTPUT"
+          echo "web=ghcr.io/$duenio/vitalis-frontend" >> "$GITHUB_OUTPUT"
+          echo "etiqueta=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - name: Imagen del frontend
-        run: docker build --tag vitalis-frontend:ci vitalis-frontend
+      # En todas las ramas se construyen las mismas imágenes que se despliegan:
+      # alcanza para saber que el despliegue sigue funcionando.
+      - name: Construir la API
+        run: docker build --tag "${{ steps.nombres.outputs.api }}:${{ steps.nombres.outputs.etiqueta }}" backend
+
+      - name: Construir el frontend
+        run: docker build --tag "${{ steps.nombres.outputs.web }}:${{ steps.nombres.outputs.etiqueta }}" vitalis-frontend
+
+      # Solo lo que entra a main se publica. Cada imagen lleva dos etiquetas:
+      # sha-xxxxxxx (fija, para volver a una versión anterior) y latest.
+      - name: Publicar en ghcr.io
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          API: ${{ steps.nombres.outputs.api }}
+          WEB: ${{ steps.nombres.outputs.web }}
+          ETIQUETA: ${{ steps.nombres.outputs.etiqueta }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for imagen in "$API" "$WEB"; do
+            docker tag "$imagen:$ETIQUETA" "$imagen:latest"
+            docker push "$imagen:$ETIQUETA"
+            docker push "$imagen:latest"
+          done
+
+  desplegar:
+    name: Desplegar en el servidor
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [imagenes]
+    # Apagado hasta que exista el servidor: se enciende creando la variable
+    # DESPLIEGUE_HABILITADO = true en Settings → Secrets and variables →
+    # Actions → Variables. Ver docs/24-despliegue.md.
+    if: >
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      vars.DESPLIEGUE_HABILITADO == 'true'
+    # El entorno "produccion" guarda los secretos del servidor y permite exigir
+    # una aprobación manual antes de cada despliegue.
+    environment:
+      name: produccion
+      url: ${{ vars.URL_SITIO }}
+    # No se despliegan dos versiones a la vez; la segunda espera.
+    concurrency:
+      group: despliegue-produccion
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin acciones de terceros: ssh y scp comunes. La huella del servidor
+      # (SSH_KNOWN_HOSTS) se carga a mano una vez, así nadie puede hacerse
+      # pasar por el servidor para robar la clave o el despliegue.
+      - name: Preparar SSH
+        env:
+          CLAVE: ${{ secrets.SSH_CLAVE_PRIVADA }}
+          HUELLA: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLAVE" > ~/.ssh/despliegue
+          chmod 600 ~/.ssh/despliegue
+          printf '%s\n' "$HUELLA" > ~/.ssh/known_hosts
+
+      - name: Copiar el compose y actualizar
+        env:
+          DESTINO: ${{ secrets.SSH_USUARIO }}@${{ secrets.SSH_HOST }}
+          ETIQUETA: ${{ needs.imagenes.outputs.etiqueta }}
+        run: |
+          ssh_opts="-i $HOME/.ssh/despliegue -o StrictHostKeyChecking=yes -o BatchMode=yes"
+          scp $ssh_opts docker-compose.prod.yml "$DESTINO:/opt/vitalis/docker-compose.prod.yml"
+          ssh $ssh_opts "$DESTINO" "cd /opt/vitalis \
+            && export VERSION=$ETIQUETA \
+            && docker compose -f docker-compose.prod.yml pull \
+            && docker compose -f docker-compose.prod.yml up -d --remove-orphans \
+            && docker image prune -f"
+
+      # La API tarda unos segundos en migrar y arrancar. Se consulta
+      # /api/health a través de Cloudflare, nginx y la API: si responde, la
+      # cadena completa funciona. Si después de un minuto no, falla.
+      - name: Comprobar que el sitio responde
+        if: vars.URL_SITIO != ''
+        run: |
+          for intento in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 10 "${{ vars.URL_SITIO }}/api/health" > /dev/null; then
+              echo "El sitio responde."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::El sitio no respondió después del despliegue."
+          exit 1
+
+      - name: Borrar la clave del runner
+        if: always()
+        run: rm -f ~/.ssh/despliegue

@@ -1,0 +1,171 @@
+# ---------------------------------------------------------------------------
+# Vitalis en producción (el servidor de verdad).
+#
+# Diferencias con docker-compose.yml (el de la PC):
+#   - No se publica NINGÚN puerto. El sitio llega a Internet por un túnel de
+#     Cloudflare: el contenedor cloudflared abre una conexión SALIENTE hacia
+#     Cloudflare y por ahí entran los pedidos. El firewall del servidor puede
+#     rechazar todo lo entrante (salvo SSH) y la IP del servidor no se publica.
+#   - Las imágenes vienen ya construidas desde GitHub (ghcr.io), las arma la
+#     integración continua. El servidor no compila nada.
+#   - Sin datos de demostración, correo real, reinicio automático, logs con
+#     tope de tamaño y una copia de seguridad diaria de la base.
+#
+# Uso (en el servidor, en /opt/vitalis, con el archivo .env completo):
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Guía completa: docs/24-despliegue.md
+# ---------------------------------------------------------------------------
+
+# Configuración común. Los logs de Docker crecen sin límite si no se los
+# acota, y un disco lleno tira abajo la base de datos.
+x-logs: &logs
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-endurecido: &endurecido
+  # Un proceso del contenedor no puede ganar privilegios nuevos (por ejemplo
+  # con un programa setuid), aunque alguien logre ejecutar algo adentro.
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    <<: [*logs, *endurecido]
+    environment:
+      POSTGRES_DB: vitalis
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vitalis"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [interna]
+
+  api:
+    image: ghcr.io/${GHCR_USUARIO:-slashmanlml}/vitalis-api:${VERSION:-latest}
+    restart: unless-stopped
+    <<: [*logs, *endurecido]
+    # La API no necesita ninguna capacidad especial del sistema: escucha en el
+    # 8080 (no privilegiado) y corre con un usuario sin privilegios.
+    cap_drop: [ALL]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=vitalis;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: ${JWT_KEY:?Falta JWT_KEY en .env}
+      Jwt__Issuer: Vitalis
+      Jwt__Audience: Vitalis.Web
+      # En producción no se cargan usuarios de prueba: el primer administrador
+      # sale de estas dos variables. Después de entrar, conviene cambiarle la
+      # contraseña desde el sistema y borrar ADMIN_PASSWORD del .env.
+      Semilla__DatosDemo: ${DATOS_DEMO:-false}
+      Semilla__AdminEmail: ${ADMIN_EMAIL:-}
+      Semilla__AdminPassword: ${ADMIN_PASSWORD:-}
+      # Correo real (Zoho, Gmail o el que sea). Ver la sección de correo en
+      # docs/24-despliegue.md.
+      Notificaciones__ModoPrueba: ${CORREO_MODO_PRUEBA:-true}
+      Notificaciones__Host: ${SMTP_HOST:-smtppro.zoho.com}
+      Notificaciones__Puerto: ${SMTP_PUERTO:-587}
+      Notificaciones__Usuario: ${SMTP_USUARIO:-}
+      Notificaciones__Password: ${SMTP_PASSWORD:-}
+      Notificaciones__RemitenteEmail: ${SMTP_REMITENTE:-}
+      Notificaciones__RemitenteNombre: ${SMTP_REMITENTE_NOMBRE:-Vitalis}
+      Notificaciones__RedirigirTodoA: ${CORREO_REDIRIGIR_A:-}
+      Notificaciones__RedirigirSoloDominios: ${CORREO_REDIRIGIR_DOMINIOS:-}
+      # Solo nginx le habla a la API (no tiene puertos publicados ni está en la
+      # misma red que cloudflared), así que la IP de X-Forwarded-For es confiable.
+      Proxy__ConfiarEnEncabezados: "true"
+      # Con esta dirección se arman los enlaces de los correos (confirmar
+      # cuenta, recuperar contraseña). Tiene que ser la del sitio publicado.
+      Seguridad__UrlFrontend: ${URL_FRONTEND:?Falta URL_FRONTEND en .env (por ejemplo https://vitalis-salud.com)}
+    volumes:
+      - archivos-subidos:/app/wwwroot/uploads
+      - claves-dataprotection:/home/vitalis/.aspnet/DataProtection-Keys
+    networks: [interna]
+
+  frontend:
+    image: ghcr.io/${GHCR_USUARIO:-slashmanlml}/vitalis-frontend:${VERSION:-latest}
+    restart: unless-stopped
+    <<: [*logs, *endurecido]
+    depends_on:
+      - api
+    # Sin "ports": nginx solo es alcanzable desde las redes internas.
+    networks: [interna, borde]
+
+  # El túnel. El token se saca del panel de Cloudflare (Zero Trust → Networks →
+  # Tunnels) y en ese mismo panel se indica que el dominio apunta a
+  # http://frontend:80. Ver docs/24-despliegue.md.
+  tunel:
+    image: cloudflare/cloudflared:2026.10.7
+    restart: unless-stopped
+    <<: [*logs, *endurecido]
+    cap_drop: [ALL]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Falta TUNNEL_TOKEN en .env}
+    depends_on:
+      - frontend
+    # cloudflared solo ve al frontend. Si alguien lo comprometiera, no llega
+    # ni a la API ni a la base: están en otra red.
+    networks: [borde]
+
+  # Copia de seguridad diaria: un volcado de la base y un .tar de los adjuntos
+  # en la carpeta ./respaldos del servidor. Se conservan los últimos
+  # RESPALDOS_DIAS días. Ojo: una copia en el mismo servidor no protege si se
+  # pierde el servidor; la guía explica cómo bajarla a otra máquina.
+  respaldo:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    <<: [*logs, *endurecido]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGDATABASE: vitalis
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      DIAS: ${RESPALDOS_DIAS:-14}
+    volumes:
+      - ./respaldos:/respaldos
+      - archivos-subidos:/adjuntos:ro
+    # $$ es un $ literal para el shell (Docker usa $ para sus variables).
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          fecha=$$(date +%Y-%m-%d_%H%M)
+          if pg_dump --format=custom --file="/respaldos/vitalis_$$fecha.dump"; then
+            tar -czf "/respaldos/adjuntos_$$fecha.tar.gz" -C /adjuntos .
+            find /respaldos -name 'vitalis_*.dump' -mtime +$$DIAS -delete
+            find /respaldos -name 'adjuntos_*.tar.gz' -mtime +$$DIAS -delete
+            echo "Respaldo $$fecha listo."
+          else
+            echo "ERROR: falló el respaldo $$fecha."
+          fi
+          sleep 86400
+        done
+    networks: [interna]
+
+networks:
+  # Base, API, nginx y respaldo.
+  interna:
+  # nginx y el túnel.
+  borde:
+
+volumes:
+  datos-postgres:
+  archivos-subidos:
+  claves-dataprotection:

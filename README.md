@@ -25,6 +25,10 @@ son cuestion de segundos.
 Para apagarlo: `Ctrl+C`, o `docker compose down`. Para empezar de cero borrando
 la base: `docker compose down -v`.
 
+Para abrirlo desde el celular con una dirección pública provisoria:
+`docker compose --profile tunel up --build`. El despliegue en un servidor con
+dominio propio está en [docs/24-despliegue.md](docs/24-despliegue.md).
+
 ### Usuarios de demostracion
 
 | Rol | Usuario | Contrasenia |
