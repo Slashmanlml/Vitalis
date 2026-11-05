@@ -63,35 +63,75 @@ Recomendado en el dominio, apenas comprado:
   *Minimum TLS Version* en 1.2.
 - **Security → WAF**: dejar activas las reglas administradas gratuitas.
 
-### 3.2 Correo con Zoho Mail
+### 3.2 Correo: Zoho Mail para personas, ZeptoMail para el sistema
 
-1. Alta en <https://www.zoho.com/mail/> con el dominio propio. Zoho pide
-   verificar que el dominio es tuyo con un registro **TXT**: se agrega en
-   Cloudflare → **DNS → Records**.
-2. Zoho muestra los registros que faltan. Todos se cargan en Cloudflare con la
-   nube **gris** (*DNS only*): el correo no pasa por el proxy.
+Se usan dos servicios de Zoho, a propósito:
 
-   | Tipo | Nombre | Valor (lo da Zoho) | Para qué |
+| Servicio | Para qué | Casillas |
+| --- | --- | --- |
+| **Zoho Mail** (plan gratis) | Correo de personas: leer y responder desde la web o el celular | `jmachado@` (administrador), `no-responder@` |
+| **ZeptoMail** (Zoho CPaaS) | Correo **transaccional**: lo que manda Vitalis solo (confirmar cuenta, recuperar contraseña, recordatorios) | envía como `no-responder@` |
+
+Por qué separados: el plan gratis de Zoho Mail no permite SMTP desde
+aplicaciones a las cuentas nuevas (responde `554 5.7.8 Access Restricted`), y
+además es buena práctica que los avisos automáticos no dependan de la casilla
+de una persona. ZeptoMail da el primer crédito gratis (10.000 correos, válido
+6 meses) y después se paga por crédito.
+
+**Zoho Mail**
+
+1. Alta en <https://www.zoho.com/mail/> (plan *Forever Free*, "correo de
+   trabajo") con `vitalis-salud.com`. Verificar el dominio con un registro
+   **TXT** en Cloudflare → **DNS → Registros**.
+2. Crear la casilla de administrador (evitar `admin@`, es la primera que
+   prueban los ataques) y `no-responder@`. Las dos con verificación en dos
+   pasos (aplicación autenticadora) y contraseñas en Bitwarden.
+3. Cargar los registros que muestra Zoho (todos *DNS only*):
+
+   | Tipo | Nombre | Valor | Para qué |
    | --- | --- | --- | --- |
-   | MX | `@` | `mx.zoho.com` (10), `mx2.zoho.com` (20), `mx3.zoho.com` (50) | Recibir correo |
-   | TXT | `@` | `v=spf1 include:zoho.com ~all` | SPF: quién puede mandar por el dominio |
-   | TXT | `zmail._domainkey` | la clave larga que genera Zoho | DKIM: firma de cada correo |
-   | TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:tu-casilla@tu-dominio` | DMARC: qué hacer con correos que fallan |
+   | MX | `@` | `mx.zoho.com` (10), `mx2.zoho.com` (20), `mx3.zoho.com` (50) | Recibir correo; tres por redundancia |
+   | TXT | `@` | `v=spf1 include:zohomail.com ~all` | SPF: servidores autorizados a enviar |
+   | TXT | `zmail._domainkey` | clave pública que da Zoho | DKIM de Zoho Mail |
+   | TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:jmachado@vitalis-salud.com` | DMARC: qué hacer con lo que no pasa SPF/DKIM |
 
-   Empezar DMARC con `p=none` (solo informa). Cuando los informes muestren que
+   DMARC arranca en `p=none` (solo informa). Cuando los informes muestren que
    todo sale firmado, pasarlo a `p=quarantine`.
-3. Crear la casilla que manda los correos del sistema, por ejemplo
-   `no-responder@vitalis-salud.com`, y una personal para vos.
-4. Para que la API pueda mandar por SMTP: activar la verificación en dos pasos
-   en Zoho y generar una **contraseña de aplicación** (*Mi cuenta → Seguridad →
-   Contraseñas específicas de aplicación*). Va en `SMTP_PASSWORD`.
-5. El servidor SMTP con dominio propio es `smtppro.zoho.com`, puerto 587. Zoho
-   lo confirma en *Configuración → Cuentas de correo*.
 
-Ojo con el plan: el plan gratuito de Zoho no incluye acceso por IMAP/POP y
-puede no permitir SMTP desde aplicaciones. Si la contraseña de aplicación no
-funciona, el plan *Mail Lite* (alrededor de 1 USD por usuario por mes) lo
-habilita. Para probar mientras tanto, el sistema sigue funcionando con Gmail.
+**ZeptoMail**
+
+1. Entrar a <https://zeptomail.zoho.com> con la cuenta de administrador
+   (organización `Vitalis`). Configuración → **Correo electrónico** → agregar
+   `vitalis-salud.com` y cargar a mano en Cloudflare:
+
+   | Tipo | Nombre | Valor | Proxy |
+   | --- | --- | --- | --- |
+   | TXT | `NNNNNN._domainkey` (lo da ZeptoMail) | `k=rsa; p=...` | — |
+   | CNAME | `bounce-zem` | `clusterNN.zeptomail.com` | **gris** (DNS only); naranja no verifica |
+
+   El CNAME es la dirección de rebotes: si un correo no se puede entregar, el
+   aviso vuelve a ZeptoMail. También alinea el SPF con el dominio.
+2. En el dominio, **Agregar dirección del remitente** → `no-responder` y
+   activar **Restricción de dirección de remitente**. Así, aunque se filtre la
+   clave, solo se puede mandar como esa dirección.
+3. **Agents → el agente → SMTP/API**, "Credenciales más seguras": servidor
+   `smtp.zeptomail.com`, puerto 587, usuario `emailapikey` y la contraseña
+   (token). Va en `SMTP_PASSWORD`; se guarda en Bitwarden.
+
+**Comprobación** (hecha el 5/11/2026): un correo de Vitalis llegó a Gmail en
+la bandeja de entrada y "Mostrar original" dio **SPF, DKIM y DMARC: PASS**,
+firmado como `vitalis-salud.com` y transportado con TLS.
+
+Para la PC (sin Docker), la misma configuración va en `user-secrets`:
+
+```powershell
+cd C:\Users\Tito\Proyectos\Vitalis\vitalis\backend\src\Vitalis.Api
+dotnet user-secrets set "Notificaciones:Host" "smtp.zeptomail.com"
+dotnet user-secrets set "Notificaciones:Puerto" "587"
+dotnet user-secrets set "Notificaciones:Usuario" "emailapikey"
+dotnet user-secrets set "Notificaciones:RemitenteEmail" "no-responder@vitalis-salud.com"
+dotnet user-secrets set "Notificaciones:Password" "EL-TOKEN"
+```
 
 ### 3.3 El servidor (VPS)
 

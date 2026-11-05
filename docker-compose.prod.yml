@@ -73,14 +73,14 @@ services:
       Semilla__DatosDemo: ${DATOS_DEMO:-false}
       Semilla__AdminEmail: ${ADMIN_EMAIL:-}
       Semilla__AdminPassword: ${ADMIN_PASSWORD:-}
-      # Correo real (Zoho, Gmail o el que sea). Ver la sección de correo en
+      # Correo real por ZeptoMail (Zoho). Ver la sección de correo en
       # docs/24-despliegue.md.
       Notificaciones__ModoPrueba: ${CORREO_MODO_PRUEBA:-true}
-      Notificaciones__Host: ${SMTP_HOST:-smtppro.zoho.com}
+      Notificaciones__Host: ${SMTP_HOST:-smtp.zeptomail.com}
       Notificaciones__Puerto: ${SMTP_PUERTO:-587}
-      Notificaciones__Usuario: ${SMTP_USUARIO:-}
+      Notificaciones__Usuario: ${SMTP_USUARIO:-emailapikey}
       Notificaciones__Password: ${SMTP_PASSWORD:-}
-      Notificaciones__RemitenteEmail: ${SMTP_REMITENTE:-}
+      Notificaciones__RemitenteEmail: ${SMTP_REMITENTE:-no-responder@vitalis-salud.com}
       Notificaciones__RemitenteNombre: ${SMTP_REMITENTE_NOMBRE:-Vitalis}
       Notificaciones__RedirigirTodoA: ${CORREO_REDIRIGIR_A:-}
       Notificaciones__RedirigirSoloDominios: ${CORREO_REDIRIGIR_DOMINIOS:-}
